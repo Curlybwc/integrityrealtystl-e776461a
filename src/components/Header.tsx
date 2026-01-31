@@ -32,10 +32,15 @@ const Header = () => {
             </Link>
           </nav>
 
-          {/* Login Button */}
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/login">Investor Portal Login</Link>
-          </Button>
+          {/* Login Buttons */}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/login">Investor Portal</Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/wholesaler-login">Wholesaler Portal</Link>
+            </Button>
+          </div>
         </div>
       </div>
     </header>
