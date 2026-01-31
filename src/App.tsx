@@ -14,6 +14,19 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
+// Portal pages
+import InvestorPortalLayout from "./components/portal/InvestorPortalLayout";
+import PortalDashboard from "./pages/portal/PortalDashboard";
+import PortalDeals from "./pages/portal/PortalDeals";
+import PortalDealDetail from "./pages/portal/PortalDealDetail";
+import PortalSubmitOffer from "./pages/portal/PortalSubmitOffer";
+import PortalRequestWalkthrough from "./pages/portal/PortalRequestWalkthrough";
+import PortalConsulting from "./pages/portal/PortalConsulting";
+import PortalAnalyzer from "./pages/portal/PortalAnalyzer";
+import PortalResources from "./pages/portal/PortalResources";
+import PortalDocuments from "./pages/portal/PortalDocuments";
+import PortalAccount from "./pages/portal/PortalAccount";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -23,6 +36,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<Index />} />
           <Route path="/invest" element={<Invest />} />
           <Route path="/buyers" element={<Buyers />} />
@@ -32,6 +46,21 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+
+          {/* Investor Portal routes */}
+          <Route path="/portal" element={<InvestorPortalLayout />}>
+            <Route index element={<PortalDashboard />} />
+            <Route path="deals" element={<PortalDeals />} />
+            <Route path="deals/:dealId" element={<PortalDealDetail />} />
+            <Route path="deals/:dealId/offer" element={<PortalSubmitOffer />} />
+            <Route path="deals/:dealId/walkthrough" element={<PortalRequestWalkthrough />} />
+            <Route path="consulting" element={<PortalConsulting />} />
+            <Route path="analyzer" element={<PortalAnalyzer />} />
+            <Route path="resources" element={<PortalResources />} />
+            <Route path="documents" element={<PortalDocuments />} />
+            <Route path="account" element={<PortalAccount />} />
+          </Route>
+
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
