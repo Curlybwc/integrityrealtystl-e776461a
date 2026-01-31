@@ -182,7 +182,7 @@ const PortalBidRequest = () => {
                 onValueChange={handleContractorSelect}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose a vetted contractor" />
+                  <SelectValue placeholder="Choose a network contractor" />
                 </SelectTrigger>
                 <SelectContent>
                   {mockContractors.map((contractor) => (
