@@ -390,10 +390,12 @@ const PortalBidRequest = () => {
             />
             <div>
               <Label htmlFor="shareAuthorization" className="text-sm font-normal">
-                I authorize Integrity Realty STL to share this bid (anonymously) with other investors interested in this property.
+                If I decide I am not interested in this property, I authorize Integrity Realty STL 
+                to share this bid (anonymously) with other investors.
               </Label>
               <p className="text-xs text-muted-foreground mt-1">
-                Your identity will not be disclosed. Shared bids are labeled "Informational Only."
+                Your identity will not be disclosed. Shared bids are labeled "Informational Only." 
+                This helps other investors and reduces wasted effort.
               </p>
             </div>
           </div>
