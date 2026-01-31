@@ -35,6 +35,7 @@ const mockDeals = [
     baths: 1,
     sqft: 1200,
     estimatedRent: 1100,
+    estimatedARV: 110000,
     status: "active",
     dateAdded: "2024-01-15",
     image: null,
@@ -50,6 +51,7 @@ const mockDeals = [
     baths: 2,
     sqft: 1450,
     estimatedRent: 1200,
+    estimatedARV: 105000,
     status: "active",
     dateAdded: "2024-01-12",
     image: null,
@@ -65,6 +67,7 @@ const mockDeals = [
     baths: 1,
     sqft: 1100,
     estimatedRent: 950,
+    estimatedARV: 95000,
     status: "active",
     dateAdded: "2024-01-10",
     image: null,
@@ -80,6 +83,7 @@ const mockDeals = [
     baths: 1.5,
     sqft: 1380,
     estimatedRent: 1250,
+    estimatedARV: 125000,
     status: "under-contract",
     dateAdded: "2024-01-08",
     image: null,
@@ -95,6 +99,7 @@ const mockDeals = [
     baths: 1,
     sqft: 900,
     estimatedRent: 850,
+    estimatedARV: 78000,
     status: "active",
     dateAdded: "2024-01-05",
     image: null,
@@ -110,6 +115,7 @@ const mockDeals = [
     baths: 2,
     sqft: 1320,
     estimatedRent: 1150,
+    estimatedARV: 115000,
     status: "active",
     dateAdded: "2024-01-03",
     image: null,
@@ -284,7 +290,27 @@ const PortalDeals = () => {
                     <span>{deal.sqft?.toLocaleString()} sqft</span>
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-border">
+                  {/* Metrics Row */}
+                  <div className="grid grid-cols-2 gap-2 pt-3 border-t border-border mb-3">
+                    {deal.estimatedRent && deal.price && (
+                      <div className="bg-accent/50 rounded px-2 py-1.5 text-center">
+                        <p className="text-xs text-muted-foreground">Rent/Price</p>
+                        <p className="text-sm font-semibold text-foreground">
+                          {((deal.estimatedRent / deal.price) * 100).toFixed(2)}%
+                        </p>
+                      </div>
+                    )}
+                    {deal.estimatedARV && deal.price && (
+                      <div className="bg-accent/50 rounded px-2 py-1.5 text-center">
+                        <p className="text-xs text-muted-foreground">ARV %</p>
+                        <p className="text-sm font-semibold text-foreground">
+                          {((deal.price / deal.estimatedARV) * 100).toFixed(0)}%
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-muted-foreground">Asking</p>
                       <p className="font-serif text-lg font-medium text-foreground">
