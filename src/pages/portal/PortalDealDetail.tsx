@@ -223,7 +223,7 @@ const PortalDealDetail = () => {
         <h2 className="font-serif text-xl text-foreground mb-4">
           Take Action
         </h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid sm:grid-cols-3 gap-4">
           <Link to={`/portal/deals/${deal.id}/offer`}>
             <Button className="w-full" size="lg">
               <FileSignature className="w-4 h-4 mr-2" />
@@ -233,13 +233,7 @@ const PortalDealDetail = () => {
           <Link to={`/portal/deals/${deal.id}/bid`}>
             <Button variant="outline" className="w-full" size="lg">
               <Wrench className="w-4 h-4 mr-2" />
-              Request Bid
-            </Button>
-          </Link>
-          <Link to={`/portal/deals/${deal.id}/walkthrough`}>
-            <Button variant="outline" className="w-full" size="lg">
-              <Home className="w-4 h-4 mr-2" />
-              Request Walkthrough
+              Request Walkthrough / Bid
             </Button>
           </Link>
           <Link to={`/portal/consulting?deal=${deal.id}`}>
