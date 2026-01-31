@@ -1,27 +1,10 @@
 import { Wrench, Users, AlertCircle, Phone, Mail, Globe } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { networkContractors } from "@/data/networkContractors";
 
 const PortalResources = () => {
-  const contractors = [
-    {
-      name: "ABC General Contracting",
-      specialty: "Full Rehabs, Kitchens, Bathrooms",
-      phone: "(314) 555-0101",
-      email: "info@abcgeneralstl.com",
-    },
-    {
-      name: "St. Louis Roofing Pros",
-      specialty: "Roofing, Gutters, Siding",
-      phone: "(314) 555-0102",
-      email: "contact@stlroofingpros.com",
-    },
-    {
-      name: "Foundation First STL",
-      specialty: "Foundation Repair, Waterproofing",
-      phone: "(314) 555-0103",
-      email: "service@foundationfirststl.com",
-    },
-  ];
+  // Use shared contractor data
+  const contractors = networkContractors;
 
   const propertyManagers = [
     {

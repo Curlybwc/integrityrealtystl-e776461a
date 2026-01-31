@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, Wrench, DollarSign, Clock, ExternalLink, AlertCircle } from "lucide-react";
+import { ArrowLeft, Send, Wrench, DollarSign, Clock, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,44 +14,14 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-
-// Mock contractor data
-const mockContractors = [
-  {
-    id: "1",
-    name: "Mike's Renovation Co.",
-    specialty: "General Contractor",
-    bidFeeRequired: true,
-    bidFeeAmount: 150,
-    estimatedTurnaround: "3-5 business days",
-    paymentUrl: "https://example.com/pay/mikes-renovation",
-  },
-  {
-    id: "2",
-    name: "STL Property Inspections",
-    specialty: "Property Inspector",
-    bidFeeRequired: true,
-    bidFeeAmount: 75,
-    estimatedTurnaround: "2-3 business days",
-    paymentUrl: "https://example.com/pay/stl-inspections",
-  },
-  {
-    id: "3",
-    name: "Budget Rehab Solutions",
-    specialty: "Investor-Focused Contractor",
-    bidFeeRequired: false,
-    bidFeeAmount: 0,
-    estimatedTurnaround: "5-7 business days",
-    paymentUrl: null,
-  },
-];
+import { networkContractors, type NetworkContractor } from "@/data/networkContractors";
 
 const PortalBidRequest = () => {
   const { dealId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedContractor, setSelectedContractor] = useState<typeof mockContractors[0] | null>(null);
+  const [selectedContractor, setSelectedContractor] = useState<NetworkContractor | null>(null);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [useOwnContractor, setUseOwnContractor] = useState(false);
 
@@ -77,7 +47,7 @@ const PortalBidRequest = () => {
 
   const handleContractorSelect = (contractorId: string) => {
     setFormData((prev) => ({ ...prev, contractorId }));
-    const contractor = mockContractors.find((c) => c.id === contractorId);
+    const contractor = networkContractors.find((c) => c.id === contractorId);
     setSelectedContractor(contractor || null);
     setPaymentConfirmed(false);
   };
@@ -185,7 +155,7 @@ const PortalBidRequest = () => {
                   <SelectValue placeholder="Choose a network contractor" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockContractors.map((contractor) => (
+                  {networkContractors.map((contractor) => (
                     <SelectItem key={contractor.id} value={contractor.id}>
                       {contractor.name} - {contractor.specialty}
                     </SelectItem>
@@ -245,8 +215,8 @@ const PortalBidRequest = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-sm text-green-800">
+                    <div className="bg-accent/50 border border-border rounded-lg p-3">
+                      <p className="text-sm text-foreground">
                         ✓ No bid fee required for this contractor
                       </p>
                     </div>
