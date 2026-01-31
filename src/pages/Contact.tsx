@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Mail, MapPin } from "lucide-react";
+import { Mail } from "lucide-react";
 
 const Contact = () => {
   return (
@@ -91,21 +91,11 @@ const Contact = () => {
                       <p className="text-muted-foreground">sam@integrityrealtystl.com</p>
                     </div>
                   </div>
-                  
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                      <MapPin className="w-5 h-5 text-accent-foreground" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Location</p>
-                      <p className="text-muted-foreground">St. Louis, Missouri</p>
-                    </div>
-                  </div>
                 </div>
               </div>
               
               <div className="bg-secondary/50 rounded-lg p-6">
-                <h3 className="font-serif text-lg text-foreground mb-2">Office Hours</h3>
+                <h3 className="font-serif text-lg text-foreground mb-2">Business Hours</h3>
                 <p className="text-sm text-muted-foreground">
                   Monday - Friday: 9:00 AM - 6:00 PM<br />
                   Saturday: By appointment<br />
