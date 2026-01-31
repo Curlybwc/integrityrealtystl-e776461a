@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
 
 const Contact = () => {
   return (
@@ -68,17 +68,7 @@ const Contact = () => {
                     </div>
                     <div>
                       <p className="font-medium text-foreground">Email</p>
-                      <p className="text-muted-foreground">info@integrityrealtystl.com</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                      <Phone className="w-5 h-5 text-accent-foreground" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Phone</p>
-                      <p className="text-muted-foreground">(314) 555-0123</p>
+                      <p className="text-muted-foreground">jen@integrityrealtystl.com</p>
                     </div>
                   </div>
                   
