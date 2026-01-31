@@ -67,8 +67,28 @@ const Contact = () => {
                       <Mail className="w-5 h-5 text-accent-foreground" />
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">Email</p>
+                      <p className="font-medium text-foreground">Jen</p>
                       <p className="text-muted-foreground">jen@integrityrealtystl.com</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                      <Mail className="w-5 h-5 text-accent-foreground" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Michele</p>
+                      <p className="text-muted-foreground">michele@integrityrealtystl.com</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                      <Mail className="w-5 h-5 text-accent-foreground" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Samantha</p>
+                      <p className="text-muted-foreground">sam@integrityrealtystl.com</p>
                     </div>
                   </div>
                   
