@@ -9,9 +9,9 @@ import {
   Folder,
   User,
   Menu,
-  X,
   LogOut,
-  ChevronDown,
+  Wrench,
+  FileSignature,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,8 @@ const useInvestorAuth = () => {
 const navItems = [
   { title: "Dashboard", href: "/portal", icon: LayoutDashboard },
   { title: "Deals", href: "/portal/deals", icon: Building2 },
+  { title: "My Offers", href: "/portal/my-offers", icon: FileSignature },
+  { title: "My Bids", href: "/portal/my-bids", icon: Wrench },
   { title: "Analyzer Tools", href: "/portal/analyzer", icon: Calculator },
   { title: "Resources", href: "/portal/resources", icon: Users },
   { title: "Documents", href: "/portal/documents", icon: Folder },
