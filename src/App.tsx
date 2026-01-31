@@ -22,6 +22,7 @@ import PortalDealDetail from "./pages/portal/PortalDealDetail";
 import PortalSubmitOffer from "./pages/portal/PortalSubmitOffer";
 import PortalRequestWalkthrough from "./pages/portal/PortalRequestWalkthrough";
 import PortalBidRequest from "./pages/portal/PortalBidRequest";
+import PortalPaidConsult from "./pages/portal/PortalPaidConsult";
 import PortalMyBids from "./pages/portal/PortalMyBids";
 import PortalMyOffers from "./pages/portal/PortalMyOffers";
 import PortalConsulting from "./pages/portal/PortalConsulting";
@@ -58,6 +59,7 @@ const App = () => (
             <Route path="deals/:dealId/offer" element={<PortalSubmitOffer />} />
             <Route path="deals/:dealId/walkthrough" element={<PortalRequestWalkthrough />} />
             <Route path="deals/:dealId/bid" element={<PortalBidRequest />} />
+            <Route path="deals/:dealId/consult" element={<PortalPaidConsult />} />
             <Route path="my-offers" element={<PortalMyOffers />} />
             <Route path="my-bids" element={<PortalMyBids />} />
             <Route path="consulting" element={<PortalConsulting />} />
