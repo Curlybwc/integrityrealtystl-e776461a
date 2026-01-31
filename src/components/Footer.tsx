@@ -48,7 +48,7 @@ const Footer = () => {
             <h4 className="font-serif text-lg">Contact</h4>
             <div className="space-y-2 text-sm text-primary-foreground/80">
               <p>St. Louis, Missouri</p>
-              <p>info@integrityrealtystl.com</p>
+              <p>jen@integrityrealtystl.com</p>
             </div>
           </div>
         </div>
