@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 // Mock data - will be replaced with real data when backend is enabled
 const mockStats = {
   activeDeals: 4,
-  pendingReview: 1,
+  drafts: 1,
   totalViews: 127,
   totalOffers: 8,
 };
@@ -41,8 +41,8 @@ const mockRecentDeals = [
     city: "St. Louis",
     askingPrice: 38000,
     arv: 95000,
-    status: "pending",
-    views: 12,
+    status: "draft",
+    views: 0,
     offers: 0,
     createdAt: "2024-01-18",
   },
@@ -85,12 +85,12 @@ const WholesalerDashboard = () => {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Pending Review</CardDescription>
+            <CardDescription>Drafts</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-amber-500" />
-              <span className="text-2xl font-bold">{mockStats.pendingReview}</span>
+              <span className="text-2xl font-bold">{mockStats.drafts}</span>
             </div>
           </CardContent>
         </Card>
@@ -146,7 +146,7 @@ const WholesalerDashboard = () => {
                     <Badge
                       variant={deal.status === "active" ? "default" : "secondary"}
                     >
-                      {deal.status === "active" ? "Active" : "Pending Review"}
+                      {deal.status === "active" ? "Active" : "Draft"}
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">{deal.city}</p>
