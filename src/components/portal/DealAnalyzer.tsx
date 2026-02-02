@@ -544,7 +544,7 @@ const DealAnalyzer = () => {
                   </p>
                 </div>
                 <div className="bg-muted/50 rounded p-3">
-                  <p className="text-muted-foreground text-xs">Market Rent Comp ({inputs.beds}BR)</p>
+                  <p className="text-muted-foreground text-xs">ZIP Average Rent ({inputs.beds}BR)</p>
                   <p className="font-mono font-medium">
                     {calculations.rentComp
                       ? formatCurrency(calculations.rentComp)
