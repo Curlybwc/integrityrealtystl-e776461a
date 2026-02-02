@@ -58,6 +58,42 @@ const usefulLinks: UsefulLink[] = [
     description: "Recommended insurance agent for investment properties",
     category: "Service Providers",
   },
+  {
+    title: "Ameren Missouri",
+    url: "https://www.ameren.com/missouri",
+    description: "Electric utility provider for the St. Louis region",
+    category: "Utilities",
+  },
+  {
+    title: "Spire Energy",
+    url: "https://www.spireenergy.com/",
+    description: "Natural gas utility provider",
+    category: "Utilities",
+  },
+  {
+    title: "MSD Project Clear",
+    url: "https://msdprojectclear.org/",
+    description: "Metropolitan St. Louis Sewer District - sewer services",
+    category: "Utilities",
+  },
+  {
+    title: "American Water",
+    url: "https://login.amwater.com/",
+    description: "Water utility provider",
+    category: "Utilities",
+  },
+  {
+    title: "Waste Connections - St. Louis",
+    url: "https://www.wasteconnections.com/st-louis/",
+    description: "Trash and recycling services",
+    category: "Utilities",
+  },
+  {
+    title: "Republic Services",
+    url: "https://www.republicservices.com/residents",
+    description: "Residential trash and recycling services",
+    category: "Utilities",
+  },
 ];
 
 const PortalLinks = () => {
