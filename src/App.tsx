@@ -10,6 +10,7 @@ import Sellers from "./pages/Sellers";
 import SellFast from "./pages/SellFast";
 import Wholesalers from "./pages/Wholesalers";
 import Login from "./pages/Login";
+import WholesalerLogin from "./pages/WholesalerLogin";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
@@ -48,6 +49,7 @@ const App = () => (
           <Route path="/sellfast" element={<SellFast />} />
           <Route path="/wholesalers" element={<Wholesalers />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/wholesaler-login" element={<WholesalerLogin />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
 
