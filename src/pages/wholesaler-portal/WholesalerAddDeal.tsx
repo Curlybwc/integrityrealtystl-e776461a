@@ -187,21 +187,9 @@ const WholesalerAddDeal = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="assignmentFee">Your Assignment Fee</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                  <Input id="assignmentFee" type="number" min="0" className="pl-7" placeholder="5000" />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  This will not be shown to investors
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="contractExpiry">Contract Expiry Date</Label>
-                <Input id="contractExpiry" type="date" />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="contractExpiry">Contract Expiry Date</Label>
+              <Input id="contractExpiry" type="date" />
             </div>
           </CardContent>
         </Card>
