@@ -55,12 +55,12 @@ const PortalPartnerProfile = () => {
   if (!partner) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
-        <Link to="/portal/local-network">
-          <Button variant="ghost" size="sm" className="gap-2">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Local Network
-          </Button>
-        </Link>
+      <Link to="/portal/local-network">
+        <Button variant="ghost" size="sm" className="gap-2">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Network Partners
+        </Button>
+      </Link>
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground">Partner not found.</p>
@@ -78,7 +78,7 @@ const PortalPartnerProfile = () => {
       <Link to="/portal/local-network">
         <Button variant="ghost" size="sm" className="gap-2">
           <ArrowLeft className="w-4 h-4" />
-          Back to Local Network
+          Back to Network Partners
         </Button>
       </Link>
 

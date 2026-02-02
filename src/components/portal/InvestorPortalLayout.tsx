@@ -40,7 +40,7 @@ const navItems = [
   { title: "My Bids", href: "/portal/my-bids", icon: Wrench },
   { title: "Deal Analyzer", href: "/portal/analyzer", icon: Calculator },
   { title: "Section 8 Calculator", href: "/portal/section8-calculator", icon: ClipboardCheck },
-  { title: "Local Network", href: "/portal/local-network", icon: Users },
+  { title: "Network Partners", href: "/portal/local-network", icon: Users },
   { title: "Resources", href: "/portal/resources", icon: FileText },
   { title: "Links", href: "/portal/links", icon: ExternalLink },
   { title: "Documents", href: "/portal/documents", icon: Folder },
