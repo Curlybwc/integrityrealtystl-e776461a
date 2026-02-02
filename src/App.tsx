@@ -11,6 +11,7 @@ import SellFast from "./pages/SellFast";
 import Wholesalers from "./pages/Wholesalers";
 import Login from "./pages/Login";
 import WholesalerLogin from "./pages/WholesalerLogin";
+import PartnerLogin from "./pages/PartnerLogin";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NetworkPartner from "./pages/NetworkPartner";
@@ -44,6 +45,12 @@ import WholesalerDeals from "./pages/wholesaler-portal/WholesalerDeals";
 import WholesalerAddDeal from "./pages/wholesaler-portal/WholesalerAddDeal";
 import WholesalerAccount from "./pages/wholesaler-portal/WholesalerAccount";
 
+// Partner Portal pages
+import PartnerPortalLayout from "./components/partner-portal/PartnerPortalLayout";
+import PartnerDashboard from "./pages/partner-portal/PartnerDashboard";
+import PartnerProfile from "./pages/partner-portal/PartnerProfile";
+import PartnerTestimonials from "./pages/partner-portal/PartnerTestimonials";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -62,6 +69,7 @@ const App = () => (
           <Route path="/wholesalers" element={<Wholesalers />} />
           <Route path="/login" element={<Login />} />
           <Route path="/wholesaler-login" element={<WholesalerLogin />} />
+          <Route path="/partner-login" element={<PartnerLogin />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/network-partner" element={<NetworkPartner />} />
@@ -94,6 +102,13 @@ const App = () => (
             <Route path="deals" element={<WholesalerDeals />} />
             <Route path="add-deal" element={<WholesalerAddDeal />} />
             <Route path="account" element={<WholesalerAccount />} />
+          </Route>
+
+          {/* Partner Portal routes */}
+          <Route path="/partner-portal" element={<PartnerPortalLayout />}>
+            <Route index element={<PartnerDashboard />} />
+            <Route path="profile" element={<PartnerProfile />} />
+            <Route path="testimonials" element={<PartnerTestimonials />} />
           </Route>
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
