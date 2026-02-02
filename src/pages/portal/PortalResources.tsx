@@ -83,7 +83,7 @@ const PortalResources = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-primary" />
-            Utility Allowances (St. Louis County 2023)
+            Utility Allowances (HASLC Single Family 2025)
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             Standard utility allowances by bedroom count for Section 8 calculations.
