@@ -94,6 +94,12 @@ const usefulLinks: UsefulLink[] = [
     description: "Residential trash and recycling services",
     category: "Utilities",
   },
+  {
+    title: "St. Louis County Trash Districts",
+    url: "https://stlouiscountymo.gov/st-louis-county-departments/public-health/environmental-services/waste-and-recycling/unincorporated-trash-districts/",
+    description: "Trash collection info for unincorporated St. Louis County areas",
+    category: "Utilities",
+  },
 ];
 
 const PortalLinks = () => {
