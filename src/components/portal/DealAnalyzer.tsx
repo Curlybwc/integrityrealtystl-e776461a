@@ -35,6 +35,7 @@ interface DealInputs {
   sqft: number;
   currentRent: number;
   avgRent: number;
+  isAvgRentManual: boolean;
   repairPreset: RepairPreset;
   manualRepairs: number;
   manualArv: number;
@@ -50,6 +51,7 @@ const initialInputs: DealInputs = {
   sqft: 0,
   currentRent: 0,
   avgRent: 0,
+  isAvgRentManual: false,
   repairPreset: "medium",
   manualRepairs: 0,
   manualArv: 0,
@@ -118,43 +120,42 @@ const DealAnalyzer = () => {
     key: K,
     value: DealInputs[K]
   ) => {
-    setInputs((prev) => {
-      const newInputs = { ...prev, [key]: value };
-      
-      // Auto-populate avgRent when ZIP or beds change (if not manually set)
-      if ((key === "zip" || key === "beds") && prev.avgRent === 0) {
-        const zip = key === "zip" ? (value as string) : prev.zip;
-        const beds = key === "beds" ? (value as number) : prev.beds;
-        const rentComp = getRentComp(zip, beds);
-        if (rentComp) {
-          newInputs.avgRent = rentComp;
-        }
-      }
-      
-      return newInputs;
-    });
+    setInputs((prev) => ({ ...prev, [key]: value }));
   };
   
-  // Auto-populate avgRent on initial ZIP/beds selection
+  // Handle ZIP change - always update avgRent unless manually set
   const handleZipChange = (zip: string) => {
     setInputs((prev) => {
       const rentComp = getRentComp(zip, prev.beds);
       return {
         ...prev,
         zip,
-        avgRent: prev.avgRent === 0 && rentComp ? rentComp : prev.avgRent,
+        avgRent: !prev.isAvgRentManual && rentComp ? rentComp : prev.avgRent,
       };
     });
   };
   
+  // Handle beds change - always update avgRent unless manually set
   const handleBedsChange = (beds: number) => {
     setInputs((prev) => {
       const rentComp = getRentComp(prev.zip, beds);
       return {
         ...prev,
         beds,
-        avgRent: prev.avgRent === 0 && rentComp ? rentComp : prev.avgRent,
+        avgRent: !prev.isAvgRentManual && rentComp ? rentComp : prev.avgRent,
       };
+    });
+  };
+  
+  // Handle manual avgRent entry
+  const handleAvgRentChange = (value: number) => {
+    setInputs((prev) => {
+      const rentComp = getRentComp(prev.zip, prev.beds);
+      // If user clears the field or sets it back to the zip average, revert to auto mode
+      if (value === 0 || value === rentComp) {
+        return { ...prev, avgRent: rentComp || 0, isAvgRentManual: false };
+      }
+      return { ...prev, avgRent: value, isAvgRentManual: true };
     });
   };
 
@@ -351,7 +352,7 @@ const DealAnalyzer = () => {
               <div className="space-y-2">
                 <Label htmlFor="avgRent">
                   Expected Rent
-                  <InfoTooltip content="Your target rent after rehab. Market comp shown in results." />
+                  <InfoTooltip content="Defaults to ZIP Average Rent. Enter a value to override." />
                 </Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -362,8 +363,9 @@ const DealAnalyzer = () => {
                     type="number"
                     min="0"
                     className="pl-7"
+                    placeholder="Auto"
                     value={inputs.avgRent || ""}
-                    onChange={(e) => updateInput("avgRent", Number(e.target.value))}
+                    onChange={(e) => handleAvgRentChange(Number(e.target.value))}
                   />
                 </div>
               </div>
