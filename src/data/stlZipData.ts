@@ -1,9 +1,10 @@
 // St. Louis Area ZIP Code Data for Deal Analysis
 // Data sourced from HUD 2025 Metro FMR and local market analysis
 
-export type RepairPreset = "light" | "medium" | "heavy" | "fullGut";
+export type RepairPreset = "turnkey" | "light" | "medium" | "heavy" | "fullGut";
 
 export const REPAIR_COSTS_PER_SF: Record<RepairPreset, number> = {
+  turnkey: 5,
   light: 15,
   medium: 30,
   heavy: 50,
@@ -11,6 +12,7 @@ export const REPAIR_COSTS_PER_SF: Record<RepairPreset, number> = {
 };
 
 export const REPAIR_PRESET_LABELS: Record<RepairPreset, string> = {
+  turnkey: "Turnkey ($5/sf)",
   light: "Light ($15/sf)",
   medium: "Medium ($30/sf)",
   heavy: "Heavy ($50/sf)",
