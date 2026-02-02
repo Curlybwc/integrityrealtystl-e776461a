@@ -40,6 +40,9 @@ const Header = () => {
             <Button variant="outline" size="sm" asChild>
               <Link to="/wholesaler-login">Wholesaler Portal</Link>
             </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/partner-login">Partner Portal</Link>
+            </Button>
           </div>
         </div>
       </div>
