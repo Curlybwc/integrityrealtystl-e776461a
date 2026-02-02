@@ -139,18 +139,86 @@ export const RENT_COMPS_BY_ZIP: Record<string, { bed2: number; bed3: number; bed
   "63121": { bed2: 1100, bed3: 1400, bed4: 1650 },
 };
 
-// Utility Allowances by bedroom count (HASLC Single Family 2025)
-// Assumes: Natural Gas Heating, Electric Cooking, Other Electric, Water County, Sewer, Trash
+// Full Utility Allowance Breakdown by bedroom count (HASLC Single Family 2025)
 // Source: HUD Form-52667 dated 01/01/2025
-export const UTILITY_ALLOWANCES: Record<number, number> = {
-  0: 168, // Studio: 54+7+30+23+45+14 = 173 (Heating NG + Cooking Elec + Other Elec + Water County + Sewer + Trash)
-  1: 199, // 1 BR: 67+9+38+29+51+14 = 208
-  2: 246, // 2 BR: 80+12+46+41+65+14 = 258
-  3: 315, // 3 BR: 92+15+54+60+84+14 = 319
-  4: 421, // 4 BR: 113+19+66+85+111+14 = 408
-  5: 467, // 5 BR: 124+22+74+97+124+14 = 455
-  6: 535, // 6 BR: 138+24+82+122+150+14 = 530
+// Index: 0=Studio, 1=1BR, 2=2BR, 3=3BR, 4=4BR, 5=5BR, 6=6BR
+export const UTILITY_BREAKDOWN = {
+  cookingElectric:     [7, 9, 12, 15, 19, 22, 24],
+  cookingNaturalGas:   [5, 7, 8, 11, 13, 15, 17],
+  heatingElectric:     [41, 41, 52, 64, 81, 93, 105],
+  heatingNaturalGas:   [54, 67, 80, 92, 113, 124, 138],
+  otherElectric:       [30, 38, 46, 54, 66, 74, 82],
+  range:               [4, 4, 4, 4, 4, 4, 4],
+  refrigerator:        [6, 6, 6, 6, 6, 6, 6],
+  sewer:               [45, 51, 65, 84, 111, 124, 150],
+  trash:               [14, 14, 14, 14, 14, 14, 14],
+  waterCity:           [14, 17, 21, 28, 37, 41, 50],
+  waterCounty:         [23, 29, 41, 60, 85, 97, 122],
+  waterHeatingElectric:[18, 25, 32, 39, 50, 47, 53],
+  waterHeatingNaturalGas:[11, 14, 19, 24, 29, 34, 38],
 };
+
+// Default Utility Allowances (pre-calculated with common setup)
+// Assumes: Natural Gas Heating, Electric Cooking, Other Electric, Water County, Sewer, Trash
+export const UTILITY_ALLOWANCES: Record<number, number> = {
+  0: 173, // Studio
+  1: 208, // 1 BR
+  2: 258, // 2 BR
+  3: 319, // 3 BR
+  4: 408, // 4 BR
+  5: 455, // 5 BR
+  6: 530, // 6 BR
+};
+
+// Calculate custom utility allowance based on selections
+export function calculateCustomUtilityAllowance(
+  bedrooms: number,
+  options: {
+    heatingType: 'electric' | 'naturalGas';
+    cookingType: 'electric' | 'naturalGas';
+    waterType: 'city' | 'county';
+    waterHeatingType: 'electric' | 'naturalGas';
+    includeRange: boolean;
+    includeRefrigerator: boolean;
+  }
+): number {
+  const idx = Math.min(Math.max(bedrooms, 0), 6);
+  
+  let total = 0;
+  
+  // Heating
+  total += options.heatingType === 'electric' 
+    ? UTILITY_BREAKDOWN.heatingElectric[idx] 
+    : UTILITY_BREAKDOWN.heatingNaturalGas[idx];
+  
+  // Cooking
+  total += options.cookingType === 'electric'
+    ? UTILITY_BREAKDOWN.cookingElectric[idx]
+    : UTILITY_BREAKDOWN.cookingNaturalGas[idx];
+  
+  // Other Electric (always included)
+  total += UTILITY_BREAKDOWN.otherElectric[idx];
+  
+  // Water
+  total += options.waterType === 'city'
+    ? UTILITY_BREAKDOWN.waterCity[idx]
+    : UTILITY_BREAKDOWN.waterCounty[idx];
+  
+  // Water Heating
+  total += options.waterHeatingType === 'electric'
+    ? UTILITY_BREAKDOWN.waterHeatingElectric[idx]
+    : UTILITY_BREAKDOWN.waterHeatingNaturalGas[idx];
+  
+  // Sewer & Trash (always included)
+  total += UTILITY_BREAKDOWN.sewer[idx];
+  total += UTILITY_BREAKDOWN.trash[idx];
+  
+  // Appliances (if tenant provides)
+  if (options.includeRange) total += UTILITY_BREAKDOWN.range[idx];
+  if (options.includeRefrigerator) total += UTILITY_BREAKDOWN.refrigerator[idx];
+  
+  return total;
+}
 
 // Helper functions
 export function getArvPerSf(zip: string): number | null {

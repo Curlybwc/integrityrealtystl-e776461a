@@ -14,6 +14,7 @@ import {
   ARV_PER_SF,
   RENT_COMPS_BY_ZIP,
 } from "@/data/stlZipData";
+import UtilityAllowanceCalculator from "@/components/portal/UtilityAllowanceCalculator";
 
 const PortalResources = () => {
   // Get sorted ZIP codes
@@ -78,15 +79,18 @@ const PortalResources = () => {
         </CardContent>
       </Card>
 
-      {/* Utility Allowances Table */}
+      {/* Utility Allowance Calculator */}
+      <UtilityAllowanceCalculator />
+
+      {/* Default Utility Allowances Table */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-primary" />
-            Utility Allowances (HASLC Single Family 2025)
+            Default Utility Allowances (HASLC Single Family 2025)
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Standard utility allowances by bedroom count for Section 8 calculations.
+            Pre-calculated allowances assuming: Natural Gas Heating, Electric Cooking, Other Electric, County Water, Sewer, Trash.
           </p>
         </CardHeader>
         <CardContent>
@@ -110,9 +114,6 @@ const PortalResources = () => {
               </TableBody>
             </UITable>
           </div>
-          <p className="text-xs text-muted-foreground mt-4">
-            Assumes: Natural Gas Heating, Electric Cooking, Other Electric, Water (County), Sewer, Trash.
-          </p>
         </CardContent>
       </Card>
 
