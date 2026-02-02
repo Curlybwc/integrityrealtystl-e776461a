@@ -40,6 +40,12 @@ const Footer = () => {
               >
                 Investor Portal
               </Link>
+              <Link 
+                to="/wholesaler-login" 
+                className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors"
+              >
+                Wholesaler Portal
+              </Link>
             </nav>
           </div>
 
