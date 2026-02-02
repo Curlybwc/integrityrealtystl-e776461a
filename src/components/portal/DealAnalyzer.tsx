@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Calculator, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -113,8 +114,42 @@ const ResultRow = ({
 );
 
 const DealAnalyzer = () => {
+  const [searchParams] = useSearchParams();
   const [inputs, setInputs] = useState<DealInputs>(initialInputs);
   const supportedZips = getSupportedZips();
+
+  // Auto-populate from URL params
+  useEffect(() => {
+    const address = searchParams.get("address");
+    const city = searchParams.get("city");
+    const zip = searchParams.get("zip");
+    const beds = searchParams.get("beds");
+    const baths = searchParams.get("baths");
+    const sqft = searchParams.get("sqft");
+    const price = searchParams.get("price");
+    const rent = searchParams.get("rent");
+    const arv = searchParams.get("arv");
+
+    if (address || city || zip || beds || sqft || price) {
+      const parsedZip = zip || "";
+      const parsedBeds = beds ? Number(beds) : 3;
+      const rentComp = getRentComp(parsedZip, parsedBeds);
+      
+      setInputs((prev) => ({
+        ...prev,
+        address: address || prev.address,
+        city: city || prev.city,
+        zip: parsedZip,
+        beds: parsedBeds,
+        baths: baths ? Number(baths) : prev.baths,
+        sqft: sqft ? Number(sqft) : prev.sqft,
+        price: price ? Number(price) : prev.price,
+        avgRent: rent ? Number(rent) : (rentComp || prev.avgRent),
+        isAvgRentManual: !!rent,
+        manualArv: arv ? Number(arv) : prev.manualArv,
+      }));
+    }
+  }, [searchParams]);
 
   const updateInput = <K extends keyof DealInputs>(
     key: K,

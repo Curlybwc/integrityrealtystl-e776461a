@@ -28,6 +28,7 @@ import PortalMyBids from "./pages/portal/PortalMyBids";
 import PortalMyOffers from "./pages/portal/PortalMyOffers";
 import PortalConsulting from "./pages/portal/PortalConsulting";
 import PortalAnalyzer from "./pages/portal/PortalAnalyzer";
+import PortalSection8Calculator from "./pages/portal/PortalSection8Calculator";
 import PortalResources from "./pages/portal/PortalResources";
 import PortalDocuments from "./pages/portal/PortalDocuments";
 import PortalAccount from "./pages/portal/PortalAccount";
@@ -73,6 +74,7 @@ const App = () => (
             <Route path="my-bids" element={<PortalMyBids />} />
             <Route path="consulting" element={<PortalConsulting />} />
             <Route path="analyzer" element={<PortalAnalyzer />} />
+            <Route path="section8-calculator" element={<PortalSection8Calculator />} />
             <Route path="resources" element={<PortalResources />} />
             <Route path="documents" element={<PortalDocuments />} />
             <Route path="account" element={<PortalAccount />} />

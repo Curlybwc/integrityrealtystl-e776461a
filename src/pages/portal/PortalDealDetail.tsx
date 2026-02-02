@@ -16,6 +16,8 @@ import {
   Wrench,
   MessageSquare,
   Phone,
+  Calculator,
+  ClipboardCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -247,6 +249,34 @@ const PortalDealDetail = () => {
             <Button variant="outline" className="w-full" size="lg">
               <MessageSquare className="w-4 h-4 mr-2" />
               Ask a Question
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Analyzer Tools */}
+      <div className="bg-card border border-border rounded-lg p-6 shadow-card">
+        <h2 className="font-serif text-xl text-foreground mb-4">
+          Analyze This Deal
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Run this property through our analysis tools with pre-filled data.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Link
+            to={`/portal/analyzer?address=${encodeURIComponent(deal.address)}&city=${encodeURIComponent(deal.city)}&zip=${deal.zip}&beds=${deal.beds}&baths=${deal.baths}&sqft=${deal.sqft}&price=${deal.price}&rent=${deal.estimatedRent || ""}&arv=${deal.estimatedARV || ""}`}
+          >
+            <Button variant="secondary" className="w-full" size="lg">
+              <Calculator className="w-4 h-4 mr-2" />
+              Open in Deal Analyzer
+            </Button>
+          </Link>
+          <Link
+            to={`/portal/section8-calculator?address=${encodeURIComponent(deal.address)}&city=${encodeURIComponent(deal.city)}&zip=${deal.zip}&beds=${deal.beds}&rent=${deal.estimatedRent || ""}`}
+          >
+            <Button variant="secondary" className="w-full" size="lg">
+              <ClipboardCheck className="w-4 h-4 mr-2" />
+              Open in Section 8 Calculator
             </Button>
           </Link>
         </div>

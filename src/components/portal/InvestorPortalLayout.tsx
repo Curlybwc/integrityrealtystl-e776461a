@@ -12,6 +12,7 @@ import {
   LogOut,
   Wrench,
   FileSignature,
+  ClipboardCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -35,7 +36,8 @@ const navItems = [
   { title: "Deals", href: "/portal/deals", icon: Building2 },
   { title: "My Offers", href: "/portal/my-offers", icon: FileSignature },
   { title: "My Bids", href: "/portal/my-bids", icon: Wrench },
-  { title: "Analyzer Tools", href: "/portal/analyzer", icon: Calculator },
+  { title: "Deal Analyzer", href: "/portal/analyzer", icon: Calculator },
+  { title: "Section 8 Calculator", href: "/portal/section8-calculator", icon: ClipboardCheck },
   { title: "Resources", href: "/portal/resources", icon: Users },
   { title: "Documents", href: "/portal/documents", icon: Folder },
   { title: "Account", href: "/portal/account", icon: User },
