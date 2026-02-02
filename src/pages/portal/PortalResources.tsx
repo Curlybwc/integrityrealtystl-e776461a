@@ -1,124 +1,179 @@
-import { Wrench, Users, AlertCircle, Phone, Mail, Globe } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import { networkContractors } from "@/data/networkContractors";
+import { Table, FileText, DollarSign } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table as UITable,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  FMR_BY_ZIP,
+  UTILITY_ALLOWANCES,
+  ARV_PER_SF,
+  RENT_COMPS_BY_ZIP,
+} from "@/data/stlZipData";
 
 const PortalResources = () => {
-  // Use shared contractor data
-  const contractors = networkContractors;
-
-  const propertyManagers = [
-    {
-      name: "Gateway Property Management",
-      focus: "Single-Family, Small Multi-Family",
-      phone: "(314) 555-0201",
-      website: "www.gatewaypmstl.com",
-    },
-    {
-      name: "North County Rentals",
-      focus: "Section 8, Affordable Housing",
-      phone: "(314) 555-0202",
-      website: "www.northcountyrentals.com",
-    },
-  ];
+  // Get sorted ZIP codes
+  const sortedZips = Object.keys(FMR_BY_ZIP).sort();
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-8">
       {/* Header */}
       <div>
         <h1 className="font-serif text-2xl text-foreground mb-2">
-          Resource Directory
+          Resources
         </h1>
         <p className="text-muted-foreground text-sm">
-          A directory of contractors and property managers for your reference. 
-          This list is informational only.
+          Reference data for North County St. Louis investment analysis.
         </p>
       </div>
 
-      {/* Disclaimer */}
-      <div className="bg-accent/50 border border-border rounded-lg p-4 flex items-start gap-3">
-        <AlertCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm font-medium text-foreground">Important Disclaimer</p>
+      {/* SAFMR Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Table className="w-5 h-5 text-primary" />
+            2025 HUD Small Area Fair Market Rents (SAFMR)
+          </CardTitle>
           <p className="text-sm text-muted-foreground">
-            This directory is provided for informational purposes only. Integrity Realty STL 
-            does not endorse, guarantee, or receive compensation from any listed provider. 
-            Investors are responsible for vetting and selecting their own contractors and 
-            property managers.
+            Payment standards for Section 8 vouchers by ZIP code and bedroom count.
           </p>
-        </div>
-      </div>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <UITable>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="font-semibold">ZIP Code</TableHead>
+                  <TableHead className="text-right">Studio</TableHead>
+                  <TableHead className="text-right">1 BR</TableHead>
+                  <TableHead className="text-right">2 BR</TableHead>
+                  <TableHead className="text-right">3 BR</TableHead>
+                  <TableHead className="text-right">4 BR</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedZips.map((zip) => {
+                  const fmr = FMR_BY_ZIP[zip];
+                  return (
+                    <TableRow key={zip}>
+                      <TableCell className="font-medium">{zip}</TableCell>
+                      <TableCell className="text-right font-mono">${fmr[0].toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono">${fmr[1].toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono">${fmr[2].toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono">${fmr[3].toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono">${fmr[4].toLocaleString()}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </UITable>
+          </div>
+          <p className="text-xs text-muted-foreground mt-4">
+            Source: HUD FY2025 Small Area Fair Market Rents. Data subject to change.
+          </p>
+        </CardContent>
+      </Card>
 
-      {/* Contractors */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Wrench className="w-5 h-5 text-primary" />
-          <h2 className="font-serif text-xl text-foreground">Contractors</h2>
-        </div>
+      {/* Utility Allowances Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-primary" />
+            Utility Allowances (St. Louis County 2023)
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Standard utility allowances by bedroom count for Section 8 calculations.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <UITable>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="font-semibold">Bedrooms</TableHead>
+                  <TableHead className="text-right">Monthly Allowance</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Object.entries(UTILITY_ALLOWANCES).map(([beds, amount]) => (
+                  <TableRow key={beds}>
+                    <TableCell className="font-medium">
+                      {beds === "0" ? "Studio" : `${beds} BR`}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">${amount}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </UITable>
+          </div>
+          <p className="text-xs text-muted-foreground mt-4">
+            Assumes: Natural Gas Heating, Electric Cooking, Other Electric, Water (County), Sewer, Trash.
+          </p>
+        </CardContent>
+      </Card>
 
-        <div className="grid md:grid-cols-2 gap-4">
-          {contractors.map((contractor, index) => (
-            <div
-              key={index}
-              className="bg-card border border-border rounded-lg p-5 shadow-card"
-            >
-              <h3 className="font-medium text-foreground mb-1">
-                {contractor.name}
-              </h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                {contractor.specialty}
-              </p>
-              <div className="space-y-1 text-sm">
-                <p className="flex items-center gap-2 text-muted-foreground">
-                  <Phone className="w-3 h-3" />
-                  {contractor.phone}
-                </p>
-                <p className="flex items-center gap-2 text-muted-foreground">
-                  <Mail className="w-3 h-3" />
-                  {contractor.email}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* ARV & Rent Comps Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" />
+            Market Data by ZIP Code
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Average ARV per square foot and market rent comps for analysis.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <UITable>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="font-semibold">ZIP Code</TableHead>
+                  <TableHead className="text-right">Avg ARV/SF</TableHead>
+                  <TableHead className="text-right">2 BR Rent</TableHead>
+                  <TableHead className="text-right">3 BR Rent</TableHead>
+                  <TableHead className="text-right">4 BR Rent</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Object.keys(ARV_PER_SF).sort().map((zip) => {
+                  const arv = ARV_PER_SF[zip];
+                  const rents = RENT_COMPS_BY_ZIP[zip];
+                  return (
+                    <TableRow key={zip}>
+                      <TableCell className="font-medium">{zip}</TableCell>
+                      <TableCell className="text-right font-mono">${arv}/sf</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {rents ? `$${rents.bed2.toLocaleString()}` : "—"}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {rents ? `$${rents.bed3.toLocaleString()}` : "—"}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {rents ? `$${rents.bed4.toLocaleString()}` : "—"}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </UITable>
+          </div>
+          <p className="text-xs text-muted-foreground mt-4">
+            Based on local market analysis. ARV and rent figures are estimates for reference only.
+          </p>
+        </CardContent>
+      </Card>
 
-      <Separator />
-
-      {/* Property Managers */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Users className="w-5 h-5 text-primary" />
-          <h2 className="font-serif text-xl text-foreground">Property Managers</h2>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-4">
-          {propertyManagers.map((pm, index) => (
-            <div
-              key={index}
-              className="bg-card border border-border rounded-lg p-5 shadow-card"
-            >
-              <h3 className="font-medium text-foreground mb-1">{pm.name}</h3>
-              <p className="text-sm text-muted-foreground mb-3">{pm.focus}</p>
-              <div className="space-y-1 text-sm">
-                <p className="flex items-center gap-2 text-muted-foreground">
-                  <Phone className="w-3 h-3" />
-                  {pm.phone}
-                </p>
-                <p className="flex items-center gap-2 text-muted-foreground">
-                  <Globe className="w-3 h-3" />
-                  {pm.website}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Footer note */}
+      {/* Disclaimer */}
       <div className="bg-muted/50 border border-border rounded-lg p-4">
         <p className="text-xs text-muted-foreground">
-          Have a contractor or property manager you'd recommend? Let us know and we 
-          may add them to the directory (after vetting).
+          <strong className="text-foreground">Disclaimer:</strong> All data is provided for 
+          informational purposes only. Investors should verify all figures independently. 
+          Market conditions change; this data may not reflect current values.
         </p>
       </div>
     </div>
