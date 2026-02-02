@@ -118,7 +118,44 @@ const DealAnalyzer = () => {
     key: K,
     value: DealInputs[K]
   ) => {
-    setInputs((prev) => ({ ...prev, [key]: value }));
+    setInputs((prev) => {
+      const newInputs = { ...prev, [key]: value };
+      
+      // Auto-populate avgRent when ZIP or beds change (if not manually set)
+      if ((key === "zip" || key === "beds") && prev.avgRent === 0) {
+        const zip = key === "zip" ? (value as string) : prev.zip;
+        const beds = key === "beds" ? (value as number) : prev.beds;
+        const rentComp = getRentComp(zip, beds);
+        if (rentComp) {
+          newInputs.avgRent = rentComp;
+        }
+      }
+      
+      return newInputs;
+    });
+  };
+  
+  // Auto-populate avgRent on initial ZIP/beds selection
+  const handleZipChange = (zip: string) => {
+    setInputs((prev) => {
+      const rentComp = getRentComp(zip, prev.beds);
+      return {
+        ...prev,
+        zip,
+        avgRent: prev.avgRent === 0 && rentComp ? rentComp : prev.avgRent,
+      };
+    });
+  };
+  
+  const handleBedsChange = (beds: number) => {
+    setInputs((prev) => {
+      const rentComp = getRentComp(prev.zip, beds);
+      return {
+        ...prev,
+        beds,
+        avgRent: prev.avgRent === 0 && rentComp ? rentComp : prev.avgRent,
+      };
+    });
   };
 
   // Calculated values
@@ -215,7 +252,7 @@ const DealAnalyzer = () => {
                 </Label>
                 <Select
                   value={inputs.zip}
-                  onValueChange={(value) => updateInput("zip", value)}
+                  onValueChange={handleZipChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select ZIP" />
@@ -239,7 +276,7 @@ const DealAnalyzer = () => {
                   type="number"
                   min="0"
                   value={inputs.beds || ""}
-                  onChange={(e) => updateInput("beds", Number(e.target.value))}
+                  onChange={(e) => handleBedsChange(Number(e.target.value))}
                 />
               </div>
               <div className="space-y-2">
