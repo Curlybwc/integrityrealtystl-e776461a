@@ -242,10 +242,17 @@ const DealAnalyzer = () => {
     };
   }, [inputs]);
 
-  // Determine RTP color coding
+  // Determine RTP color coding (thresholds: green ≥1.3%, orange ≥1.0%, red <1.0%)
   const getRtpColor = (rtp: number): string => {
     if (rtp >= 0.013) return "text-green-600";
-    if (rtp >= 0.01) return "text-yellow-600";
+    if (rtp >= 0.01) return "text-amber-500";
+    return "text-red-600";
+  };
+
+  // Determine % of ARV color coding (thresholds: green <75%, orange 75-80%, red >80%)
+  const getArvPercentColor = (percent: number): string => {
+    if (percent < 0.75) return "text-green-600";
+    if (percent <= 0.80) return "text-amber-500";
     return "text-red-600";
   };
 
@@ -527,11 +534,21 @@ const DealAnalyzer = () => {
                 tooltip="Manual ARV if entered, otherwise auto"
                 highlight
               />
-              <ResultRow
-                label="% of ARV"
-                value={formatPercent(calculations.percentArv)}
-                tooltip="Purchase price as % of ARV. Lower is better."
-              />
+              <div
+                className={`flex justify-between items-center py-2 px-3 rounded`}
+              >
+                <span className="text-sm text-muted-foreground flex items-center">
+                  % of ARV
+                  <InfoTooltip content="Purchase price as % of ARV. Green <75%, Orange 75-80%, Red >80%" />
+                </span>
+                <span
+                  className={`font-mono text-sm font-semibold ${getArvPercentColor(
+                    calculations.percentArv
+                  )}`}
+                >
+                  {formatPercent(calculations.percentArv)}
+                </span>
+              </div>
             </div>
 
             {/* Return Analysis */}
