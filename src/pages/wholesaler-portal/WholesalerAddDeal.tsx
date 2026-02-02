@@ -110,7 +110,7 @@ const WholesalerAddDeal = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="propertyType">Property Type *</Label>
                 <Select required>
@@ -153,6 +153,20 @@ const WholesalerAddDeal = () => {
                     <SelectItem value="vacant">Vacant</SelectItem>
                     <SelectItem value="tenant-occupied">Tenant Occupied</SelectItem>
                     <SelectItem value="owner-occupied">Owner Occupied</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="basement">Basement Type</Label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="full">Full</SelectItem>
+                    <SelectItem value="partial">Partial</SelectItem>
+                    <SelectItem value="crawl">Crawl Space</SelectItem>
+                    <SelectItem value="slab">Slab</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
