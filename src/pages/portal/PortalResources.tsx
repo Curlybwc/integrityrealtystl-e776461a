@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Table, FileText, DollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -9,6 +10,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import {
   FMR_BY_ZIP,
   UTILITY_ALLOWANCES,
   ARV_PER_SF,
@@ -17,8 +26,30 @@ import {
 import UtilityAllowanceCalculator from "@/components/portal/UtilityAllowanceCalculator";
 
 const PortalResources = () => {
+  const [selectedZip, setSelectedZip] = useState<string>("");
+  const [selectedBeds, setSelectedBeds] = useState<string>("");
+  
   // Get sorted ZIP codes
   const sortedZips = Object.keys(FMR_BY_ZIP).sort();
+  
+  // Bedroom options (index maps to FMR array: 0=Studio, 1=1BR, etc.)
+  const bedroomOptions = [
+    { value: "0", label: "Studio" },
+    { value: "1", label: "1 Bedroom" },
+    { value: "2", label: "2 Bedroom" },
+    { value: "3", label: "3 Bedroom" },
+    { value: "4", label: "4 Bedroom" },
+  ];
+  
+  // Get SAFMR value based on selections
+  const getSafmr = (): number | null => {
+    if (!selectedZip || selectedBeds === "") return null;
+    const fmrData = FMR_BY_ZIP[selectedZip];
+    if (!fmrData) return null;
+    return fmrData[parseInt(selectedBeds)];
+  };
+  
+  const safmrValue = getSafmr();
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
@@ -32,7 +63,7 @@ const PortalResources = () => {
         </p>
       </div>
 
-      {/* SAFMR Table */}
+      {/* SAFMR Lookup */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -43,37 +74,60 @@ const PortalResources = () => {
             Payment standards for Section 8 vouchers by ZIP code and bedroom count.
           </p>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <UITable>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-semibold">ZIP Code</TableHead>
-                  <TableHead className="text-right">Studio</TableHead>
-                  <TableHead className="text-right">1 BR</TableHead>
-                  <TableHead className="text-right">2 BR</TableHead>
-                  <TableHead className="text-right">3 BR</TableHead>
-                  <TableHead className="text-right">4 BR</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedZips.map((zip) => {
-                  const fmr = FMR_BY_ZIP[zip];
-                  return (
-                    <TableRow key={zip}>
-                      <TableCell className="font-medium">{zip}</TableCell>
-                      <TableCell className="text-right font-mono">${fmr[0].toLocaleString()}</TableCell>
-                      <TableCell className="text-right font-mono">${fmr[1].toLocaleString()}</TableCell>
-                      <TableCell className="text-right font-mono">${fmr[2].toLocaleString()}</TableCell>
-                      <TableCell className="text-right font-mono">${fmr[3].toLocaleString()}</TableCell>
-                      <TableCell className="text-right font-mono">${fmr[4].toLocaleString()}</TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </UITable>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
+            <div className="space-y-2">
+              <Label htmlFor="safmr-zip">ZIP Code</Label>
+              <Select value={selectedZip} onValueChange={setSelectedZip}>
+                <SelectTrigger id="safmr-zip">
+                  <SelectValue placeholder="Select ZIP" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sortedZips.map((zip) => (
+                    <SelectItem key={zip} value={zip}>
+                      {zip}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="safmr-beds">Bedrooms</Label>
+              <Select value={selectedBeds} onValueChange={setSelectedBeds}>
+                <SelectTrigger id="safmr-beds">
+                  <SelectValue placeholder="Select bedrooms" />
+                </SelectTrigger>
+                <SelectContent>
+                  {bedroomOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-4">
+          
+          {/* Result Display */}
+          <div className="bg-muted/50 rounded-lg p-6 text-center max-w-md">
+            {safmrValue !== null ? (
+              <>
+                <p className="text-sm text-muted-foreground mb-1">SAFMR Payment Standard</p>
+                <p className="text-4xl font-mono font-bold text-primary">
+                  ${safmrValue.toLocaleString()}
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  per month for {bedroomOptions.find(b => b.value === selectedBeds)?.label} in {selectedZip}
+                </p>
+              </>
+            ) : (
+              <p className="text-muted-foreground">
+                Select a ZIP code and bedroom count to see the SAFMR
+              </p>
+            )}
+          </div>
+          
+          <p className="text-xs text-muted-foreground">
             Source: HUD FY2025 Small Area Fair Market Rents. Data subject to change.
           </p>
         </CardContent>
