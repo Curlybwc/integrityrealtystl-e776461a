@@ -1,4 +1,4 @@
-import { Wrench, Users, AlertCircle, Phone, Mail, Globe, Building2 } from "lucide-react";
+import { Wrench, Users, AlertCircle, Phone, Mail, Globe, Building2, Shield } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { networkContractors } from "@/data/networkContractors";
 
@@ -82,6 +82,15 @@ const PortalResources = () => {
       contact: "Guy Clauss",
       phone: "949-270-3418",
       email: "gclauss@centerstreetlending.com",
+    },
+  ];
+
+  const insuranceProviders = [
+    {
+      company: "Shelter Insurance",
+      contact: "Mike Finney",
+      focus: "Investment Properties",
+      website: "shelterinsurance.com/CA/agent/mikefinney",
     },
   ];
 
@@ -223,10 +232,48 @@ const PortalResources = () => {
         </div>
       </div>
 
+      <Separator />
+
+      {/* Insurance Providers */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Shield className="w-5 h-5 text-primary" />
+          <h2 className="font-serif text-xl text-foreground">Insurance</h2>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          {insuranceProviders.map((provider, index) => (
+            <div
+              key={index}
+              className="bg-card border border-border rounded-lg p-5 shadow-card"
+            >
+              <h3 className="font-medium text-foreground mb-1">{provider.company}</h3>
+              <p className="text-sm text-muted-foreground mb-3">Contact: {provider.contact}</p>
+              <div className="space-y-1 text-sm">
+                {provider.focus && (
+                  <p className="text-muted-foreground text-xs">{provider.focus}</p>
+                )}
+                {provider.website && (
+                  <a 
+                    href={`https://www.${provider.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-primary hover:underline"
+                  >
+                    <Globe className="w-3 h-3" />
+                    {provider.website}
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Footer note */}
       <div className="bg-muted/50 border border-border rounded-lg p-4">
         <p className="text-xs text-muted-foreground">
-          Have a contractor, property manager, or lender you'd recommend? Let us know and we 
+          Have a contractor, property manager, lender, or insurance agent you'd recommend? Let us know and we 
           may add them to the directory (after vetting).
         </p>
       </div>
