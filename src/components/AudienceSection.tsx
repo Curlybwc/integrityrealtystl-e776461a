@@ -1,4 +1,4 @@
-import { TrendingUp, Home, Tag, Zap, Handshake } from "lucide-react";
+import { TrendingUp, Home, Tag, Zap, Handshake, Wrench } from "lucide-react";
 import AudienceCard from "./AudienceCard";
 
 const audiences = [
@@ -36,6 +36,13 @@ const audiences = [
     href: "/wholesalers",
     icon: Handshake,
     delay: "animation-delay-500",
+  },
+  {
+    title: "Apply to be a Network Partner",
+    description: "Contractors and service providers: join our trusted network and connect with investors.",
+    href: "/network-partner",
+    icon: Wrench,
+    delay: "animation-delay-600",
   },
 ];
 

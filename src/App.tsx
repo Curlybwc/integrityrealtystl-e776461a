@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 import WholesalerLogin from "./pages/WholesalerLogin";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import NetworkPartner from "./pages/NetworkPartner";
 import NotFound from "./pages/NotFound";
 
 // Investor Portal pages
@@ -62,6 +63,7 @@ const App = () => (
           <Route path="/wholesaler-login" element={<WholesalerLogin />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/network-partner" element={<NetworkPartner />} />
 
           {/* Investor Portal routes */}
           <Route path="/portal" element={<InvestorPortalLayout />}>
