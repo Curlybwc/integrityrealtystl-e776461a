@@ -13,12 +13,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ZipCombobox } from "@/components/ui/zip-combobox";
 import { useToast } from "@/hooks/use-toast";
 
 const WholesalerAddDeal = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [zipCode, setZipCode] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +79,12 @@ const WholesalerAddDeal = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="zip">ZIP Code *</Label>
-                  <Input id="zip" placeholder="63101" required />
+                  <ZipCombobox 
+                    value={zipCode} 
+                    onValueChange={setZipCode}
+                    placeholder="Select ZIP"
+                    required
+                  />
                 </div>
               </div>
             </div>
