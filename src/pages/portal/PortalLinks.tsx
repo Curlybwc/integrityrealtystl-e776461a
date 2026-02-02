@@ -8,37 +8,55 @@ interface UsefulLink {
   category: string;
 }
 
-// Placeholder links - user will provide actual links
+// User-provided useful links
 const usefulLinks: UsefulLink[] = [
   {
-    title: "HUD Fair Market Rents",
-    url: "https://www.huduser.gov/portal/datasets/fmr.html",
-    description: "Official HUD Fair Market Rent data and documentation",
+    title: "Rentometer - Rent Comps",
+    url: "https://www.rentometer.com",
+    description: "Research rental rates and comps in your target area",
+    category: "Market Research",
+  },
+  {
+    title: "SpotCrime - Check Crime in Area",
+    url: "https://www.spotcrime.com",
+    description: "View crime data and safety information by neighborhood",
+    category: "Market Research",
+  },
+  {
+    title: "ZIP Code Map",
+    url: "https://www.unitedstateszipcodes.org/63135/",
+    description: "Explore ZIP code boundaries and demographics",
+    category: "Market Research",
+  },
+  {
+    title: "St. Louis County Property Assessor",
+    url: "https://revenue.stlouisco.com/IAS/SearchInput.aspx",
+    description: "Property tax records, assessed values, and ownership info for St. Louis County",
+    category: "Property Research",
+  },
+  {
+    title: "St. Louis City Property Assessor",
+    url: "https://www.stlouis-mo.gov/data/address-search/index.cfm",
+    description: "Property assessment records for City of St. Louis",
+    category: "Property Research",
+  },
+  {
+    title: "FEMA Flood Map",
+    url: "https://msc.fema.gov/portal/search",
+    description: "Check if a property is in a flood plain",
+    category: "Property Research",
+  },
+  {
+    title: "SLHA Utility Allowance for 2025",
+    url: "https://www.slha.org/wp-content/uploads/2025/01/Allowances-for-2025.pdf",
+    description: "Official St. Louis Housing Authority utility allowance schedule",
     category: "Section 8 / HUD",
   },
   {
-    title: "St. Louis County Assessor",
-    url: "https://revenue.stlouisco.com/IAS/",
-    description: "Property tax records, assessed values, and ownership info",
-    category: "Property Research",
-  },
-  {
-    title: "St. Louis City Assessor",
-    url: "https://www.stlouis-mo.gov/government/departments/assessor/",
-    description: "City of St. Louis property assessment records",
-    category: "Property Research",
-  },
-  {
-    title: "Missouri Case.net",
-    url: "https://www.courts.mo.gov/cnet/",
-    description: "Court records including eviction history",
-    category: "Property Research",
-  },
-  {
-    title: "St. Louis County GIS",
-    url: "https://stlouiscountymo.gov/st-louis-county-departments/revenue/geographic-information-system-gis/",
-    description: "Maps, parcel data, and geographic information",
-    category: "Property Research",
+    title: "Mike Finney - Shelter Insurance",
+    url: "https://www.shelterinsurance.com/CA/agent/mikefinney",
+    description: "Recommended insurance agent for investment properties",
+    category: "Service Providers",
   },
 ];
 
