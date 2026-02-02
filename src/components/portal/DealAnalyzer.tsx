@@ -552,7 +552,7 @@ const DealAnalyzer = () => {
                   </p>
                 </div>
                 <div className="bg-muted/50 rounded p-3">
-                  <p className="text-muted-foreground text-xs">ARV per SF</p>
+                  <p className="text-muted-foreground text-xs">Average ARV per SF</p>
                   <p className="font-mono font-medium">
                     {calculations.arvQuick && inputs.sqft
                       ? `$${Math.round(calculations.arvQuick / inputs.sqft)}/sf`
