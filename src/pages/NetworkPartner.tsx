@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { Wrench, CheckCircle, Phone, Mail, Globe, Briefcase } from "lucide-react";
+import { Wrench, CheckCircle, Phone, Briefcase } from "lucide-react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -14,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
 
 const serviceCategories = [
   "General Contractor",
@@ -32,31 +32,71 @@ const serviceCategories = [
   "Attorney",
   "Insurance Agent",
   "Lender/Mortgage",
+  "Cleaning/Junk Removal",
+  "Locksmith",
+  "Pest Control",
   "Other",
 ];
+
+const formSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
+  streetAddress: z.string().trim().min(1, "Street address is required").max(200, "Address too long"),
+  city: z.string().trim().min(1, "City is required").max(100, "City too long"),
+  state: z.string().trim().min(1, "State is required").max(50, "State too long"),
+  zip: z.string().trim().min(5, "ZIP code is required").max(10, "Invalid ZIP"),
+  cellPhone: z.string().trim().min(10, "Cell phone is required").max(20, "Invalid phone"),
+  officePhone: z.string().trim().max(20, "Invalid phone").optional(),
+  faxPhone: z.string().trim().max(20, "Invalid phone").optional(),
+  email: z.string().trim().email("Invalid email address").max(255, "Email too long"),
+  website: z.string().trim().max(255, "Website too long").optional(),
+  serviceCategory: z.string().min(1, "Service category is required"),
+  discounts: z.string().trim().max(500, "Description too long").optional(),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 const NetworkPartner = () => {
   const { toast } = useToast();
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [formData, setFormData] = useState({
-    companyName: "",
-    contactName: "",
-    phone: "",
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    streetAddress: "",
+    city: "",
+    state: "MO",
+    zip: "",
+    cellPhone: "",
+    officePhone: "",
+    faxPhone: "",
     email: "",
     website: "",
-    category: "",
-    serviceArea: "",
-    experience: "",
-    description: "",
-    references: false,
-    insurance: false,
-    licensed: false,
+    serviceCategory: "",
+    discounts: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const result = formSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors: Partial<Record<keyof FormData, string>> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as keyof FormData] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast({
+        title: "Please fix the errors",
+        description: "Some fields need attention.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setErrors({});
     // Mock submission - will connect to backend later
-    console.log("Network Partner Application:", formData);
+    console.log("Network Partner Application submitted");
     setIsSubmitted(true);
     toast({
       title: "Application Submitted",
@@ -64,8 +104,12 @@ const NetworkPartner = () => {
     });
   };
 
-  const updateField = (field: string, value: string | boolean) => {
+  const updateField = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when field is updated
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
   };
 
   if (isSubmitted) {
@@ -152,67 +196,138 @@ const NetworkPartner = () => {
       <section className="py-12 px-6">
         <div className="container mx-auto max-w-2xl">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Company Info */}
+            {/* Contact Info */}
             <div className="space-y-4">
-              <h3 className="font-serif text-lg text-foreground">Company Information</h3>
+              <h3 className="font-serif text-lg text-foreground">Contact Information</h3>
               
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name *</Label>
+              <div className="space-y-2">
+                <Label htmlFor="name">Name (Individual or Company) *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => updateField("name", e.target.value)}
+                  placeholder="John Smith or ABC Contracting"
+                  className={errors.name ? "border-red-500" : ""}
+                />
+                {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="streetAddress">Street Address *</Label>
+                <Input
+                  id="streetAddress"
+                  value={formData.streetAddress}
+                  onChange={(e) => updateField("streetAddress", e.target.value)}
+                  placeholder="123 Main Street"
+                  className={errors.streetAddress ? "border-red-500" : ""}
+                />
+                {errors.streetAddress && <p className="text-xs text-red-500">{errors.streetAddress}</p>}
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="col-span-2 space-y-2">
+                  <Label htmlFor="city">City *</Label>
                   <Input
-                    id="companyName"
-                    required
-                    value={formData.companyName}
-                    onChange={(e) => updateField("companyName", e.target.value)}
-                    placeholder="ABC Contracting"
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) => updateField("city", e.target.value)}
+                    placeholder="St. Louis"
+                    className={errors.city ? "border-red-500" : ""}
+                  />
+                  {errors.city && <p className="text-xs text-red-500">{errors.city}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="state">State *</Label>
+                  <Input
+                    id="state"
+                    value={formData.state}
+                    onChange={(e) => updateField("state", e.target.value)}
+                    placeholder="MO"
+                    className={errors.state ? "border-red-500" : ""}
+                  />
+                  {errors.state && <p className="text-xs text-red-500">{errors.state}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="zip">ZIP *</Label>
+                  <Input
+                    id="zip"
+                    value={formData.zip}
+                    onChange={(e) => updateField("zip", e.target.value)}
+                    placeholder="63101"
+                    className={errors.zip ? "border-red-500" : ""}
+                  />
+                  {errors.zip && <p className="text-xs text-red-500">{errors.zip}</p>}
+                </div>
+              </div>
+            </div>
+
+            {/* Phone Numbers */}
+            <div className="space-y-4">
+              <h3 className="font-serif text-lg text-foreground">Phone Numbers</h3>
+              
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cellPhone">Cell Phone *</Label>
+                  <Input
+                    id="cellPhone"
+                    type="tel"
+                    value={formData.cellPhone}
+                    onChange={(e) => updateField("cellPhone", e.target.value)}
+                    placeholder="(314) 555-0100"
+                    className={errors.cellPhone ? "border-red-500" : ""}
+                  />
+                  {errors.cellPhone && <p className="text-xs text-red-500">{errors.cellPhone}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="officePhone">Office Phone</Label>
+                  <Input
+                    id="officePhone"
+                    type="tel"
+                    value={formData.officePhone}
+                    onChange={(e) => updateField("officePhone", e.target.value)}
+                    placeholder="(314) 555-0101"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="contactName">Contact Name *</Label>
+                  <Label htmlFor="faxPhone">Fax</Label>
                   <Input
-                    id="contactName"
-                    required
-                    value={formData.contactName}
-                    onChange={(e) => updateField("contactName", e.target.value)}
-                    placeholder="John Smith"
+                    id="faxPhone"
+                    type="tel"
+                    value={formData.faxPhone}
+                    onChange={(e) => updateField("faxPhone", e.target.value)}
+                    placeholder="(314) 555-0102"
                   />
                 </div>
               </div>
+            </div>
 
+            {/* Email & Website */}
+            <div className="space-y-4">
+              <h3 className="font-serif text-lg text-foreground">Online Presence</h3>
+              
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone *</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => updateField("phone", e.target.value)}
-                    placeholder="(314) 555-0100"
-                  />
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email *</Label>
                   <Input
                     id="email"
                     type="email"
-                    required
                     value={formData.email}
                     onChange={(e) => updateField("email", e.target.value)}
                     placeholder="john@abccontracting.com"
+                    className={errors.email ? "border-red-500" : ""}
+                  />
+                  {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="website">Website</Label>
+                  <Input
+                    id="website"
+                    type="url"
+                    value={formData.website}
+                    onChange={(e) => updateField("website", e.target.value)}
+                    placeholder="https://www.abccontracting.com"
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="website">Website (optional)</Label>
-                <Input
-                  id="website"
-                  type="url"
-                  value={formData.website}
-                  onChange={(e) => updateField("website", e.target.value)}
-                  placeholder="https://www.abccontracting.com"
-                />
               </div>
             </div>
 
@@ -220,107 +335,40 @@ const NetworkPartner = () => {
             <div className="space-y-4">
               <h3 className="font-serif text-lg text-foreground">Service Details</h3>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="category">Service Category *</Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) => updateField("category", value)}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {serviceCategories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="experience">Years in Business *</Label>
-                  <Select
-                    value={formData.experience}
-                    onValueChange={(value) => updateField("experience", value)}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select experience" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1-2">1-2 years</SelectItem>
-                      <SelectItem value="3-5">3-5 years</SelectItem>
-                      <SelectItem value="5-10">5-10 years</SelectItem>
-                      <SelectItem value="10+">10+ years</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="serviceCategory">What kind of service do you provide? *</Label>
+                <Select
+                  value={formData.serviceCategory}
+                  onValueChange={(value) => updateField("serviceCategory", value)}
+                >
+                  <SelectTrigger className={errors.serviceCategory ? "border-red-500" : ""}>
+                    <SelectValue placeholder="Select your service category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {serviceCategories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.serviceCategory && <p className="text-xs text-red-500">{errors.serviceCategory}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="serviceArea">Service Area *</Label>
-                <Input
-                  id="serviceArea"
-                  required
-                  value={formData.serviceArea}
-                  onChange={(e) => updateField("serviceArea", e.target.value)}
-                  placeholder="North County, St. Louis City, St. Charles..."
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">
-                  Brief Description of Services *
+                <Label htmlFor="discounts">
+                  Do you offer any coupons or discounts for our investor clients?
                 </Label>
                 <Textarea
-                  id="description"
-                  required
-                  rows={4}
-                  value={formData.description}
-                  onChange={(e) => updateField("description", e.target.value)}
-                  placeholder="Describe your services, specialties, and what sets you apart..."
+                  id="discounts"
+                  rows={3}
+                  value={formData.discounts}
+                  onChange={(e) => updateField("discounts", e.target.value)}
+                  placeholder="e.g., 10% off first service, free estimates, bulk pricing for multiple properties..."
                 />
-              </div>
-            </div>
-
-            {/* Qualifications */}
-            <div className="space-y-4">
-              <h3 className="font-serif text-lg text-foreground">Qualifications</h3>
-              
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    id="licensed"
-                    checked={formData.licensed}
-                    onCheckedChange={(checked) => updateField("licensed", !!checked)}
-                  />
-                  <Label htmlFor="licensed" className="text-sm font-normal">
-                    Licensed in Missouri (if applicable to your trade)
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    id="insurance"
-                    checked={formData.insurance}
-                    onCheckedChange={(checked) => updateField("insurance", !!checked)}
-                  />
-                  <Label htmlFor="insurance" className="text-sm font-normal">
-                    Carry liability insurance
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    id="references"
-                    checked={formData.references}
-                    onCheckedChange={(checked) => updateField("references", !!checked)}
-                  />
-                  <Label htmlFor="references" className="text-sm font-normal">
-                    Willing to provide references upon request
-                  </Label>
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  If you offer special pricing for investors, describe it here. This will be shared with our investor network.
+                </p>
               </div>
             </div>
 
