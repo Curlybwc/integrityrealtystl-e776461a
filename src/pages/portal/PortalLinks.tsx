@@ -100,6 +100,12 @@ const usefulLinks: UsefulLink[] = [
     description: "Trash collection info for unincorporated St. Louis County areas",
     category: "Utilities",
   },
+  {
+    title: "Gateway Disposal - Florissant",
+    url: "https://gatewaydisposalstl.com/florissant-mo/",
+    description: "Trash collection services for Florissant area",
+    category: "Utilities",
+  },
 ];
 
 const PortalLinks = () => {
