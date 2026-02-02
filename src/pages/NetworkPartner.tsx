@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Wrench, CheckCircle, Phone, Briefcase } from "lucide-react";
+import { Wrench, CheckCircle, Phone, Briefcase, DollarSign } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +53,9 @@ const formSchema = z.object({
   serviceCategory: z.string().min(1, "Service category is required"),
   aboutMe: z.string().trim().max(1000, "Description too long").optional(),
   discounts: z.string().trim().max(500, "Description too long").optional(),
+  willingToPayReferralFee: z.boolean().optional(),
+  willingToPayMonthlyFee: z.boolean().optional(),
+  feeNotes: z.string().trim().max(500, "Notes too long").optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -74,6 +78,9 @@ const NetworkPartner = () => {
     serviceCategory: "",
     aboutMe: "",
     discounts: "",
+    willingToPayReferralFee: false,
+    willingToPayMonthlyFee: false,
+    feeNotes: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -106,10 +113,10 @@ const NetworkPartner = () => {
     });
   };
 
-  const updateField = (field: keyof FormData, value: string) => {
+  const updateField = (field: keyof FormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when field is updated
-    if (errors[field]) {
+    if (errors[field as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
@@ -384,6 +391,64 @@ const NetworkPartner = () => {
                 <p className="text-xs text-muted-foreground">
                   If you offer special pricing for investors, describe it here. This will be shared with our investor network.
                 </p>
+              </div>
+            </div>
+
+            {/* Fee Structure */}
+            <div className="space-y-4">
+              <h3 className="font-serif text-lg text-foreground flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-primary" />
+                Partnership Options
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Please indicate if you're interested in either of these partnership options:
+              </p>
+              
+              <div className="space-y-4 bg-muted/30 border border-border rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <Checkbox
+                    id="referralFee"
+                    checked={formData.willingToPayReferralFee}
+                    onCheckedChange={(checked) => updateField("willingToPayReferralFee", checked === true)}
+                  />
+                  <div className="space-y-1">
+                    <label htmlFor="referralFee" className="text-sm font-medium cursor-pointer">
+                      Referral Fee Program
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      I'm willing to pay a referral fee for each new client I receive through your website.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <Checkbox
+                    id="monthlyFee"
+                    checked={formData.willingToPayMonthlyFee}
+                    onCheckedChange={(checked) => updateField("willingToPayMonthlyFee", checked === true)}
+                  />
+                  <div className="space-y-1">
+                    <label htmlFor="monthlyFee" className="text-sm font-medium cursor-pointer">
+                      Featured Listing Program
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      I'm willing to pay a monthly fee to be featured prominently on your website.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="feeNotes">
+                  Additional notes about partnership preferences (optional)
+                </Label>
+                <Textarea
+                  id="feeNotes"
+                  rows={2}
+                  value={formData.feeNotes}
+                  onChange={(e) => updateField("feeNotes", e.target.value)}
+                  placeholder="Any questions or comments about the fee structure..."
+                />
               </div>
             </div>
 
