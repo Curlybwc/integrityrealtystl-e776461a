@@ -50,6 +50,7 @@ const formSchema = z.object({
   email: z.string().trim().email("Invalid email address").max(255, "Email too long"),
   website: z.string().trim().max(255, "Website too long").optional(),
   serviceCategory: z.string().min(1, "Service category is required"),
+  aboutMe: z.string().trim().max(1000, "Description too long").optional(),
   discounts: z.string().trim().max(500, "Description too long").optional(),
 });
 
@@ -71,6 +72,7 @@ const NetworkPartner = () => {
     email: "",
     website: "",
     serviceCategory: "",
+    aboutMe: "",
     discounts: "",
   });
 
@@ -353,6 +355,19 @@ const NetworkPartner = () => {
                   </SelectContent>
                 </Select>
                 {errors.serviceCategory && <p className="text-xs text-red-500">{errors.serviceCategory}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="aboutMe">
+                  Tell us about yourself and why you're a good fit for our clients
+                </Label>
+                <Textarea
+                  id="aboutMe"
+                  rows={4}
+                  value={formData.aboutMe}
+                  onChange={(e) => updateField("aboutMe", e.target.value)}
+                  placeholder="Share your experience, specialties, what sets you apart, and why investors should work with you..."
+                />
               </div>
 
               <div className="space-y-2">
