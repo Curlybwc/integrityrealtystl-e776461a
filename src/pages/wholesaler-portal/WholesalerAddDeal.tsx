@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, X } from "lucide-react";
+import { ArrowLeft, Upload, Link, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -226,9 +226,9 @@ const WholesalerAddDeal = () => {
         <Card>
           <CardHeader>
             <CardTitle>Photos</CardTitle>
-            <CardDescription>Upload property photos (up to 10)</CardDescription>
+            <CardDescription>Upload property photos or provide a link to an album</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
               <Upload className="w-10 h-10 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-2">
@@ -239,6 +239,30 @@ const WholesalerAddDeal = () => {
               </Button>
               <p className="text-xs text-muted-foreground mt-2">
                 PNG, JPG up to 5MB each
+              </p>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">Or</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="photoAlbumLink" className="flex items-center gap-2">
+                <Link className="w-4 h-4" />
+                Photo Album Link
+              </Label>
+              <Input 
+                id="photoAlbumLink" 
+                type="url"
+                placeholder="Paste a Google Photos, Dropbox, or other album link" 
+              />
+              <p className="text-xs text-muted-foreground">
+                Works with Google Photos, Dropbox, iCloud, or any shareable album link
               </p>
             </div>
           </CardContent>
