@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Building2, PlusCircle, Eye, DollarSign, Clock } from "lucide-react";
+import { Building2, PlusCircle, Eye, DollarSign, Clock, Footprints, HardHat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,7 @@ const mockStats = {
   activeDeals: 4,
   drafts: 1,
   totalViews: 127,
-  totalOffers: 8,
+  totalWalkthroughs: 12,
 };
 
 const mockRecentDeals = [
@@ -21,7 +21,11 @@ const mockRecentDeals = [
     arv: 120000,
     status: "active",
     views: 34,
-    offers: 2,
+    walkthroughs: 5,
+    bids: [
+      { contractor: "Mike's Contracting", scope: "Full Rehab", amount: 42000 },
+      { contractor: "STL Renovations", scope: "Full Rehab", amount: 38500 },
+    ],
     createdAt: "2024-01-15",
   },
   {
@@ -32,7 +36,10 @@ const mockRecentDeals = [
     arv: 175000,
     status: "active",
     views: 56,
-    offers: 4,
+    walkthroughs: 7,
+    bids: [
+      { contractor: "Gateway Builders", scope: "Full Rehab", amount: 55000 },
+    ],
     createdAt: "2024-01-12",
   },
   {
@@ -43,7 +50,8 @@ const mockRecentDeals = [
     arv: 95000,
     status: "draft",
     views: 0,
-    offers: 0,
+    walkthroughs: 0,
+    bids: [],
     createdAt: "2024-01-18",
   },
 ];
@@ -109,12 +117,12 @@ const WholesalerDashboard = () => {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Total Offers</CardDescription>
+            <CardDescription>Total Walkthroughs</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-green-500" />
-              <span className="text-2xl font-bold">{mockStats.totalOffers}</span>
+              <Footprints className="w-5 h-5 text-primary" />
+              <span className="text-2xl font-bold">{mockStats.totalWalkthroughs}</span>
             </div>
           </CardContent>
         </Card>
@@ -159,18 +167,38 @@ const WholesalerDashboard = () => {
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Eye className="w-4 h-4" />
-                    {deal.views}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Eye className="w-4 h-4" />
+                      {deal.views} views
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Footprints className="w-4 h-4" />
+                      {deal.walkthroughs} walkthroughs
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <HardHat className="w-4 h-4" />
+                      {deal.bids.length} bids
+                    </div>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/wholesaler-portal/deals/${deal.id}`}>Manage</Link>
+                    </Button>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="w-4 h-4" />
-                    {deal.offers} offers
-                  </div>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link to={`/wholesaler-portal/deals/${deal.id}`}>Manage</Link>
-                  </Button>
+                  {deal.bids.length > 0 && (
+                    <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contractor Bids</p>
+                      {deal.bids.map((bid, idx) => (
+                        <div key={idx} className="flex items-center justify-between text-sm">
+                          <div>
+                            <span className="font-medium text-foreground">{bid.contractor}</span>
+                            <span className="text-muted-foreground ml-2">• {bid.scope}</span>
+                          </div>
+                          <span className="font-semibold text-foreground">${bid.amount.toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
