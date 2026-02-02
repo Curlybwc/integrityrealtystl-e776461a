@@ -409,27 +409,27 @@ const Section8Calculator = () => {
             {/* Left: TTP and Tenant Portions */}
             <div className="space-y-1">
               <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                Tenant Payment Calculations
+                Total Tenant Portion (TTP)
               </h4>
               <ResultRow
                 label="TTP at 30%"
                 value={formatCurrency(calculations.ttpAt30)}
-                tooltip="30% of tenant monthly income - includes utilities"
+                tooltip="Total Tenant Portion at 30% of income - includes rent portion plus tenant-paid utilities"
               />
               <ResultRow
                 label="TTP at 40%"
                 value={formatCurrency(calculations.ttpAt40)}
-                tooltip="40% of tenant monthly income - maximum allowed"
+                tooltip="Total Tenant Portion at 40% of income (maximum allowed) - includes rent portion plus tenant-paid utilities"
               />
               <ResultRow
                 label="Tenant Rent Portion at 30%"
                 value={formatCurrency(calculations.tenantRentPortionAt30)}
-                tooltip="TTP at 30% minus Utility Allowance"
+                tooltip="Tenant's rent payment only (TTP at 30% minus Utility Allowance)"
               />
               <ResultRow
                 label="Tenant Rent Portion at 40%"
                 value={formatCurrency(calculations.tenantRentPortionAt40)}
-                tooltip="TTP at 40% minus Utility Allowance"
+                tooltip="Tenant's rent payment only (TTP at 40% minus Utility Allowance)"
               />
             </div>
 
