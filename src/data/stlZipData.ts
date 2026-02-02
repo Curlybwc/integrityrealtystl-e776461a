@@ -81,16 +81,17 @@ export const RENT_COMPS_BY_ZIP: Record<string, { bed2: number; bed3: number; bed
   "63121": { bed2: 1100, bed3: 1400, bed4: 1650 },
 };
 
-// Utility Allowances by bedroom count (St. Louis County 2023)
+// Utility Allowances by bedroom count (HASLC Single Family 2025)
 // Assumes: Natural Gas Heating, Electric Cooking, Other Electric, Water County, Sewer, Trash
+// Source: HUD Form-52667 dated 01/01/2025
 export const UTILITY_ALLOWANCES: Record<number, number> = {
-  0: 166, // Studio
-  1: 193, // 1 BR
-  2: 235, // 2 BR
-  3: 290, // 3 BR
-  4: 361, // 4 BR
-  5: 408, // 5 BR
-  6: 461, // 6 BR
+  0: 168, // Studio: 54+7+30+23+45+14 = 173 (Heating NG + Cooking Elec + Other Elec + Water County + Sewer + Trash)
+  1: 199, // 1 BR: 67+9+38+29+51+14 = 208
+  2: 246, // 2 BR: 80+12+46+41+65+14 = 258
+  3: 315, // 3 BR: 92+15+54+60+84+14 = 319
+  4: 421, // 4 BR: 113+19+66+85+111+14 = 408
+  5: 467, // 5 BR: 124+22+74+97+124+14 = 455
+  6: 535, // 6 BR: 138+24+82+122+150+14 = 530
 };
 
 // Helper functions
