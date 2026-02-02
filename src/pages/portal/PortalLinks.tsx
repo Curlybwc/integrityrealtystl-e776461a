@@ -53,12 +53,6 @@ const usefulLinks: UsefulLink[] = [
     category: "Section 8 / HUD",
   },
   {
-    title: "Mike Finney - Shelter Insurance",
-    url: "https://www.shelterinsurance.com/CA/agent/mikefinney",
-    description: "Recommended insurance agent for investment properties",
-    category: "Service Providers",
-  },
-  {
     title: "Ameren Missouri",
     url: "https://www.ameren.com/missouri",
     description: "Electric utility provider for the St. Louis region",
