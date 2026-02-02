@@ -15,7 +15,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
-// Portal pages
+// Investor Portal pages
 import InvestorPortalLayout from "./components/portal/InvestorPortalLayout";
 import PortalDashboard from "./pages/portal/PortalDashboard";
 import PortalDeals from "./pages/portal/PortalDeals";
@@ -31,6 +31,13 @@ import PortalAnalyzer from "./pages/portal/PortalAnalyzer";
 import PortalResources from "./pages/portal/PortalResources";
 import PortalDocuments from "./pages/portal/PortalDocuments";
 import PortalAccount from "./pages/portal/PortalAccount";
+
+// Wholesaler Portal pages
+import WholesalerPortalLayout from "./components/wholesaler-portal/WholesalerPortalLayout";
+import WholesalerDashboard from "./pages/wholesaler-portal/WholesalerDashboard";
+import WholesalerDeals from "./pages/wholesaler-portal/WholesalerDeals";
+import WholesalerAddDeal from "./pages/wholesaler-portal/WholesalerAddDeal";
+import WholesalerAccount from "./pages/wholesaler-portal/WholesalerAccount";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +76,14 @@ const App = () => (
             <Route path="resources" element={<PortalResources />} />
             <Route path="documents" element={<PortalDocuments />} />
             <Route path="account" element={<PortalAccount />} />
+          </Route>
+
+          {/* Wholesaler Portal routes */}
+          <Route path="/wholesaler-portal" element={<WholesalerPortalLayout />}>
+            <Route index element={<WholesalerDashboard />} />
+            <Route path="deals" element={<WholesalerDeals />} />
+            <Route path="add-deal" element={<WholesalerAddDeal />} />
+            <Route path="account" element={<WholesalerAccount />} />
           </Route>
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,6 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 
 const WholesalerLogin = () => {
+  const navigate = useNavigate();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Mock login - will be replaced with real auth when backend is enabled
+    navigate("/wholesaler-portal");
+  };
+
   return (
     <Layout>
       <section className="pt-32 pb-20 px-6">
@@ -19,7 +28,7 @@ const WholesalerLogin = () => {
           </div>
           
           <div className="bg-card border border-border rounded-lg p-8 shadow-card">
-            <form className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input 
