@@ -77,7 +77,7 @@ const PortalLocalNetwork = () => {
       {/* Header */}
       <div>
         <h1 className="font-serif text-2xl text-foreground mb-2">
-          Local Network
+          Network Partners
         </h1>
         <p className="text-muted-foreground text-sm">
           A directory of contractors and service providers in the North County area. 
