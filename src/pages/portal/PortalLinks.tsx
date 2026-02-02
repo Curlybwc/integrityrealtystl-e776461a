@@ -106,6 +106,24 @@ const usefulLinks: UsefulLink[] = [
     description: "Trash collection services for Florissant area",
     category: "Utilities",
   },
+  {
+    title: "Tenant Screening Form",
+    url: "https://forms.gle/b88h4EEprZ5Fz2nW6",
+    description: "Google Form for tenant screening applications",
+    category: "Tenant Resources",
+  },
+  {
+    title: "Tenant Application Process",
+    url: "https://docs.google.com/document/d/1rBbw1JT3WtLHtbiW0TQGaOwKWHMzyenr/edit?usp=sharing&ouid=109944592598996179034&rtpof=true&sd=true",
+    description: "Info document for prospective tenants on the application process",
+    category: "Tenant Resources",
+  },
+  {
+    title: "Tenant Screening Checklist",
+    url: "https://docs.google.com/document/d/1SC0vsLCsXQUemRNd_TqKiRG9q-q-WjpAp851jBvaQCo/edit?usp=sharing",
+    description: "Checklist for screening prospective tenants",
+    category: "Tenant Resources",
+  },
 ];
 
 const PortalLinks = () => {
