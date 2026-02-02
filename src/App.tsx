@@ -29,7 +29,9 @@ import PortalMyOffers from "./pages/portal/PortalMyOffers";
 import PortalConsulting from "./pages/portal/PortalConsulting";
 import PortalAnalyzer from "./pages/portal/PortalAnalyzer";
 import PortalSection8Calculator from "./pages/portal/PortalSection8Calculator";
+import PortalLocalNetwork from "./pages/portal/PortalLocalNetwork";
 import PortalResources from "./pages/portal/PortalResources";
+import PortalLinks from "./pages/portal/PortalLinks";
 import PortalDocuments from "./pages/portal/PortalDocuments";
 import PortalAccount from "./pages/portal/PortalAccount";
 
@@ -75,7 +77,9 @@ const App = () => (
             <Route path="consulting" element={<PortalConsulting />} />
             <Route path="analyzer" element={<PortalAnalyzer />} />
             <Route path="section8-calculator" element={<PortalSection8Calculator />} />
+            <Route path="local-network" element={<PortalLocalNetwork />} />
             <Route path="resources" element={<PortalResources />} />
+            <Route path="links" element={<PortalLinks />} />
             <Route path="documents" element={<PortalDocuments />} />
             <Route path="account" element={<PortalAccount />} />
           </Route>
