@@ -404,6 +404,42 @@ const Section8Calculator = () => {
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Auto-populated values from ZIP/Bedrooms */}
+          {inputs.zip && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+              <div>
+                <p className="text-xs text-muted-foreground">Payment Standard (SAFMR)</p>
+                <p className="font-mono font-semibold text-foreground">
+                  {calculations.paymentStandard
+                    ? formatCurrency(calculations.paymentStandard)
+                    : "N/A"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Utility Allowance</p>
+                <p className="font-mono font-semibold text-foreground">
+                  {formatCurrency(calculations.utilityAllowance)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">ZIP Code</p>
+                <p className="font-mono font-semibold text-foreground">{inputs.zip}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Bedrooms</p>
+                <p className="font-mono font-semibold text-foreground">
+                  {inputs.beds === 0 ? "Studio" : `${inputs.beds} BR`}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {!inputs.zip && (
+            <div className="p-4 bg-muted/50 border border-border rounded-lg text-sm text-muted-foreground">
+              Select a ZIP code above to auto-populate SAFMR and Utility Allowance
+            </div>
+          )}
+
           <div className="grid md:grid-cols-2 gap-6">
             {/* Tenant Income Input */}
             <div className="space-y-2">
