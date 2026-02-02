@@ -234,7 +234,7 @@ const Section8Calculator = () => {
       {/* Instructions */}
       <Card className="bg-accent/30 border-accent">
         <CardContent className="pt-4">
-          <p className="text-sm font-medium text-foreground mb-2">Instructions - Fill in the highlighted fields</p>
+          <p className="text-sm font-medium text-foreground mb-2">Instructions</p>
           <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
             <li>Enter rent comps from Rentometer.com - Highest Comp will auto-populate</li>
             <li>Select ZIP code and bedrooms to auto-populate Payment Standard and Utility Allowance (or enter manually)</li>
