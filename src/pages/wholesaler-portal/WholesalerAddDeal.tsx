@@ -110,7 +110,7 @@ const WholesalerAddDeal = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="propertyType">Property Type *</Label>
                 <Select required>
@@ -143,6 +143,27 @@ const WholesalerAddDeal = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="occupancy">Occupancy Status *</Label>
+                <Select required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="vacant">Vacant</SelectItem>
+                    <SelectItem value="tenant-occupied">Tenant Occupied</SelectItem>
+                    <SelectItem value="owner-occupied">Owner Occupied</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="lockboxCode">Lockbox Code</Label>
+              <Input id="lockboxCode" placeholder="Enter lockbox code for property access" />
+              <p className="text-xs text-muted-foreground">
+                This will only be shared with approved investors
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -163,7 +184,7 @@ const WholesalerAddDeal = () => {
             <CardDescription>Enter the deal numbers</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="askingPrice">Asking Price *</Label>
                 <div className="relative">
@@ -183,6 +204,13 @@ const WholesalerAddDeal = () => {
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                   <Input id="repairCost" type="number" min="0" className="pl-7" placeholder="60000" required />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="monthlyRent">Est. Monthly Rent</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input id="monthlyRent" type="number" min="0" className="pl-7" placeholder="1200" />
                 </div>
               </div>
             </div>
