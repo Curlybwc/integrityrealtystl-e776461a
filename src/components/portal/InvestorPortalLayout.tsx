@@ -16,6 +16,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logo from "@/assets/integrity-logo.png";
 import { cn } from "@/lib/utils";
 
 // Mock auth state - replace with real auth when backend is enabled
@@ -84,12 +85,11 @@ const InvestorPortalLayout = () => {
           {/* Logo */}
           <div className="p-4 border-b border-border">
             <Link to="/portal" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-serif font-bold text-sm">IR</span>
-              </div>
-              <div>
-                <span className="font-serif text-foreground font-medium">Investor Portal</span>
-              </div>
+              <img 
+                src={logo} 
+                alt="Integrity Realty STL" 
+                className="h-10 w-auto"
+              />
             </Link>
           </div>
 

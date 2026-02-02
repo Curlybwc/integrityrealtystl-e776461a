@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/integrity-logo.png";
 
 // Mock auth state - replace with real auth when backend is enabled
 const useWholesalerAuth = () => {
@@ -71,12 +72,11 @@ const WholesalerPortalLayout = () => {
           {/* Logo */}
           <div className="p-4 border-b border-border">
             <Link to="/wholesaler-portal" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-serif font-bold text-sm">WP</span>
-              </div>
-              <div>
-                <span className="font-serif text-foreground font-medium">Wholesaler Portal</span>
-              </div>
+              <img 
+                src={logo} 
+                alt="Integrity Realty STL" 
+                className="h-10 w-auto"
+              />
             </Link>
           </div>
 
