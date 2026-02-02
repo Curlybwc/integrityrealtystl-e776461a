@@ -188,6 +188,15 @@ const WholesalerAddDeal = () => {
                 rows={4}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Additional Notes / Special Instructions</Label>
+              <Textarea
+                id="notes"
+                placeholder="Any additional details, special access instructions, seller requirements, or other notes for investors..."
+                rows={3}
+              />
+            </div>
           </CardContent>
         </Card>
 
