@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Send } from "lucide-react";
+import { Send, Upload, X, Image, Link as LinkIcon } from "lucide-react";
 
 const SellFastIntakeForm = () => {
   const { toast } = useToast();
@@ -33,7 +33,12 @@ const SellFastIntakeForm = () => {
     desiredPrice: "",
     knownIssues: "",
     additionalNotes: "",
+    photoLink: "",
   });
+
+  const [uploadedPhotos, setUploadedPhotos] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -44,6 +49,35 @@ const SellFastIntakeForm = () => {
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newFiles = Array.from(files);
+    const totalPhotos = uploadedPhotos.length + newFiles.length;
+
+    if (totalPhotos > 25) {
+      toast({
+        title: "Too many photos",
+        description: "You can upload a maximum of 25 photos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create previews for new files
+    const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
+
+    setUploadedPhotos((prev) => [...prev, ...newFiles]);
+    setPhotoPreviews((prev) => [...prev, ...newPreviews]);
+  };
+
+  const removePhoto = (index: number) => {
+    URL.revokeObjectURL(photoPreviews[index]);
+    setUploadedPhotos((prev) => prev.filter((_, i) => i !== index));
+    setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -77,7 +111,12 @@ const SellFastIntakeForm = () => {
       desiredPrice: "",
       knownIssues: "",
       additionalNotes: "",
+      photoLink: "",
     });
+    // Clear photos
+    photoPreviews.forEach((url) => URL.revokeObjectURL(url));
+    setUploadedPhotos([]);
+    setPhotoPreviews([]);
   };
 
   return (
@@ -272,6 +311,87 @@ const SellFastIntakeForm = () => {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+          </div>
+
+          {/* Property Photos */}
+          <div className="space-y-4 pt-4 border-t border-border">
+            <h3 className="font-serif text-lg text-foreground flex items-center gap-2">
+              <Image className="w-5 h-5 text-primary" />
+              Property Photos
+              <span className="font-sans text-sm text-muted-foreground">(Optional)</span>
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Photos help us better evaluate your property. You can upload up to 25 photos or provide a link to an online album.
+            </p>
+
+            {/* Photo Link */}
+            <div>
+              <Label htmlFor="photoLink" className="flex items-center gap-2">
+                <LinkIcon className="w-4 h-4" />
+                Link to Photos
+              </Label>
+              <Input
+                id="photoLink"
+                name="photoLink"
+                type="url"
+                value={formData.photoLink}
+                onChange={handleInputChange}
+                placeholder="Google Photos, Dropbox, or other photo album link"
+                className="mt-1"
+              />
+            </div>
+
+            {/* Photo Upload */}
+            <div>
+              <Label className="flex items-center gap-2">
+                <Upload className="w-4 h-4" />
+                Upload Photos (max 25)
+              </Label>
+              <div className="mt-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadedPhotos.length >= 25}
+                  className="w-full"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {uploadedPhotos.length > 0
+                    ? `${uploadedPhotos.length}/25 photos selected`
+                    : "Select Photos"}
+                </Button>
+              </div>
+
+              {/* Photo Previews */}
+              {photoPreviews.length > 0 && (
+                <div className="mt-4 grid grid-cols-4 sm:grid-cols-5 gap-2">
+                  {photoPreviews.map((preview, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={preview}
+                        alt={`Property photo ${index + 1}`}
+                        className="w-full h-16 object-cover rounded-md border border-border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(index)}
+                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
