@@ -25,6 +25,8 @@ const SellFastIntakeForm = () => {
     state: "MO",
     zip: "",
     propertyType: "",
+    bedrooms: "",
+    bathrooms: "",
     occupancyStatus: "",
     reasonForSelling: "",
     desiredTimeframe: "",
@@ -67,6 +69,8 @@ const SellFastIntakeForm = () => {
       state: "MO",
       zip: "",
       propertyType: "",
+      bedrooms: "",
+      bathrooms: "",
       occupancyStatus: "",
       reasonForSelling: "",
       desiredTimeframe: "",
@@ -223,6 +227,48 @@ const SellFastIntakeForm = () => {
                     <SelectItem value="owner-occupied">Owner-Occupied</SelectItem>
                     <SelectItem value="tenant-occupied">Tenant-Occupied</SelectItem>
                     <SelectItem value="vacant">Vacant</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="bedrooms">Bedrooms *</Label>
+                <Select
+                  value={formData.bedrooms}
+                  onValueChange={(value) => handleSelectChange("bedrooms", value)}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1</SelectItem>
+                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="3">3</SelectItem>
+                    <SelectItem value="4">4</SelectItem>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="6+">6+</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="bathrooms">Bathrooms *</Label>
+                <Select
+                  value={formData.bathrooms}
+                  onValueChange={(value) => handleSelectChange("bathrooms", value)}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1</SelectItem>
+                    <SelectItem value="1.5">1.5</SelectItem>
+                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="2.5">2.5</SelectItem>
+                    <SelectItem value="3">3</SelectItem>
+                    <SelectItem value="3.5">3.5</SelectItem>
+                    <SelectItem value="4+">4+</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
