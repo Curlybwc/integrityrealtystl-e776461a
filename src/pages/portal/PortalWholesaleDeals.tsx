@@ -7,6 +7,8 @@ import {
   Bed,
   Bath,
   MapPin,
+  ArrowLeft,
+  Store,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useDeals } from "@/hooks/useDeals";
-import { Deal, formatCurrency, formatPercent, getStatusDisplayLabel } from "@/lib/screening";
+import { formatCurrency, formatPercent, getStatusDisplayLabel } from "@/lib/screening";
 
 const strategyColors = {
   Both: "bg-primary text-primary-foreground",
@@ -29,30 +31,36 @@ const strategyColors = {
 };
 
 const statusColors = {
-  Active: "bg-green-100 text-green-800",
+  Available: "bg-green-100 text-green-800",
   "Under Contract": "bg-yellow-100 text-yellow-800",
   Sold: "bg-red-100 text-red-800",
-  Available: "bg-green-100 text-green-800",
   Unknown: "bg-muted text-muted-foreground",
 };
 
-const PortalDeals = () => {
-  const { getBuyerVisibleDeals, isLoading } = useDeals();
+const PortalWholesaleDeals = () => {
+  const { deals, isLoading } = useDeals();
   const [searchQuery, setSearchQuery] = useState("");
   const [strategyFilter, setStrategyFilter] = useState("All");
   const [priceFilter, setPriceFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const allDeals = getBuyerVisibleDeals();
+  // Filter to WHOLESALER deals only - show all that aren't sold
+  const wholesaleDeals = deals.filter(d => 
+    d.source_type === "WHOLESALER" && 
+    d.wholesaler_status !== "Sold"
+  );
   
-  const filteredDeals = allDeals.filter((deal) => {
+  const filteredDeals = wholesaleDeals.filter((deal) => {
     const matchesSearch =
       deal.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
       deal.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
       deal.zip.includes(searchQuery);
 
+    // For wholesaler deals, strategy might be "None" if not scored yet
     const matchesStrategy = 
-      strategyFilter === "All" || deal.strategy === strategyFilter;
+      strategyFilter === "All" || 
+      deal.strategy === strategyFilter ||
+      (strategyFilter === "Unscored" && deal.strategy === "None");
     
     const matchesPrice =
       priceFilter === "all" ||
@@ -64,7 +72,7 @@ const PortalDeals = () => {
     const displayStatus = getStatusDisplayLabel(deal);
     const matchesStatus = 
       statusFilter === "all" || 
-      (statusFilter === "active" && displayStatus === "Active") ||
+      (statusFilter === "available" && displayStatus === "Available") ||
       (statusFilter === "under-contract" && displayStatus === "Under Contract");
 
     return matchesSearch && matchesStrategy && matchesPrice && matchesStatus;
@@ -81,11 +89,18 @@ const PortalDeals = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="font-serif text-2xl text-foreground mb-2">Available Deals</h1>
-        <p className="text-muted-foreground text-sm">
-          Browse curated investment opportunities. Click any deal for details and actions.
-        </p>
+      <div className="flex items-center gap-4">
+        <Link to="/portal/deals">
+          <Button variant="ghost" size="icon">
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+        </Link>
+        <div>
+          <h1 className="font-serif text-2xl text-foreground mb-1">Wholesaler Deals</h1>
+          <p className="text-muted-foreground text-sm">
+            Off-market opportunities from approved wholesalers. Assignment deals before they hit market.
+          </p>
+        </div>
       </div>
 
       {/* Filters */}
@@ -114,6 +129,7 @@ const PortalDeals = () => {
               <SelectItem value="Both">Both (Turnkey + BRRRR)</SelectItem>
               <SelectItem value="Turnkey">Turnkey Only</SelectItem>
               <SelectItem value="BRRRR">BRRRR Only</SelectItem>
+              <SelectItem value="Unscored">Not Yet Scored</SelectItem>
             </SelectContent>
           </Select>
 
@@ -136,7 +152,7 @@ const PortalDeals = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="available">Available</SelectItem>
               <SelectItem value="under-contract">Under Contract</SelectItem>
             </SelectContent>
           </Select>
@@ -145,7 +161,7 @@ const PortalDeals = () => {
 
       {/* Results count */}
       <p className="text-sm text-muted-foreground">
-        Showing {filteredDeals.length} of {allDeals.length} deals
+        Showing {filteredDeals.length} of {wholesaleDeals.length} wholesaler deals
       </p>
 
       {/* Deals Grid */}
@@ -153,7 +169,10 @@ const PortalDeals = () => {
         {filteredDeals.map((deal) => {
           const displayStatus = getStatusDisplayLabel(deal);
           const statusColor = statusColors[displayStatus as keyof typeof statusColors] || statusColors.Unknown;
-          const strategyColor = strategyColors[deal.strategy as keyof typeof strategyColors];
+          const hasStrategy = deal.strategy !== "None";
+          const strategyColor = hasStrategy 
+            ? strategyColors[deal.strategy as keyof typeof strategyColors]
+            : "bg-muted/50 text-muted-foreground";
 
           return (
             <Link
@@ -172,13 +191,13 @@ const PortalDeals = () => {
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <Building2 className="w-12 h-12 text-muted-foreground/30" />
+                      <Store className="w-12 h-12 text-muted-foreground/30" />
                     </div>
                   )}
                   {/* Strategy badge */}
                   <div className="absolute top-3 left-3">
                     <Badge className={strategyColor}>
-                      {deal.strategy}
+                      {hasStrategy ? deal.strategy : "Not Scored"}
                     </Badge>
                   </div>
                   {/* Status badge */}
@@ -187,14 +206,17 @@ const PortalDeals = () => {
                       {displayStatus}
                     </Badge>
                   </div>
-                  {/* Source indicator */}
-                  {deal.source_type === "WHOLESALER" && (
-                    <div className="absolute bottom-3 left-3">
-                      <Badge variant="outline" className="bg-background/80 text-xs">
-                        Wholesaler
+                  {/* Wholesaler indicator */}
+                  <div className="absolute bottom-3 left-3 flex gap-2">
+                    <Badge variant="outline" className="bg-background/80 text-xs">
+                      Wholesaler
+                    </Badge>
+                    {deal.flagged_for_alert && (
+                      <Badge variant="destructive" className="text-xs">
+                        🔥 Deal Alert
                       </Badge>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
                 {/* Content */}
@@ -223,21 +245,29 @@ const PortalDeals = () => {
                     <span>{deal.sqft?.toLocaleString()} sqft</span>
                   </div>
 
-                  {/* Metrics Row */}
-                  <div className="grid grid-cols-2 gap-2 pt-3 border-t border-border mb-3">
-                    <div className="bg-accent/50 rounded px-2 py-1.5 text-center">
-                      <p className="text-xs text-muted-foreground">Rent/Price</p>
-                      <p className={`text-sm font-semibold ${deal.rent_to_price_pct >= 0.0135 ? "text-green-600" : "text-foreground"}`}>
-                        {formatPercent(deal.rent_to_price_pct)}
+                  {/* Metrics Row - only show if scored */}
+                  {hasStrategy ? (
+                    <div className="grid grid-cols-2 gap-2 pt-3 border-t border-border mb-3">
+                      <div className="bg-accent/50 rounded px-2 py-1.5 text-center">
+                        <p className="text-xs text-muted-foreground">Rent/Price</p>
+                        <p className={`text-sm font-semibold ${deal.rent_to_price_pct >= 0.0135 ? "text-green-600" : "text-foreground"}`}>
+                          {formatPercent(deal.rent_to_price_pct)}
+                        </p>
+                      </div>
+                      <div className="bg-accent/50 rounded px-2 py-1.5 text-center">
+                        <p className="text-xs text-muted-foreground">All-In % ARV</p>
+                        <p className={`text-sm font-semibold ${deal.all_in_pct_of_arv <= 0.75 ? "text-green-600" : "text-foreground"}`}>
+                          {formatPercent(deal.all_in_pct_of_arv)}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="pt-3 border-t border-border mb-3">
+                      <p className="text-xs text-muted-foreground text-center italic">
+                        Not yet auto-scored
                       </p>
                     </div>
-                    <div className="bg-accent/50 rounded px-2 py-1.5 text-center">
-                      <p className="text-xs text-muted-foreground">All-In % ARV</p>
-                      <p className={`text-sm font-semibold ${deal.all_in_pct_of_arv <= 0.75 ? "text-green-600" : "text-foreground"}`}>
-                        {formatPercent(deal.all_in_pct_of_arv)}
-                      </p>
-                    </div>
-                  </div>
+                  )}
 
                   <div className="flex items-center justify-between">
                     <div>
@@ -246,12 +276,14 @@ const PortalDeals = () => {
                         {formatCurrency(deal.list_price)}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">Est. Rent</p>
-                      <p className="text-sm font-medium text-foreground">
-                        {formatCurrency(deal.rent_effective)}/mo
-                      </p>
-                    </div>
+                    {hasStrategy && (
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground">Est. Rent</p>
+                        <p className="text-sm font-medium text-foreground">
+                          {formatCurrency(deal.rent_effective)}/mo
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -263,8 +295,8 @@ const PortalDeals = () => {
       {/* Empty state */}
       {filteredDeals.length === 0 && (
         <div className="text-center py-12">
-          <Building2 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-          <p className="text-muted-foreground">No deals match your filters.</p>
+          <Store className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+          <p className="text-muted-foreground">No wholesaler deals match your filters.</p>
           <Button
             variant="link"
             onClick={() => {
@@ -282,13 +314,13 @@ const PortalDeals = () => {
       {/* Disclaimer */}
       <div className="bg-muted/50 border border-border rounded-lg p-4">
         <p className="text-xs text-muted-foreground">
-          <strong className="text-foreground">Disclaimer:</strong> Deal availability may change 
-          without notice. Financial estimates are for informational purposes only. Investors 
-          must verify all information independently.
+          <strong className="text-foreground">Disclaimer:</strong> Wholesaler deals are assignment contracts. 
+          Assignment fee is typically included in the asking price. Buyers should verify all property 
+          information and consult with their own advisors before making offers.
         </p>
       </div>
     </div>
   );
 };
 
-export default PortalDeals;
+export default PortalWholesaleDeals;

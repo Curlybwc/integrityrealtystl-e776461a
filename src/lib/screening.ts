@@ -66,6 +66,7 @@ export interface Deal {
   reviewed_at?: string;
   notes?: string;
   removed_reason?: string;
+  flagged_for_alert?: boolean;
   
   // Wholesaler Fields
   wholesaler_owner_id?: string;
