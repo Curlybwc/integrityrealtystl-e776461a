@@ -21,7 +21,10 @@ import NotFound from "./pages/NotFound";
 // Investor Portal pages
 import InvestorPortalLayout from "./components/portal/InvestorPortalLayout";
 import PortalDashboard from "./pages/portal/PortalDashboard";
-import PortalDeals from "./pages/portal/PortalDeals";
+import PortalDealsHub from "./pages/portal/PortalDealsHub";
+import PortalMlsDeals from "./pages/portal/PortalMlsDeals";
+import PortalWholesaleDeals from "./pages/portal/PortalWholesaleDeals";
+import PortalDealAlerts from "./pages/portal/PortalDealAlerts";
 import PortalDealDetail from "./pages/portal/PortalDealDetail";
 import PortalSubmitOffer from "./pages/portal/PortalSubmitOffer";
 import PortalRequestWalkthrough from "./pages/portal/PortalRequestWalkthrough";
@@ -85,7 +88,10 @@ const App = () => (
           {/* Investor Portal routes */}
           <Route path="/portal" element={<InvestorPortalLayout />}>
             <Route index element={<PortalDashboard />} />
-            <Route path="deals" element={<PortalDeals />} />
+            <Route path="deals" element={<PortalDealsHub />} />
+            <Route path="deals/mls" element={<PortalMlsDeals />} />
+            <Route path="deals/wholesale" element={<PortalWholesaleDeals />} />
+            <Route path="deals/alerts" element={<PortalDealAlerts />} />
             <Route path="deals/:dealId" element={<PortalDealDetail />} />
             <Route path="deals/:dealId/offer" element={<PortalSubmitOffer />} />
             <Route path="deals/:dealId/walkthrough" element={<PortalRequestWalkthrough />} />
