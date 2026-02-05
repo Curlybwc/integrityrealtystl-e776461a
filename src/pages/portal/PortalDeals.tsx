@@ -2,13 +2,10 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Building2,
-  Star,
-  FileText,
   Filter,
   Search,
   Bed,
   Bath,
-  DollarSign,
   MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,144 +18,65 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { useDeals } from "@/hooks/useDeals";
+import { Deal, formatCurrency, formatPercent, getStatusDisplayLabel } from "@/lib/screening";
 
-// Mock deals data
-const mockDeals = [
-  {
-    id: "1",
-    type: "jens-pick",
-    address: "1234 Oak Street",
-    city: "Florissant",
-    zip: "63033",
-    price: 75000,
-    beds: 3,
-    baths: 1,
-    sqft: 1200,
-    estimatedRent: 1100,
-    estimatedARV: 110000,
-    status: "active",
-    dateAdded: "2024-01-15",
-    image: null,
-  },
-  {
-    id: "2",
-    type: "mls",
-    address: "5678 Maple Avenue",
-    city: "Ferguson",
-    zip: "63135",
-    price: 65000,
-    beds: 4,
-    baths: 2,
-    sqft: 1450,
-    estimatedRent: 1200,
-    estimatedARV: 105000,
-    status: "active",
-    dateAdded: "2024-01-12",
-    image: null,
-  },
-  {
-    id: "3",
-    type: "wholesaler",
-    address: "9101 Pine Drive",
-    city: "Jennings",
-    zip: "63136",
-    price: 55000,
-    beds: 3,
-    baths: 1,
-    sqft: 1100,
-    estimatedRent: 950,
-    estimatedARV: 95000,
-    status: "active",
-    dateAdded: "2024-01-10",
-    image: null,
-  },
-  {
-    id: "4",
-    type: "jens-pick",
-    address: "2222 Elm Court",
-    city: "Berkeley",
-    zip: "63134",
-    price: 82000,
-    beds: 4,
-    baths: 1.5,
-    sqft: 1380,
-    estimatedRent: 1250,
-    estimatedARV: 125000,
-    status: "under-contract",
-    dateAdded: "2024-01-08",
-    image: null,
-  },
-  {
-    id: "5",
-    type: "mls",
-    address: "3333 Cedar Lane",
-    city: "Normandy",
-    zip: "63121",
-    price: 48000,
-    beds: 2,
-    baths: 1,
-    sqft: 900,
-    estimatedRent: 850,
-    estimatedARV: 78000,
-    status: "active",
-    dateAdded: "2024-01-05",
-    image: null,
-  },
-  {
-    id: "6",
-    type: "wholesaler",
-    address: "4444 Birch Road",
-    city: "Hazelwood",
-    zip: "63042",
-    price: 72000,
-    beds: 3,
-    baths: 2,
-    sqft: 1320,
-    estimatedRent: 1150,
-    estimatedARV: 115000,
-    status: "active",
-    dateAdded: "2024-01-03",
-    image: null,
-  },
-];
-
-const dealTypeLabels = {
-  "jens-pick": { label: "Jen's Pick", icon: Star, color: "bg-primary text-primary-foreground" },
-  mls: { label: "MLS", icon: Building2, color: "bg-secondary text-secondary-foreground" },
-  wholesaler: { label: "Wholesaler", icon: FileText, color: "bg-muted text-muted-foreground" },
+const strategyColors = {
+  Both: "bg-primary text-primary-foreground",
+  Turnkey: "bg-secondary text-secondary-foreground",
+  BRRRR: "bg-accent text-accent-foreground",
+  None: "bg-muted text-muted-foreground",
 };
 
-const statusLabels = {
-  active: { label: "Active", color: "bg-green-100 text-green-800" },
-  "under-contract": { label: "Under Contract", color: "bg-yellow-100 text-yellow-800" },
-  sold: { label: "Sold", color: "bg-red-100 text-red-800" },
+const statusColors = {
+  Active: "bg-green-100 text-green-800",
+  "Under Contract": "bg-yellow-100 text-yellow-800",
+  Sold: "bg-red-100 text-red-800",
+  Available: "bg-green-100 text-green-800",
+  Unknown: "bg-muted text-muted-foreground",
 };
 
 const PortalDeals = () => {
+  const { getBuyerVisibleDeals, isLoading } = useDeals();
   const [searchQuery, setSearchQuery] = useState("");
-  const [dealTypeFilter, setDealTypeFilter] = useState("all");
+  const [strategyFilter, setStrategyFilter] = useState("All");
   const [priceFilter, setPriceFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const filteredDeals = mockDeals.filter((deal) => {
+  const allDeals = getBuyerVisibleDeals();
+  
+  const filteredDeals = allDeals.filter((deal) => {
     const matchesSearch =
       deal.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
       deal.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
       deal.zip.includes(searchQuery);
 
-    const matchesType = dealTypeFilter === "all" || deal.type === dealTypeFilter;
+    const matchesStrategy = 
+      strategyFilter === "All" || deal.strategy === strategyFilter;
     
     const matchesPrice =
       priceFilter === "all" ||
-      (priceFilter === "under50k" && deal.price < 50000) ||
-      (priceFilter === "50k-75k" && deal.price >= 50000 && deal.price < 75000) ||
-      (priceFilter === "75k-100k" && deal.price >= 75000 && deal.price < 100000) ||
-      (priceFilter === "over100k" && deal.price >= 100000);
+      (priceFilter === "under50k" && deal.list_price < 50000) ||
+      (priceFilter === "50k-75k" && deal.list_price >= 50000 && deal.list_price < 75000) ||
+      (priceFilter === "75k-100k" && deal.list_price >= 75000 && deal.list_price < 100000) ||
+      (priceFilter === "over100k" && deal.list_price >= 100000);
 
-    const matchesStatus = statusFilter === "all" || deal.status === statusFilter;
+    const displayStatus = getStatusDisplayLabel(deal);
+    const matchesStatus = 
+      statusFilter === "all" || 
+      (statusFilter === "active" && displayStatus === "Active") ||
+      (statusFilter === "under-contract" && displayStatus === "Under Contract");
 
-    return matchesSearch && matchesType && matchesPrice && matchesStatus;
+    return matchesSearch && matchesStrategy && matchesPrice && matchesStatus;
   });
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Loading deals...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -187,15 +105,15 @@ const PortalDeals = () => {
             />
           </div>
 
-          <Select value={dealTypeFilter} onValueChange={setDealTypeFilter}>
+          <Select value={strategyFilter} onValueChange={setStrategyFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Deal Type" />
+              <SelectValue placeholder="Strategy" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="jens-pick">Jen's Picks</SelectItem>
-              <SelectItem value="mls">MLS Deals</SelectItem>
-              <SelectItem value="wholesaler">Wholesaler Deals</SelectItem>
+              <SelectItem value="All">All Strategies</SelectItem>
+              <SelectItem value="Both">Both (Turnkey + BRRRR)</SelectItem>
+              <SelectItem value="Turnkey">Turnkey Only</SelectItem>
+              <SelectItem value="BRRRR">BRRRR Only</SelectItem>
             </SelectContent>
           </Select>
 
@@ -227,15 +145,15 @@ const PortalDeals = () => {
 
       {/* Results count */}
       <p className="text-sm text-muted-foreground">
-        Showing {filteredDeals.length} of {mockDeals.length} deals
+        Showing {filteredDeals.length} of {allDeals.length} deals
       </p>
 
       {/* Deals Grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredDeals.map((deal) => {
-          const typeInfo = dealTypeLabels[deal.type as keyof typeof dealTypeLabels];
-          const statusInfo = statusLabels[deal.status as keyof typeof statusLabels];
-          const TypeIcon = typeInfo.icon;
+          const displayStatus = getStatusDisplayLabel(deal);
+          const statusColor = statusColors[displayStatus as keyof typeof statusColors] || statusColors.Unknown;
+          const strategyColor = strategyColors[deal.strategy as keyof typeof strategyColors];
 
           return (
             <Link
@@ -244,24 +162,39 @@ const PortalDeals = () => {
               className="group"
             >
               <div className="bg-card border border-border rounded-lg overflow-hidden shadow-card hover:shadow-card-hover transition-shadow">
-                {/* Image placeholder */}
-                <div className="aspect-[4/3] bg-muted relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Building2 className="w-12 h-12 text-muted-foreground/30" />
-                  </div>
-                  {/* Type badge */}
+                {/* Image */}
+                <div className="aspect-[4/3] bg-muted relative overflow-hidden">
+                  {deal.photo_urls.length > 0 ? (
+                    <img
+                      src={deal.photo_urls[0]}
+                      alt={deal.address}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Building2 className="w-12 h-12 text-muted-foreground/30" />
+                    </div>
+                  )}
+                  {/* Strategy badge */}
                   <div className="absolute top-3 left-3">
-                    <Badge className={typeInfo.color}>
-                      <TypeIcon className="w-3 h-3 mr-1" />
-                      {typeInfo.label}
+                    <Badge className={strategyColor}>
+                      {deal.strategy}
                     </Badge>
                   </div>
                   {/* Status badge */}
                   <div className="absolute top-3 right-3">
-                    <Badge className={statusInfo.color}>
-                      {statusInfo.label}
+                    <Badge className={statusColor}>
+                      {displayStatus}
                     </Badge>
                   </div>
+                  {/* Source indicator */}
+                  {deal.source_type === "WHOLESALER" && (
+                    <div className="absolute bottom-3 left-3">
+                      <Badge variant="outline" className="bg-background/80 text-xs">
+                        Wholesaler
+                      </Badge>
+                    </div>
+                  )}
                 </div>
 
                 {/* Content */}
@@ -292,39 +225,33 @@ const PortalDeals = () => {
 
                   {/* Metrics Row */}
                   <div className="grid grid-cols-2 gap-2 pt-3 border-t border-border mb-3">
-                    {deal.estimatedRent && deal.price && (
-                      <div className="bg-accent/50 rounded px-2 py-1.5 text-center">
-                        <p className="text-xs text-muted-foreground">Rent/Price</p>
-                        <p className="text-sm font-semibold text-foreground">
-                          {((deal.estimatedRent / deal.price) * 100).toFixed(2)}%
-                        </p>
-                      </div>
-                    )}
-                    {deal.estimatedARV && deal.price && (
-                      <div className="bg-accent/50 rounded px-2 py-1.5 text-center">
-                        <p className="text-xs text-muted-foreground">ARV %</p>
-                        <p className="text-sm font-semibold text-foreground">
-                          {((deal.price / deal.estimatedARV) * 100).toFixed(0)}%
-                        </p>
-                      </div>
-                    )}
+                    <div className="bg-accent/50 rounded px-2 py-1.5 text-center">
+                      <p className="text-xs text-muted-foreground">Rent/Price</p>
+                      <p className={`text-sm font-semibold ${deal.rent_to_price_pct >= 0.0135 ? "text-green-600" : "text-foreground"}`}>
+                        {formatPercent(deal.rent_to_price_pct)}
+                      </p>
+                    </div>
+                    <div className="bg-accent/50 rounded px-2 py-1.5 text-center">
+                      <p className="text-xs text-muted-foreground">All-In % ARV</p>
+                      <p className={`text-sm font-semibold ${deal.all_in_pct_of_arv <= 0.75 ? "text-green-600" : "text-foreground"}`}>
+                        {formatPercent(deal.all_in_pct_of_arv)}
+                      </p>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-muted-foreground">Asking</p>
                       <p className="font-serif text-lg font-medium text-foreground">
-                        ${deal.price.toLocaleString()}
+                        {formatCurrency(deal.list_price)}
                       </p>
                     </div>
-                    {deal.estimatedRent && (
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">Est. Rent</p>
-                        <p className="text-sm font-medium text-foreground">
-                          ${deal.estimatedRent.toLocaleString()}/mo
-                        </p>
-                      </div>
-                    )}
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Est. Rent</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {formatCurrency(deal.rent_effective)}/mo
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -342,7 +269,7 @@ const PortalDeals = () => {
             variant="link"
             onClick={() => {
               setSearchQuery("");
-              setDealTypeFilter("all");
+              setStrategyFilter("All");
               setPriceFilter("all");
               setStatusFilter("all");
             }}
