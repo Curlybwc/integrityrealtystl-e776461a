@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Building2,
   Filter,
   Search,
   Bed,
@@ -20,8 +19,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useDeals } from "@/hooks/useDeals";
-import { formatCurrency, formatPercent, getStatusDisplayLabel } from "@/lib/screening";
+import { formatCurrency, formatPercent, getStatusDisplayLabel, getScoringStatus } from "@/lib/screening";
 
 const strategyColors = {
   Both: "bg-primary text-primary-foreground",
@@ -43,6 +44,7 @@ const PortalWholesaleDeals = () => {
   const [strategyFilter, setStrategyFilter] = useState("All");
   const [priceFilter, setPriceFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showPassingOnly, setShowPassingOnly] = useState(false);
 
   // Filter to WHOLESALER deals only - show all that aren't sold
   const wholesaleDeals = deals.filter(d => 
@@ -56,11 +58,13 @@ const PortalWholesaleDeals = () => {
       deal.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
       deal.zip.includes(searchQuery);
 
-    // For wholesaler deals, strategy might be "None" if not scored yet
+    const scoringStatus = getScoringStatus(deal);
+    
+    // Strategy filter logic
     const matchesStrategy = 
       strategyFilter === "All" || 
       deal.strategy === strategyFilter ||
-      (strategyFilter === "Unscored" && deal.strategy === "None");
+      (strategyFilter === "Unscored" && !scoringStatus.isScored);
     
     const matchesPrice =
       priceFilter === "all" ||
@@ -75,7 +79,11 @@ const PortalWholesaleDeals = () => {
       (statusFilter === "available" && displayStatus === "Available") ||
       (statusFilter === "under-contract" && displayStatus === "Under Contract");
 
-    return matchesSearch && matchesStrategy && matchesPrice && matchesStatus;
+    // "Show only passing" filter - only show deals that pass at least one strategy
+    const matchesPassingFilter = !showPassingOnly || 
+      (scoringStatus.isScored && deal.strategy !== "None");
+
+    return matchesSearch && matchesStrategy && matchesPrice && matchesStatus && matchesPassingFilter;
   });
 
   if (isLoading) {
@@ -157,6 +165,18 @@ const PortalWholesaleDeals = () => {
             </SelectContent>
           </Select>
         </div>
+        
+        {/* Show only passing toggle */}
+        <div className="col-span-full flex items-center gap-2 pt-2 border-t border-border">
+          <Switch
+            id="passing-only"
+            checked={showPassingOnly}
+            onCheckedChange={setShowPassingOnly}
+          />
+          <Label htmlFor="passing-only" className="text-sm text-muted-foreground cursor-pointer">
+            Show only deals that pass screening
+          </Label>
+        </div>
       </div>
 
       {/* Results count */}
@@ -169,10 +189,18 @@ const PortalWholesaleDeals = () => {
         {filteredDeals.map((deal) => {
           const displayStatus = getStatusDisplayLabel(deal);
           const statusColor = statusColors[displayStatus as keyof typeof statusColors] || statusColors.Unknown;
-          const hasStrategy = deal.strategy !== "None";
-          const strategyColor = hasStrategy 
-            ? strategyColors[deal.strategy as keyof typeof strategyColors]
-            : "bg-muted/50 text-muted-foreground";
+          const scoringStatus = getScoringStatus(deal);
+          
+          // Determine strategy badge styling
+          let strategyBadgeClass = "bg-muted/50 text-muted-foreground";
+          let strategyLabel = scoringStatus.label;
+          
+          if (scoringStatus.isScored && deal.strategy !== "None") {
+            strategyBadgeClass = strategyColors[deal.strategy as keyof typeof strategyColors];
+            strategyLabel = deal.strategy;
+          } else if (!scoringStatus.isScored) {
+            strategyBadgeClass = "bg-orange-100 text-orange-800";
+          }
 
           return (
             <Link
@@ -196,8 +224,8 @@ const PortalWholesaleDeals = () => {
                   )}
                   {/* Strategy badge */}
                   <div className="absolute top-3 left-3">
-                    <Badge className={strategyColor}>
-                      {hasStrategy ? deal.strategy : "Not Scored"}
+                    <Badge className={strategyBadgeClass}>
+                      {strategyLabel}
                     </Badge>
                   </div>
                   {/* Status badge */}
@@ -245,8 +273,8 @@ const PortalWholesaleDeals = () => {
                     <span>{deal.sqft?.toLocaleString()} sqft</span>
                   </div>
 
-                  {/* Metrics Row - only show if scored */}
-                  {hasStrategy ? (
+                  {/* Metrics Row - show if scored, otherwise explain why not */}
+                  {scoringStatus.isScored ? (
                     <div className="grid grid-cols-2 gap-2 pt-3 border-t border-border mb-3">
                       <div className="bg-accent/50 rounded px-2 py-1.5 text-center">
                         <p className="text-xs text-muted-foreground">Rent/Price</p>
@@ -264,7 +292,7 @@ const PortalWholesaleDeals = () => {
                   ) : (
                     <div className="pt-3 border-t border-border mb-3">
                       <p className="text-xs text-muted-foreground text-center italic">
-                        Not yet auto-scored
+                        Missing: {scoringStatus.missingFields.join(", ")}
                       </p>
                     </div>
                   )}
@@ -276,7 +304,7 @@ const PortalWholesaleDeals = () => {
                         {formatCurrency(deal.list_price)}
                       </p>
                     </div>
-                    {hasStrategy && (
+                    {scoringStatus.isScored && (
                       <div className="text-right">
                         <p className="text-xs text-muted-foreground">Est. Rent</p>
                         <p className="text-sm font-medium text-foreground">

@@ -354,3 +354,47 @@ export function getStatusDisplayLabel(deal: Deal): string {
     default: return "Unknown";
   }
 }
+
+// Check if a deal has all required fields for scoring
+export function canScoreDeal(deal: Partial<Deal>): boolean {
+  return !!(
+    deal.zip && 
+    deal.beds !== undefined && 
+    deal.sqft && deal.sqft > 0 &&
+    deal.list_price && deal.list_price > 0
+  );
+}
+
+// Get scoring status for display
+export interface ScoringStatus {
+  isScored: boolean;
+  label: string;
+  strategy: Strategy;
+  missingFields: string[];
+}
+
+export function getScoringStatus(deal: Deal): ScoringStatus {
+  const missingFields: string[] = [];
+  
+  if (!deal.zip) missingFields.push("ZIP");
+  if (deal.beds === undefined) missingFields.push("beds");
+  if (!deal.sqft || deal.sqft <= 0) missingFields.push("sqft");
+  if (!deal.list_price || deal.list_price <= 0) missingFields.push("price");
+  
+  if (missingFields.length > 0) {
+    return {
+      isScored: false,
+      label: "Not Scored (missing data)",
+      strategy: "None",
+      missingFields,
+    };
+  }
+  
+  // Deal is scorable - return actual strategy
+  return {
+    isScored: true,
+    label: deal.strategy,
+    strategy: deal.strategy,
+    missingFields: [],
+  };
+}
