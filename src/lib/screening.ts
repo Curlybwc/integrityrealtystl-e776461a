@@ -141,9 +141,13 @@ export function estimateSystemArv(zip: string, sqft: number): number {
   return sqft * 100;
 }
 
-export function estimateRehabTier(_year_built?: number): RehabTier {
-  // Default all properties to Light — year_built is not a reliable indicator of rehab needs
-  return "Light";
+export function estimateRehabTier(list_price: number, arv: number): RehabTier {
+  if (!arv || arv <= 0) return "Medium";
+  const ratio = list_price / arv;
+  if (ratio >= 0.90) return "Turnkey";
+  if (ratio >= 0.80) return "Light";
+  if (ratio >= 0.60) return "Medium";
+  return "Heavy";
 }
 
 // Main Screening Function
@@ -165,16 +169,18 @@ export function computeDealMetrics(
   // Compute effective values (overrides take precedence)
   const rent_effective = deal.rent_override ?? deal.rent_system ?? 0;
   const arv_effective = deal.arv_override ?? deal.arv_system ?? 0;
-  const rehab_tier_effective = deal.rehab_tier_override ?? deal.rehab_tier_system ?? "Medium";
+  // Smart rehab tier: use price/ARV ratio to estimate tier (unless override exists)
+  const list_price = deal.list_price ?? 0;
+  const smartTier = estimateRehabTier(list_price, arv_effective);
+  const rehab_tier_effective = deal.rehab_tier_override ?? smartTier;
   
   // Compute rehab estimate
   const rehabRate = getRehabRate(rehab_tier_effective, config);
   const rehab_est_effective = (deal.sqft ?? 0) * rehabRate;
   
-  // Compute metrics
-  const list_price = deal.list_price ?? 0;
-  const rent_to_price_pct = list_price > 0 ? rent_effective / list_price : 0;
+  // Compute metrics — RTP uses all-in price (price + repairs)
   const all_in = list_price + rehab_est_effective;
+  const rent_to_price_pct = all_in > 0 ? rent_effective / all_in : 0;
   const all_in_pct_of_arv = arv_effective > 0 ? all_in / arv_effective : 0;
   const price_to_arv = arv_effective > 0 ? list_price / arv_effective : 0;
   
@@ -245,7 +251,7 @@ export function createDeal(
   // Compute system estimates
   const rent_system = estimateSystemRent(input.zip, input.beds);
   const arv_system = estimateSystemArv(input.zip, input.sqft);
-  const rehab_tier_system = estimateRehabTier(input.year_built);
+  const rehab_tier_system = estimateRehabTier(input.list_price, arv_system);
   
   const baseDeal: Partial<Deal> = {
     id: input.id ?? crypto.randomUUID(),
