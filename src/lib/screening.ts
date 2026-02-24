@@ -7,7 +7,7 @@ import {
 } from "@/data/stlZipData";
 
 // Types
-export type RehabTier = "Light" | "Medium" | "Heavy";
+export type RehabTier = "Turnkey" | "Light" | "Medium" | "Heavy";
 export type MlsStatus = "Active" | "Pending" | "Sold" | "Unknown";
 export type WholesalerStatus = "Available" | "UnderContract" | "Sold";
 export type SourceType = "MLS" | "WHOLESALER";
@@ -79,6 +79,7 @@ export interface Deal {
 
 // Screening Configuration
 export interface ScreeningConfig {
+  rehab_rate_turnkey: number;
   rehab_rate_light: number;
   rehab_rate_medium: number;
   rehab_rate_heavy: number;
@@ -90,7 +91,8 @@ export interface ScreeningConfig {
 }
 
 export const DEFAULT_SCREENING_CONFIG: ScreeningConfig = {
-  rehab_rate_light: 20,
+  rehab_rate_turnkey: 5,
+  rehab_rate_light: 15,
   rehab_rate_medium: 30,
   rehab_rate_heavy: 50,
   turnkey_min_rtp: 0.0135,
@@ -103,6 +105,7 @@ export const DEFAULT_SCREENING_CONFIG: ScreeningConfig = {
 // Helper Functions
 export function getRehabRate(tier: RehabTier, config: ScreeningConfig = DEFAULT_SCREENING_CONFIG): number {
   switch (tier) {
+    case "Turnkey": return config.rehab_rate_turnkey;
     case "Light": return config.rehab_rate_light;
     case "Medium": return config.rehab_rate_medium;
     case "Heavy": return config.rehab_rate_heavy;
@@ -138,12 +141,9 @@ export function estimateSystemArv(zip: string, sqft: number): number {
   return sqft * 100;
 }
 
-export function estimateRehabTier(year_built?: number): RehabTier {
-  if (!year_built) return "Medium";
-  const age = new Date().getFullYear() - year_built;
-  if (age <= 20) return "Light";
-  if (age <= 50) return "Medium";
-  return "Heavy";
+export function estimateRehabTier(_year_built?: number): RehabTier {
+  // Default all properties to Light — year_built is not a reliable indicator of rehab needs
+  return "Light";
 }
 
 // Main Screening Function

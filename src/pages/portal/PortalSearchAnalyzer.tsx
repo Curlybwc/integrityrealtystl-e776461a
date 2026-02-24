@@ -171,9 +171,19 @@ const PortalSearchAnalyzer = () => {
                 {/* Repair Cost Settings */}
                 <div className="space-y-4 md:col-span-2">
                   <h3 className="font-semibold text-sm text-foreground">Repair Cost Estimates ($/sqft)</h3>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-4 gap-4">
                     <div>
-                      <Label className="text-xs">Light (≤20yr old)</Label>
+                      <Label className="text-xs">Turnkey ($5/sf)</Label>
+                      <Input
+                        type="number"
+                        step="1"
+                        value={screeningConfig.rehab_rate_turnkey}
+                        onChange={(e) => updateConfig("rehab_rate_turnkey", parseFloat(e.target.value) || 0)}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Light ($15/sf)</Label>
                       <Input
                         type="number"
                         step="1"
@@ -183,7 +193,7 @@ const PortalSearchAnalyzer = () => {
                       />
                     </div>
                     <div>
-                      <Label className="text-xs">Medium (21–50yr)</Label>
+                      <Label className="text-xs">Medium ($30/sf)</Label>
                       <Input
                         type="number"
                         step="1"
@@ -193,7 +203,7 @@ const PortalSearchAnalyzer = () => {
                       />
                     </div>
                     <div>
-                      <Label className="text-xs">Heavy (50yr+)</Label>
+                      <Label className="text-xs">Heavy ($50/sf)</Label>
                       <Input
                         type="number"
                         step="1"
@@ -203,7 +213,7 @@ const PortalSearchAnalyzer = () => {
                       />
                     </div>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">Repair tier is auto-assigned based on property age. These rates affect All-in % calculations.</p>
+                  <p className="text-[11px] text-muted-foreground">Default rehab tier is Light for all properties. Change per-listing in the Deal Analyzer.</p>
                 </div>
               </div>
 
