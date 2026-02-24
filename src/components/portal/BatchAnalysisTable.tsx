@@ -224,7 +224,7 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
                 <TableHead><SortButton field="strategy">Strategy</SortButton></TableHead>
                 <TableHead>Est. Rent</TableHead>
                 <TableHead>ARV</TableHead>
-                <TableHead><SortButton field="rent_to_price_pct">RTP%</SortButton></TableHead>
+                <TableHead><SortButton field="rent_to_price_pct">RTP Ratio</SortButton></TableHead>
                 <TableHead><SortButton field="all_in_pct_of_arv">All-In%</SortButton></TableHead>
                 <TableHead></TableHead>
               </TableRow>
