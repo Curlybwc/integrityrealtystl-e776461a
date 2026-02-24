@@ -39,7 +39,7 @@
 - mls_status
 
 ### RLS
-- Public read for active deals (no auth required)
+- Anon SELECT only where `is_active = true` (enforced via RLS policy, not just frontend filter)
 
 ---
 
@@ -56,10 +56,15 @@
 ### Behavior
 - Handles pagination (loop all pages)
 - Filters out excluded cities post-fetch: Country Club Hills, Dellwood, Pagedale, Pine Lawn
+- Maintains `fetched_mls_numbers` set of ALL listings returned by Repliers (regardless of pass/fail)
 - Inlines screening math from screening.ts (ARV lookup, rent estimates, rehab tier, strategy evaluation)
 - Inlines ZIP data from stlZipData.ts (only target ZIPs)
 - Upserts passing deals (Turnkey or BRRRR); skips failures
-- Lifecycle cleanup: deactivates deals not seen in current run or with Closed/Expired/Withdrawn status
+- Lifecycle cleanup:
+  1. Deactivates deals where `mls_number NOT IN fetched_mls_numbers` (no longer in feed)
+  2. Deactivates deals where `mls_status IN (Closed, Expired, Withdrawn)` even if still in feed
+  3. Deactivates deals that previously passed but now fail screening (price changed, beds corrected, etc.)
+  - Key: deactivation is driven by the FULL fetch set, not just passing deals
 - Returns: { totalFetched, totalPassed, totalUpserted, totalDeactivated }
 
 ### Technical Constraints
@@ -70,8 +75,9 @@
 
 ## 3. Cron Schedule
 - Daily at 5:00 AM Central (11:00 UTC)
-- Uses pg_cron + pg_net extensions
+- Uses pg_cron + pg_net extensions (both must be enabled via migration)
 - Calls the daily-mls-harvest edge function via HTTP
+- Migration must explicitly: `CREATE EXTENSION IF NOT EXISTS pg_cron/pg_net` and `SELECT cron.schedule(...)`
 
 ---
 
