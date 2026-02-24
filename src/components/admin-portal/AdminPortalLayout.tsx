@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Building2,
   Settings,
+  Search,
   Menu,
   LogOut,
   User,
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { title: "Deal Pot", href: "/admin/deal-pot", icon: Building2 },
+  { title: "MLS Import", href: "/admin/mls-import", icon: Search },
   { title: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
