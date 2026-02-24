@@ -1,50 +1,53 @@
 
 
-# Store MLS Feed Plan in Project Memory
+# MLS Search and Batch Analyzer
 
-## What
-Save the approved Daily Property Harvest implementation plan to `.lovable/memory/mls-feed-plan.md` so it persists as a reference for all future development.
+## Overview
+A new page where admins or investors can enter custom MLS search criteria (ZIP codes, price range, bedrooms, etc.), pull back live results from the Repliers API, and then batch-run every result through the screening engine -- instantly seeing which listings pass Turnkey, BRRRR, Both, or None.
 
-## File to Create
-**`.lovable/memory/mls-feed-plan.md`**
+## How It Works
 
-Contents will include the full approved plan covering:
+1. **Search Form** -- The user fills in fields like ZIP code(s), min/max price, min bedrooms, min baths, status (Active, Pending, etc.). They hit "Search" and results come back from the MLS feed.
 
-### 1. Database Table: `deals`
-- All columns (mls_number, address, city, postal_code, list_price, beds, baths, sqft, year_built, mls_status, strategy, passes_turnkey, passes_brrrr, rent_effective, arv_effective, rehab_tier, rehab_est, rent_to_price_pct, all_in_pct_of_arv, is_active, first_seen_at, last_seen_at, photo_urls, etc.)
-- Indexes on mls_number, is_active, postal_code, mls_status
-- Public read RLS for active deals
+2. **Batch Screening** -- Every returned listing is automatically run through the same Turnkey/BRRRR screening logic already in the codebase. Each listing gets a strategy badge, rent estimate, ARV estimate, rent-to-price ratio, and all-in % of ARV.
 
-### 2. Edge Function: `daily-mls-harvest`
-- Calls Repliers API with hardcoded search criteria:
-  - ZIP codes: 63031, 63032, 63033, 63034, 63130, 63132, 63134, 63042, 63074, 63114, 63135
-  - Max price: $120,000, min bedrooms: 3, class: residential, status: Active + Pending
-  - Sort by price ascending
-- Handles pagination
-- Filters out excluded cities: Country Club Hills, Dellwood, Pagedale, Pine Lawn
-- Inlines screening math from screening.ts and ZIP data from stlZipData.ts (cannot import src/ in Deno)
-- Upserts passing deals, skips failing ones
-- Lifecycle cleanup: deactivates deals not seen in current run, or with Closed/Expired/Withdrawn status
-- Returns summary: totalFetched, totalPassed, totalUpserted, totalDeactivated
+3. **Results Table** -- A sortable table showing all results with columns for address, price, beds/baths/sqft, strategy badge, estimated rent, ARV, rent-to-price %, and all-in % ARV. Passing deals are highlighted; failing deals are shown but visually dimmed.
 
-### 3. Cron Schedule
-- Daily at 5:00 AM Central (11:00 UTC) via pg_cron + pg_net
+4. **Single-Deal Drill-Down** -- Click any row to open it in the existing Deal Analyzer with all fields pre-populated, so the user can tweak inputs (rehab tier, manual ARV, etc.) for deeper analysis.
 
-### 4. Frontend: `/deals` Page
-- Shows only `is_active = true` deals
-- Displays: Address, Price, Beds/Baths, ZIP, Strategy badge, Projected Rent, ARV Estimate, Rent-to-Price %, Status
-- Sorted by rent_to_price_pct DESC
-- Uses TanStack Query + database client SDK (not /api/deals)
+## What Gets Built
 
-### 5. Admin Trigger
-- "Run Harvest Now" button on Admin Dashboard
-- Manually invokes daily-mls-harvest and shows summary
+### 1. New Page: Portal Search Analyzer (`src/pages/portal/PortalSearchAnalyzer.tsx`)
+- Search form at top with fields: ZIP code (text input, supports single or comma-separated), min/max price, min beds, min baths, status dropdown
+- "Search MLS" button that calls the existing `fetch-mls-listings` edge function via the `useMlsSearch` hook
+- Pagination controls (the edge function already supports `pageNum`)
+- Results count and summary stats (e.g., "14 of 47 listings pass screening")
 
-### Technical Notes
-- rent_to_price_pct used instead of cash_on_cash (which doesn't exist in screening engine)
-- Screening logic and ZIP data must be inlined in edge function (Deno can't import from src/)
-- Repliers API params: use `minBedrooms`, `maxPrice`, `zip`, `class`, `status` (not the names from the ChatGPT prompt)
+### 2. New Component: Batch Results Table (`src/components/portal/BatchAnalysisTable.tsx`)
+- Takes the raw MLS results and runs each through `computeDealMetrics` from `screening.ts`
+- Columns: Address, City, ZIP, Price, Beds, Baths, Sqft, Strategy (badge), Est. Rent, ARV, RTP%, All-In % ARV
+- Color-coded: green rows for passing deals, dimmed for failures
+- Sortable by price, RTP%, strategy
+- "Analyze" link on each row that opens the Deal Analyzer with query params pre-filled
 
-## No Other Changes
-This is a memory-only save. No code changes.
+### 3. Route Registration (`src/App.tsx`)
+- Add route: `/portal/search-analyzer` pointing to the new page
+
+### 4. Navigation Update (`src/components/portal/InvestorPortalLayout.tsx`)
+- Add "Search & Analyze" link in the Tools section of the portal sidebar
+
+## Technical Details
+
+- **No new edge function needed** -- reuses the existing `fetch-mls-listings` function and the existing `useMlsSearch` hook
+- **No database changes** -- this is a live search tool; results are not persisted (the Daily Harvest handles persistence separately)
+- **Screening runs client-side** -- imports `computeDealMetrics`, `estimateSystemRent`, `estimateSystemArv`, `estimateRehabTier` from `screening.ts` to process each listing in the browser
+- **Deal Analyzer integration** -- each row links to `/portal/analyzer?address=...&zip=...&beds=...&price=...` using the existing URL-param auto-populate feature already built into `DealAnalyzer`
+
+### Files to Create
+- `src/pages/portal/PortalSearchAnalyzer.tsx` -- page with search form + results
+- `src/components/portal/BatchAnalysisTable.tsx` -- results table with inline screening
+
+### Files to Modify
+- `src/App.tsx` -- add route
+- `src/components/portal/InvestorPortalLayout.tsx` -- add sidebar link
 
