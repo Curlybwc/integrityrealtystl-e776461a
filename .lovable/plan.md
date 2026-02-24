@@ -1,42 +1,41 @@
 
 
-# Search Results: Card View + Photo Modal
+# Fix: Multi-ZIP Search Support
 
-## Overview
-Add a toggle to the Search & Analyze results so you can switch between the existing **table view** and a new **card grid view** that shows listing photos front and center. Both views will also support a photo lightbox for browsing all available images.
+## Problem
+The Repliers API does not accept comma-separated ZIP codes in a single `zip` parameter. When you search "63031,63130,63134,63135", the API returns 0 results because it treats the whole string as one invalid ZIP. Single-ZIP searches work fine (63031 with maxPrice 130000 returned 1 result).
 
-## What You'll See
+## Solution
+Update the edge function to detect comma-separated ZIPs, split them, and make parallel API calls for each ZIP -- then combine and deduplicate the results before returning them.
 
-### Card Grid View (new)
-- Each listing displayed as a "trading card" with:
-  - Main photo taking up the top portion (or a placeholder if no photos)
-  - Strategy badge (Both / Turnkey / BRRRR / None) overlaid on the photo
-  - Address, city, ZIP below the photo
-  - Price, beds/baths/sqft, estimated rent, ARV
-  - Color-coded RTP% and All-In% metrics
-  - "Analyze" button linking to the Deal Analyzer
-  - Click the photo to open a lightbox showing all available photos
-- Responsive grid: 1 column on mobile, 2 on tablet, 3 on desktop
-- Non-passing deals shown with reduced opacity (same as table view)
+## Changes
 
-### Table View (enhanced)
-- Existing table stays as-is
-- New camera icon added to each row showing the photo count (e.g., camera icon with "6")
-- Clicking it opens the same photo lightbox/modal
+### 1. Edge Function: `supabase/functions/fetch-mls-listings/index.ts`
+- Detect if `params.zip` contains commas
+- If so, split into individual ZIPs and fire a parallel `fetch` for each one
+- Merge all listing arrays, deduplicate by `mlsNumber`
+- Sum up `count`, recalculate `numPages` based on combined results
+- Single-ZIP searches continue to work exactly as before (no behavior change)
 
-### Toggle
-- A simple toggle button group (Grid / Table icons) at the top of the results area
-- User's choice persists during the session
+### 2. Fix Console Warnings
+- **`src/components/portal/BatchAnalysisTable.tsx`** -- The component doesn't need `forwardRef`; the warning is likely from how it's rendered. Will ensure no ref is being passed to it.
+- **`src/components/portal/ListingPhotoModal.tsx`** -- Same ref warning fix.
 
-## Technical Details
+## Technical Detail
 
-### Files to Create
-- `src/components/portal/ListingCard.tsx` -- Individual trading card component for a single analyzed listing. Shows photo, stats, strategy badge, and Analyze link.
-- `src/components/portal/ListingPhotoModal.tsx` -- Dialog/modal that displays all photos for a listing in a carousel or grid. Uses existing Dialog and AspectRatio components.
+The edge function change looks roughly like this:
 
-### Files to Modify
-- `src/components/portal/BatchAnalysisTable.tsx` -- Add the view toggle (grid vs table), render the card grid when in grid mode, add camera icon to table rows that opens the photo modal.
+```text
+If zip contains commas:
+  Split into ["63031", "63130", "63134", "63135"]
+  For each zip, build the same Repliers URL but with a single zip
+  Await all fetches in parallel (Promise.all)
+  Merge listings arrays
+  Deduplicate by mlsNumber
+  Return combined result
+Else:
+  Existing single-request logic (unchanged)
+```
 
-### No backend changes needed
-Photos are already returned from the API (`photo_urls` array, up to 10 per listing). This is purely a frontend display change.
+This keeps the API contract identical from the frontend's perspective -- no changes needed to `useMlsSearch` or `PortalSearchAnalyzer`.
 
