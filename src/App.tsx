@@ -59,6 +59,7 @@ import PartnerTestimonials from "./pages/partner-portal/PartnerTestimonials";
 import AdminPortalLayout from "./components/admin-portal/AdminPortalLayout";
 import AdminDashboard from "./pages/admin-portal/AdminDashboard";
 import AdminDealPot from "./pages/admin-portal/AdminDealPot";
+import AdminMlsImport from "./pages/admin-portal/AdminMlsImport";
 import AdminSettings from "./pages/admin-portal/AdminSettings";
 
 const queryClient = new QueryClient();
@@ -129,6 +130,7 @@ const App = () => (
           <Route path="/admin" element={<AdminPortalLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="deal-pot" element={<AdminDealPot />} />
+            <Route path="mls-import" element={<AdminMlsImport />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
 
