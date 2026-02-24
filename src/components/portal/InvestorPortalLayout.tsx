@@ -14,6 +14,7 @@ import {
   FileSignature,
   ClipboardCheck,
   ExternalLink,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/integrity-logo.png";
@@ -38,6 +39,7 @@ const navItems = [
   { title: "Deals", href: "/portal/deals", icon: Building2 },
   { title: "My Offers", href: "/portal/my-offers", icon: FileSignature },
   { title: "My Bids", href: "/portal/my-bids", icon: Wrench },
+  { title: "Search & Analyze", href: "/portal/search-analyzer", icon: Search },
   { title: "Deal Analyzer", href: "/portal/analyzer", icon: Calculator },
   { title: "Section 8 Calculator", href: "/portal/section8-calculator", icon: ClipboardCheck },
   { title: "Network Partners", href: "/portal/local-network", icon: Users },
