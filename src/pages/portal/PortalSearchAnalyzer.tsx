@@ -77,10 +77,10 @@ const PortalSearchAnalyzer = () => {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription className="text-sm">
-          <strong>Screening assumptions:</strong> Rent estimates are based on ZIP-level comps and Fair Market Rent data. 
-          ARV is estimated from median $/sqft by ZIP. Repair costs are assigned by property age (Light ≤20yr, Medium 21–50yr, Heavy 50yr+). 
-          All-in % = (Purchase Price + Estimated Repairs) ÷ ARV. These are <em>estimates only</em> — always verify with your own due diligence. 
-          Adjust the screening thresholds below to match your criteria.
+          <strong>Screening assumptions:</strong> All homes are analyzed assuming <em>Light rehab ($15/sqft)</em>. 
+          Rent estimates use ZIP-level comps and Fair Market Rent data. ARV is estimated from median $/sqft by ZIP. 
+          All-in % = (Purchase Price + Estimated Repairs) ÷ ARV. These are <em>estimates only</em> — click <strong>Analyze</strong> on 
+          any listing to adjust all numbers and assumptions for that specific deal.
         </AlertDescription>
       </Alert>
 
