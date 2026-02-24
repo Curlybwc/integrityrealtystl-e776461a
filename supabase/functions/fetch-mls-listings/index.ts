@@ -34,7 +34,11 @@ function normalizeListing(listing: any) {
     list_price: parseFloat(listing.listPrice || "0"),
     mls_status: mapStatus(listing.status),
     photo_urls: Array.isArray(photos)
-      ? photos.slice(0, 10).map((p: any) => (typeof p === "string" ? p : p.url || p.photoUrl || ""))
+      ? photos.slice(0, 10).map((p: any) => {
+          const path = typeof p === "string" ? p : p.url || p.photoUrl || "";
+          if (!path) return "";
+          return path.startsWith("http") ? path : `https://cdn.repliers.io/${path}`;
+        }).filter(Boolean)
       : [],
     raw: listing,
   };
