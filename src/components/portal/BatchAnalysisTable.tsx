@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpDown, ExternalLink } from "lucide-react";
+import { ArrowUpDown, ExternalLink, Camera, LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { MlsListing } from "@/hooks/useMlsSearch";
 import {
   computeDealMetrics,
@@ -22,6 +23,8 @@ import {
   type Strategy,
 } from "@/lib/screening";
 import { cn } from "@/lib/utils";
+import ListingCard from "./ListingCard";
+import ListingPhotoModal from "./ListingPhotoModal";
 
 interface AnalyzedListing extends MlsListing {
   rent_effective: number;
@@ -34,6 +37,7 @@ interface AnalyzedListing extends MlsListing {
 }
 
 type SortField = "list_price" | "rent_to_price_pct" | "all_in_pct_of_arv" | "strategy";
+type ViewMode = "table" | "grid";
 
 interface BatchAnalysisTableProps {
   listings: MlsListing[];
@@ -55,6 +59,8 @@ const strategyVariant = (s: Strategy) => {
 const BatchAnalysisTable = ({ listings }: BatchAnalysisTableProps) => {
   const [sortField, setSortField] = useState<SortField>("strategy");
   const [sortAsc, setSortAsc] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [photoModal, setPhotoModal] = useState<{ photos: string[]; address: string } | null>(null);
 
   const analyzed: AnalyzedListing[] = useMemo(() => {
     return listings.map((l) => {
@@ -101,6 +107,12 @@ const BatchAnalysisTable = ({ listings }: BatchAnalysisTableProps) => {
     }
   };
 
+  const openPhotos = (l: AnalyzedListing) => {
+    if (l.photo_urls?.length) {
+      setPhotoModal({ photos: l.photo_urls, address: l.address });
+    }
+  };
+
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <Button
       variant="ghost"
@@ -115,85 +127,144 @@ const BatchAnalysisTable = ({ listings }: BatchAnalysisTableProps) => {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">
-        <span className="font-semibold text-foreground">{passingCount}</span> of{" "}
-        <span className="font-semibold text-foreground">{analyzed.length}</span> listings pass screening
-      </p>
+      {/* Header row with stats and view toggle */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground">{passingCount}</span> of{" "}
+          <span className="font-semibold text-foreground">{analyzed.length}</span> listings pass screening
+        </p>
+        <ToggleGroup
+          type="single"
+          value={viewMode}
+          onValueChange={(v) => v && setViewMode(v as ViewMode)}
+          size="sm"
+        >
+          <ToggleGroupItem value="grid" aria-label="Grid view">
+            <LayoutGrid className="h-4 w-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="table" aria-label="Table view">
+            <List className="h-4 w-4" />
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
 
-      <div className="rounded-md border border-border overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Address</TableHead>
-              <TableHead>City</TableHead>
-              <TableHead>ZIP</TableHead>
-              <TableHead><SortButton field="list_price">Price</SortButton></TableHead>
-              <TableHead>Bd/Ba/Sf</TableHead>
-              <TableHead><SortButton field="strategy">Strategy</SortButton></TableHead>
-              <TableHead>Est. Rent</TableHead>
-              <TableHead>ARV</TableHead>
-              <TableHead><SortButton field="rent_to_price_pct">RTP%</SortButton></TableHead>
-              <TableHead><SortButton field="all_in_pct_of_arv">All-In%</SortButton></TableHead>
-              <TableHead></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sorted.map((l) => {
-              const passes = l.strategy !== "None";
-              return (
-                <TableRow
-                  key={l.mls_listing_id}
-                  className={cn(!passes && "opacity-50")}
-                >
-                  <TableCell className="font-medium text-xs">{l.address}</TableCell>
-                  <TableCell className="text-xs">{l.city}</TableCell>
-                  <TableCell className="text-xs">{l.zip}</TableCell>
-                  <TableCell className="text-xs">{formatCurrency(l.list_price)}</TableCell>
-                  <TableCell className="text-xs whitespace-nowrap">
-                    {l.beds}/{l.baths}/{l.sqft?.toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={strategyVariant(l.strategy)} className="text-xs">
-                      {l.strategy}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-xs">{formatCurrency(l.rent_effective)}</TableCell>
-                  <TableCell className="text-xs">{formatCurrency(l.arv_effective)}</TableCell>
-                  <TableCell className={cn(
-                    "text-xs font-medium",
-                    l.rent_to_price_pct >= 0.013 ? "text-green-600" : l.rent_to_price_pct >= 0.01 ? "text-orange-500" : "text-destructive"
-                  )}>
-                    {formatPercent(l.rent_to_price_pct)}
-                  </TableCell>
-                  <TableCell className={cn(
-                    "text-xs font-medium",
-                    l.all_in_pct_of_arv <= 0.75 ? "text-green-600" : l.all_in_pct_of_arv <= 0.80 ? "text-orange-500" : "text-destructive"
-                  )}>
-                    {formatPercent(l.all_in_pct_of_arv)}
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      to={`/portal/analyzer?address=${encodeURIComponent(l.address)}&zip=${l.zip}&beds=${l.beds}&baths=${l.baths}&sqft=${l.sqft}&price=${l.list_price}`}
-                    >
-                      <Button variant="ghost" size="sm" className="h-7 px-2">
-                        <ExternalLink className="h-3 w-3 mr-1" />
-                        Analyze
-                      </Button>
-                    </Link>
+      {/* Grid View */}
+      {viewMode === "grid" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {sorted.map((l) => (
+            <ListingCard
+              key={l.mls_listing_id}
+              listing={l}
+              onPhotoClick={() => openPhotos(l)}
+            />
+          ))}
+          {sorted.length === 0 && (
+            <p className="col-span-full text-center text-muted-foreground py-8">
+              No listings to display
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Table View */}
+      {viewMode === "table" && (
+        <div className="rounded-md border border-border overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead></TableHead>
+                <TableHead>Address</TableHead>
+                <TableHead>City</TableHead>
+                <TableHead>ZIP</TableHead>
+                <TableHead><SortButton field="list_price">Price</SortButton></TableHead>
+                <TableHead>Bd/Ba/Sf</TableHead>
+                <TableHead><SortButton field="strategy">Strategy</SortButton></TableHead>
+                <TableHead>Est. Rent</TableHead>
+                <TableHead>ARV</TableHead>
+                <TableHead><SortButton field="rent_to_price_pct">RTP%</SortButton></TableHead>
+                <TableHead><SortButton field="all_in_pct_of_arv">All-In%</SortButton></TableHead>
+                <TableHead></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sorted.map((l) => {
+                const passes = l.strategy !== "None";
+                const photoCount = l.photo_urls?.length ?? 0;
+                return (
+                  <TableRow
+                    key={l.mls_listing_id}
+                    className={cn(!passes && "opacity-50")}
+                  >
+                    <TableCell className="pr-0">
+                      {photoCount > 0 ? (
+                        <button
+                          onClick={() => openPhotos(l)}
+                          className="flex items-center gap-0.5 text-muted-foreground hover:text-foreground transition-colors"
+                          title={`${photoCount} photos`}
+                        >
+                          <Camera className="h-3.5 w-3.5" />
+                          <span className="text-[10px]">{photoCount}</span>
+                        </button>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="font-medium text-xs">{l.address}</TableCell>
+                    <TableCell className="text-xs">{l.city}</TableCell>
+                    <TableCell className="text-xs">{l.zip}</TableCell>
+                    <TableCell className="text-xs">{formatCurrency(l.list_price)}</TableCell>
+                    <TableCell className="text-xs whitespace-nowrap">
+                      {l.beds}/{l.baths}/{l.sqft?.toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={strategyVariant(l.strategy)} className="text-xs">
+                        {l.strategy}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs">{formatCurrency(l.rent_effective)}</TableCell>
+                    <TableCell className="text-xs">{formatCurrency(l.arv_effective)}</TableCell>
+                    <TableCell className={cn(
+                      "text-xs font-medium",
+                      l.rent_to_price_pct >= 0.013 ? "text-green-600" : l.rent_to_price_pct >= 0.01 ? "text-orange-500" : "text-destructive"
+                    )}>
+                      {formatPercent(l.rent_to_price_pct)}
+                    </TableCell>
+                    <TableCell className={cn(
+                      "text-xs font-medium",
+                      l.all_in_pct_of_arv <= 0.75 ? "text-green-600" : l.all_in_pct_of_arv <= 0.80 ? "text-orange-500" : "text-destructive"
+                    )}>
+                      {formatPercent(l.all_in_pct_of_arv)}
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        to={`/portal/analyzer?address=${encodeURIComponent(l.address)}&zip=${l.zip}&beds=${l.beds}&baths=${l.baths}&sqft=${l.sqft}&price=${l.list_price}`}
+                      >
+                        <Button variant="ghost" size="sm" className="h-7 px-2">
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          Analyze
+                        </Button>
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {sorted.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
+                    No listings to display
                   </TableCell>
                 </TableRow>
-              );
-            })}
-            {sorted.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
-                  No listings to display
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {/* Photo Modal */}
+      <ListingPhotoModal
+        open={!!photoModal}
+        onOpenChange={(open) => !open && setPhotoModal(null)}
+        photos={photoModal?.photos ?? []}
+        address={photoModal?.address ?? ""}
+      />
     </div>
   );
 };
