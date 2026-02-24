@@ -90,7 +90,7 @@ export interface ScreeningConfig {
 }
 
 export const DEFAULT_SCREENING_CONFIG: ScreeningConfig = {
-  rehab_rate_light: 15,
+  rehab_rate_light: 20,
   rehab_rate_medium: 30,
   rehab_rate_heavy: 50,
   turnkey_min_rtp: 0.0135,
