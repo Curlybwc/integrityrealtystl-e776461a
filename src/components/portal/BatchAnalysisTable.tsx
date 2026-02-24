@@ -38,6 +38,7 @@ interface AnalyzedListing extends MlsListing {
 
 type SortField = "list_price" | "rent_to_price_pct" | "all_in_pct_of_arv" | "strategy";
 type ViewMode = "table" | "grid";
+type StrategyFilter = "all" | "pass_any" | "Turnkey" | "BRRRR" | "Both" | "None";
 
 interface BatchAnalysisTableProps {
   listings: MlsListing[];
@@ -60,6 +61,7 @@ const BatchAnalysisTable = ({ listings }: BatchAnalysisTableProps) => {
   const [sortField, setSortField] = useState<SortField>("strategy");
   const [sortAsc, setSortAsc] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [strategyFilter, setStrategyFilter] = useState<StrategyFilter>("all");
   const [photoModal, setPhotoModal] = useState<{ photos: string[]; address: string } | null>(null);
 
   const analyzed: AnalyzedListing[] = useMemo(() => {
@@ -84,8 +86,23 @@ const BatchAnalysisTable = ({ listings }: BatchAnalysisTableProps) => {
     });
   }, [listings]);
 
+  const stats = useMemo(() => {
+    const passAny = analyzed.filter((l) => l.strategy !== "None").length;
+    const turnkey = analyzed.filter((l) => l.passes_turnkey && !l.passes_brrrr).length;
+    const brrrr = analyzed.filter((l) => l.passes_brrrr && !l.passes_turnkey).length;
+    const both = analyzed.filter((l) => l.passes_turnkey && l.passes_brrrr).length;
+    const none = analyzed.filter((l) => l.strategy === "None").length;
+    return { total: analyzed.length, passAny, turnkey, brrrr, both, none };
+  }, [analyzed]);
+
+  const filtered = useMemo(() => {
+    if (strategyFilter === "all") return analyzed;
+    if (strategyFilter === "pass_any") return analyzed.filter((l) => l.strategy !== "None");
+    return analyzed.filter((l) => l.strategy === strategyFilter);
+  }, [analyzed, strategyFilter]);
+
   const sorted = useMemo(() => {
-    return [...analyzed].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       let cmp = 0;
       if (sortField === "strategy") {
         cmp = strategyOrder[a.strategy] - strategyOrder[b.strategy];
@@ -94,9 +111,9 @@ const BatchAnalysisTable = ({ listings }: BatchAnalysisTableProps) => {
       }
       return sortAsc ? cmp : -cmp;
     });
-  }, [analyzed, sortField, sortAsc]);
+  }, [filtered, sortField, sortAsc]);
 
-  const passingCount = analyzed.filter((l) => l.strategy !== "None").length;
+  const passingCount = stats.passAny;
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -127,11 +144,32 @@ const BatchAnalysisTable = ({ listings }: BatchAnalysisTableProps) => {
 
   return (
     <div className="space-y-3">
-      {/* Header row with stats and view toggle */}
+      {/* Summary stats */}
+      <div className="flex flex-wrap items-center gap-2">
+        {([
+          ["all", `All (${stats.total})`],
+          ["pass_any", `Pass Any (${stats.passAny})`],
+          ["Both", `Both (${stats.both})`],
+          ["Turnkey", `Turnkey (${stats.turnkey})`],
+          ["BRRRR", `BRRRR (${stats.brrrr})`],
+          ["None", `None (${stats.none})`],
+        ] as [StrategyFilter, string][]).map(([key, label]) => (
+          <Button
+            key={key}
+            variant={strategyFilter === key ? "default" : "outline"}
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => setStrategyFilter(key)}
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
+
+      {/* Header row with count and view toggle */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">{passingCount}</span> of{" "}
-          <span className="font-semibold text-foreground">{analyzed.length}</span> listings pass screening
+          Showing <span className="font-semibold text-foreground">{sorted.length}</span> listings
         </p>
         <ToggleGroup
           type="single"
