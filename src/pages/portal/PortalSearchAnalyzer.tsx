@@ -74,13 +74,16 @@ const PortalSearchAnalyzer = () => {
       </div>
 
       {/* Disclaimer */}
-      <Alert>
+      <Alert className="py-3">
         <Info className="h-4 w-4" />
-        <AlertDescription className="text-sm">
-          <strong>Smart screening:</strong> Rehab level is auto-estimated from the listing price relative to ARV — 
-          properties priced near ARV are assumed Turnkey ($5/sf), while deeply discounted properties are flagged as 
-          Heavy rehab ($50/sf). RTP Ratio = Rent ÷ All-In Price (price + repairs). 
-          These are <em>estimates only</em> — click <strong>Analyze</strong> on any listing to customize all numbers and assumptions.
+        <AlertDescription className="text-xs leading-relaxed space-y-1.5">
+          <p className="font-semibold text-sm">Analysis is based on estimates only — click Analyze on any listing to customize.</p>
+          <ul className="list-disc list-inside text-muted-foreground space-y-0.5">
+            <li><strong>Rehab tier</strong> is estimated from price vs. ARV: 90%+ = Turnkey ($5/sf), 80–90% = Light ($15/sf), 60–80% = Medium ($30/sf), &lt;60% = Heavy ($50/sf)</li>
+            <li><strong>RTP Ratio</strong> = Monthly Rent ÷ All-In Price (purchase price + estimated repairs)</li>
+            <li><strong>All-In %</strong> = (Purchase Price + Estimated Repairs) ÷ ARV</li>
+            <li><strong>Rent</strong> estimated from ZIP-level comps &amp; Fair Market Rent data; <strong>ARV</strong> from median $/sqft by ZIP</li>
+          </ul>
         </AlertDescription>
       </Alert>
 
