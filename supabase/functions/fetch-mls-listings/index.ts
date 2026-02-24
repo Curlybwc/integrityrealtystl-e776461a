@@ -139,9 +139,10 @@ serve(async (req) => {
         }
       }
 
-      listings = merged;
+      // Filter out leases that slip through
+      listings = merged.filter((l: any) => !l.property_type?.toLowerCase().includes("lease"));
       totalCount = listings.length;
-      console.log(`Multi-ZIP merged: ${totalCount} unique listings`);
+      console.log(`Multi-ZIP merged: ${totalCount} unique listings (leases excluded)`);
     } else {
       // Single ZIP (or no ZIP) — original behavior
       const repliersUrl = buildRepliersUrl(params);
@@ -163,8 +164,9 @@ serve(async (req) => {
       const data = await response.json();
       console.log(`Repliers response: count=${data.count}, page=${data.page}, numPages=${data.numPages}, listings=${(data.listings || []).length}`);
 
-      listings = (data.listings || []).map(normalizeListing);
-      totalCount = data.count || listings.length;
+      listings = (data.listings || []).map(normalizeListing)
+        .filter((l: any) => !l.property_type?.toLowerCase().includes("lease"));
+      totalCount = listings.length;
     }
 
     return new Response(
