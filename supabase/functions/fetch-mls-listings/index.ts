@@ -20,17 +20,6 @@ function normalizeListing(listing: any) {
   const details = listing.details || {};
   const photos = listing.images || listing.photos || [];
 
-  // Log raw details keys for first listing to debug sqft field name
-  console.log("Raw details keys:", Object.keys(details).join(", "));
-  console.log("Raw sqft candidates:", JSON.stringify({
-    sqft: details.sqft,
-    squareFeet: details.squareFeet,
-    area: details.area,
-    sqftTotal: details.sqftTotal,
-    livingArea: details.livingArea,
-    numSqft: details.numSqft,
-  }));
-
   return {
     mls_listing_id: listing.mlsNumber || listing.listingId || listing.id,
     address: `${address.streetNumber || ""} ${address.streetName || ""} ${address.streetSuffix || ""}`.trim(),
@@ -39,7 +28,7 @@ function normalizeListing(listing: any) {
     zip: address.zip || address.postalCode || "",
     beds: parseInt(details.numBedrooms || details.bedrooms || "0", 10),
     baths: parseInt(details.numBathrooms || details.bathrooms || "0", 10),
-    sqft: parseInt(details.sqft || details.squareFeet || details.area || details.sqftTotal || details.livingArea || "0", 10),
+    sqft: parseInt(details.sqft || details.squareFeet || details.area || "0", 10),
     year_built: details.yearBuilt ? parseInt(details.yearBuilt, 10) : undefined,
     property_type: details.propertyType || listing.type || "Single Family",
     list_price: parseFloat(listing.listPrice || "0"),
