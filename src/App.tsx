@@ -41,6 +41,7 @@ import PortalResources from "./pages/portal/PortalResources";
 import PortalLinks from "./pages/portal/PortalLinks";
 import PortalDocuments from "./pages/portal/PortalDocuments";
 import PortalAccount from "./pages/portal/PortalAccount";
+import PortalSearchAnalyzer from "./pages/portal/PortalSearchAnalyzer";
 
 // Wholesaler Portal pages
 import WholesalerPortalLayout from "./components/wholesaler-portal/WholesalerPortalLayout";
@@ -109,6 +110,7 @@ const App = () => (
             <Route path="links" element={<PortalLinks />} />
             <Route path="documents" element={<PortalDocuments />} />
             <Route path="account" element={<PortalAccount />} />
+            <Route path="search-analyzer" element={<PortalSearchAnalyzer />} />
           </Route>
 
           {/* Wholesaler Portal routes */}
