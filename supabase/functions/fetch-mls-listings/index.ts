@@ -15,10 +15,23 @@ function mapStatus(status: string | undefined): string {
   return "Unknown";
 }
 
+let loggedSqftOnce = false;
 function normalizeListing(listing: any) {
   const address = listing.address || {};
   const details = listing.details || {};
   const photos = listing.images || listing.photos || [];
+
+  // Log all sqft/area-related keys from first listing with sqft data
+  if (!loggedSqftOnce && details.sqft) {
+    const sqftKeys: Record<string, any> = {};
+    for (const [k, v] of Object.entries(details)) {
+      if (v != null && (k.toLowerCase().includes("sqft") || k.toLowerCase().includes("area") || k.toLowerCase().includes("living") || k.toLowerCase().includes("grade") || k.toLowerCase().includes("size") || k.toLowerCase().includes("square"))) {
+        sqftKeys[k] = v;
+      }
+    }
+    console.log("SQFT-RELATED FIELDS:", JSON.stringify(sqftKeys));
+    loggedSqftOnce = true;
+  }
 
   return {
     mls_listing_id: listing.mlsNumber || listing.listingId || listing.id,
