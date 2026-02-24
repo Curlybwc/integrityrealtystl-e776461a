@@ -77,10 +77,10 @@ const PortalSearchAnalyzer = () => {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription className="text-sm">
-          <strong>Screening assumptions:</strong> All homes are analyzed assuming <em>Light rehab ($15/sqft)</em>. 
-          Rent estimates use ZIP-level comps and Fair Market Rent data. ARV is estimated from median $/sqft by ZIP. 
-          All-in % = (Purchase Price + Estimated Repairs) ÷ ARV. These are <em>estimates only</em> — click <strong>Analyze</strong> on 
-          any listing to adjust all numbers and assumptions for that specific deal.
+          <strong>Smart screening:</strong> Rehab level is auto-estimated from the listing price relative to ARV — 
+          properties priced near ARV are assumed Turnkey ($5/sf), while deeply discounted properties are flagged as 
+          Heavy rehab ($50/sf). RTP Ratio = Rent ÷ All-In Price (price + repairs). 
+          These are <em>estimates only</em> — click <strong>Analyze</strong> on any listing to customize all numbers and assumptions.
         </AlertDescription>
       </Alert>
 
@@ -112,7 +112,7 @@ const PortalSearchAnalyzer = () => {
                         onChange={(e) => updateConfig("brrrr_min_rtp", parseFloat(e.target.value) / 100 || 0)}
                         className="h-8 text-sm"
                       />
-                      <p className="text-[11px] text-muted-foreground mt-0.5">Monthly rent ÷ purchase price (default: 1.30%)</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">Monthly rent ÷ all-in price (default: 1.30%)</p>
                     </div>
                     <div>
                       <Label className="text-xs">Max All-in % of ARV</Label>
@@ -141,7 +141,7 @@ const PortalSearchAnalyzer = () => {
                         onChange={(e) => updateConfig("turnkey_min_rtp", parseFloat(e.target.value) / 100 || 0)}
                         className="h-8 text-sm"
                       />
-                      <p className="text-[11px] text-muted-foreground mt-0.5">Monthly rent ÷ purchase price (default: 1.35%)</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">Monthly rent ÷ all-in price (default: 1.35%)</p>
                     </div>
                     <div>
                       <Label className="text-xs">Price as % of ARV (range)</Label>
@@ -213,7 +213,7 @@ const PortalSearchAnalyzer = () => {
                       />
                     </div>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">Default rehab tier is Light for all properties. Change per-listing in the Deal Analyzer.</p>
+                  <p className="text-[11px] text-muted-foreground">Rehab tier is auto-estimated from price vs. ARV (90%+ = Turnkey, 80-90% = Light, 60-80% = Medium, &lt;60% = Heavy).</p>
                 </div>
               </div>
 

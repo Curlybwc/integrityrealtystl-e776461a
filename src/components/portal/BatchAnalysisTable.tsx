@@ -73,7 +73,7 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
     return listings.map((l) => {
       const rent_system = estimateSystemRent(l.zip, l.beds);
       const arv_system = estimateSystemArv(l.zip, l.sqft);
-      const rehab_tier_system = estimateRehabTier(l.year_built);
+      const rehab_tier_system = estimateRehabTier(l.list_price, arv_system);
 
       const metrics = computeDealMetrics({
         source_type: "MLS",
