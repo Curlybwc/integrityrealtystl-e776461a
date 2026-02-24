@@ -35,23 +35,23 @@ serve(async (req) => {
     // Build Repliers API URL
     const repliersUrl = new URL("https://api.repliers.io/listings");
 
-    // Map our params to Repliers params
+    // Map our params to Repliers params (using their exact parameter names)
     if (params.city) repliersUrl.searchParams.set("city", params.city);
     if (params.zip) repliersUrl.searchParams.set("zip", params.zip);
     if (params.minPrice) repliersUrl.searchParams.set("minPrice", params.minPrice);
     if (params.maxPrice) repliersUrl.searchParams.set("maxPrice", params.maxPrice);
-    if (params.minBeds) repliersUrl.searchParams.set("minBeds", params.minBeds);
-    if (params.maxBeds) repliersUrl.searchParams.set("maxBeds", params.maxBeds);
+    if (params.minBeds) repliersUrl.searchParams.set("minBedrooms", params.minBeds);
+    if (params.maxBeds) repliersUrl.searchParams.set("maxBedrooms", params.maxBeds);
     if (params.minBaths) repliersUrl.searchParams.set("minBaths", params.minBaths);
     if (params.minSqft) repliersUrl.searchParams.set("minSqft", params.minSqft);
     if (params.maxSqft) repliersUrl.searchParams.set("maxSqft", params.maxSqft);
     if (params.status) repliersUrl.searchParams.set("status", params.status);
     if (params.type) repliersUrl.searchParams.set("type", params.type);
-    if (params.class) repliersUrl.searchParams.set("class", params.class || "residential");
+    if (params.class) repliersUrl.searchParams.set("class", params.class);
     if (params.pageNum) repliersUrl.searchParams.set("pageNum", params.pageNum);
     if (params.resultsPerPage) repliersUrl.searchParams.set("resultsPerPage", params.resultsPerPage);
 
-    // Default to residential class and active status for STL area
+    // Defaults
     if (!params.class) repliersUrl.searchParams.set("class", "residential");
     if (!params.status) repliersUrl.searchParams.set("status", "A");
     if (!params.resultsPerPage) repliersUrl.searchParams.set("resultsPerPage", "50");
@@ -75,6 +75,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
+    console.log(`Repliers response: count=${data.count}, page=${data.page}, numPages=${data.numPages}, listings=${(data.listings || []).length}`);
 
     // Normalize listings to our Deal-compatible format
     const listings = (data.listings || []).map((listing: any) => {
@@ -108,6 +109,14 @@ serve(async (req) => {
         page: data.page || 1,
         numPages: data.numPages || 1,
         listings,
+        // Include debug info
+        _debug: {
+          repliersUrl: repliersUrl.toString().replace(apiKey, "***"),
+          rawCount: data.count,
+          rawPage: data.page,
+          rawNumPages: data.numPages,
+          rawKeys: Object.keys(data),
+        },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
