@@ -65,6 +65,7 @@ function buildRepliersUrl(params: Record<string, string>, singleZip?: string): U
   if (params.resultsPerPage) url.searchParams.set("resultsPerPage", params.resultsPerPage);
 
   if (!params.class) url.searchParams.set("class", "residential");
+  if (!params.type) url.searchParams.set("type", "Sale");
   if (!params.status) url.searchParams.set("status", "A");
   if (!params.resultsPerPage) url.searchParams.set("resultsPerPage", "50");
 

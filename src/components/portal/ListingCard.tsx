@@ -95,7 +95,7 @@ const ListingCard = ({ listing: l, onPhotoClick }: ListingCardProps) => {
             <span className="font-medium">{formatCurrency(l.arv_effective)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">RTP%</span>
+            <span className="text-muted-foreground">RTP Ratio</span>
             <span className={cn(
               "font-medium",
               l.rent_to_price_pct >= 0.013 ? "text-green-600" : l.rent_to_price_pct >= 0.01 ? "text-orange-500" : "text-destructive"
