@@ -1,53 +1,42 @@
 
 
-# MLS Search and Batch Analyzer
+# Search Results: Card View + Photo Modal
 
 ## Overview
-A new page where admins or investors can enter custom MLS search criteria (ZIP codes, price range, bedrooms, etc.), pull back live results from the Repliers API, and then batch-run every result through the screening engine -- instantly seeing which listings pass Turnkey, BRRRR, Both, or None.
+Add a toggle to the Search & Analyze results so you can switch between the existing **table view** and a new **card grid view** that shows listing photos front and center. Both views will also support a photo lightbox for browsing all available images.
 
-## How It Works
+## What You'll See
 
-1. **Search Form** -- The user fills in fields like ZIP code(s), min/max price, min bedrooms, min baths, status (Active, Pending, etc.). They hit "Search" and results come back from the MLS feed.
+### Card Grid View (new)
+- Each listing displayed as a "trading card" with:
+  - Main photo taking up the top portion (or a placeholder if no photos)
+  - Strategy badge (Both / Turnkey / BRRRR / None) overlaid on the photo
+  - Address, city, ZIP below the photo
+  - Price, beds/baths/sqft, estimated rent, ARV
+  - Color-coded RTP% and All-In% metrics
+  - "Analyze" button linking to the Deal Analyzer
+  - Click the photo to open a lightbox showing all available photos
+- Responsive grid: 1 column on mobile, 2 on tablet, 3 on desktop
+- Non-passing deals shown with reduced opacity (same as table view)
 
-2. **Batch Screening** -- Every returned listing is automatically run through the same Turnkey/BRRRR screening logic already in the codebase. Each listing gets a strategy badge, rent estimate, ARV estimate, rent-to-price ratio, and all-in % of ARV.
+### Table View (enhanced)
+- Existing table stays as-is
+- New camera icon added to each row showing the photo count (e.g., camera icon with "6")
+- Clicking it opens the same photo lightbox/modal
 
-3. **Results Table** -- A sortable table showing all results with columns for address, price, beds/baths/sqft, strategy badge, estimated rent, ARV, rent-to-price %, and all-in % ARV. Passing deals are highlighted; failing deals are shown but visually dimmed.
-
-4. **Single-Deal Drill-Down** -- Click any row to open it in the existing Deal Analyzer with all fields pre-populated, so the user can tweak inputs (rehab tier, manual ARV, etc.) for deeper analysis.
-
-## What Gets Built
-
-### 1. New Page: Portal Search Analyzer (`src/pages/portal/PortalSearchAnalyzer.tsx`)
-- Search form at top with fields: ZIP code (text input, supports single or comma-separated), min/max price, min beds, min baths, status dropdown
-- "Search MLS" button that calls the existing `fetch-mls-listings` edge function via the `useMlsSearch` hook
-- Pagination controls (the edge function already supports `pageNum`)
-- Results count and summary stats (e.g., "14 of 47 listings pass screening")
-
-### 2. New Component: Batch Results Table (`src/components/portal/BatchAnalysisTable.tsx`)
-- Takes the raw MLS results and runs each through `computeDealMetrics` from `screening.ts`
-- Columns: Address, City, ZIP, Price, Beds, Baths, Sqft, Strategy (badge), Est. Rent, ARV, RTP%, All-In % ARV
-- Color-coded: green rows for passing deals, dimmed for failures
-- Sortable by price, RTP%, strategy
-- "Analyze" link on each row that opens the Deal Analyzer with query params pre-filled
-
-### 3. Route Registration (`src/App.tsx`)
-- Add route: `/portal/search-analyzer` pointing to the new page
-
-### 4. Navigation Update (`src/components/portal/InvestorPortalLayout.tsx`)
-- Add "Search & Analyze" link in the Tools section of the portal sidebar
+### Toggle
+- A simple toggle button group (Grid / Table icons) at the top of the results area
+- User's choice persists during the session
 
 ## Technical Details
 
-- **No new edge function needed** -- reuses the existing `fetch-mls-listings` function and the existing `useMlsSearch` hook
-- **No database changes** -- this is a live search tool; results are not persisted (the Daily Harvest handles persistence separately)
-- **Screening runs client-side** -- imports `computeDealMetrics`, `estimateSystemRent`, `estimateSystemArv`, `estimateRehabTier` from `screening.ts` to process each listing in the browser
-- **Deal Analyzer integration** -- each row links to `/portal/analyzer?address=...&zip=...&beds=...&price=...` using the existing URL-param auto-populate feature already built into `DealAnalyzer`
-
 ### Files to Create
-- `src/pages/portal/PortalSearchAnalyzer.tsx` -- page with search form + results
-- `src/components/portal/BatchAnalysisTable.tsx` -- results table with inline screening
+- `src/components/portal/ListingCard.tsx` -- Individual trading card component for a single analyzed listing. Shows photo, stats, strategy badge, and Analyze link.
+- `src/components/portal/ListingPhotoModal.tsx` -- Dialog/modal that displays all photos for a listing in a carousel or grid. Uses existing Dialog and AspectRatio components.
 
 ### Files to Modify
-- `src/App.tsx` -- add route
-- `src/components/portal/InvestorPortalLayout.tsx` -- add sidebar link
+- `src/components/portal/BatchAnalysisTable.tsx` -- Add the view toggle (grid vs table), render the card grid when in grid mode, add camera icon to table rows that opens the photo modal.
+
+### No backend changes needed
+Photos are already returned from the API (`photo_urls` array, up to 10 per listing). This is purely a frontend display change.
 
