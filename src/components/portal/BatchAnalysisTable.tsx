@@ -21,6 +21,8 @@ import {
   formatCurrency,
   formatPercent,
   type Strategy,
+  type ScreeningConfig,
+  DEFAULT_SCREENING_CONFIG,
 } from "@/lib/screening";
 import { cn } from "@/lib/utils";
 import ListingCard from "./ListingCard";
@@ -42,6 +44,7 @@ type StrategyFilter = "all" | "pass_any" | "Turnkey" | "BRRRR" | "Both" | "None"
 
 interface BatchAnalysisTableProps {
   listings: MlsListing[];
+  screeningConfig?: ScreeningConfig;
 }
 
 const strategyOrder: Record<Strategy, number> = {
@@ -57,12 +60,14 @@ const strategyVariant = (s: Strategy) => {
   return "outline";
 };
 
-const BatchAnalysisTable = ({ listings }: BatchAnalysisTableProps) => {
+const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTableProps) => {
   const [sortField, setSortField] = useState<SortField>("strategy");
   const [sortAsc, setSortAsc] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [strategyFilter, setStrategyFilter] = useState<StrategyFilter>("all");
   const [photoModal, setPhotoModal] = useState<{ photos: string[]; address: string } | null>(null);
+
+  const config = screeningConfig ?? DEFAULT_SCREENING_CONFIG;
 
   const analyzed: AnalyzedListing[] = useMemo(() => {
     return listings.map((l) => {
@@ -80,11 +85,11 @@ const BatchAnalysisTable = ({ listings }: BatchAnalysisTableProps) => {
         rent_system,
         arv_system,
         rehab_tier_system,
-      });
+      }, config);
 
       return { ...l, ...metrics };
     });
-  }, [listings]);
+  }, [listings, config]);
 
   const stats = useMemo(() => {
     const passAny = analyzed.filter((l) => l.strategy !== "None").length;
