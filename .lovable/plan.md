@@ -1,49 +1,121 @@
 
 
-# Fix RTP Ratio + Smart Rehab Tier Estimation
+# Plan: Add `rehab_est_override` and Centralize DealAnalyzer Math
 
-## Overview
-Two changes to the screening logic:
-1. **RTP Ratio fix** -- Change from Rent / List Price to Rent / All-In Price (price + repairs)
-2. **Smart rehab tier** -- Auto-estimate rehab level based on price-to-ARV ratio (before repairs)
+## Summary
 
-## Rehab Tier Logic
+Two changes: (1) Add a `rehab_est_override` field to the Deal interface and wire it into `computeDealMetrics`, (2) Refactor `DealAnalyzer.tsx` to use `computeDealMetrics` instead of inline math. The UI interaction rule: changing the rehab tier dropdown populates the rehab dollars field; manually entering rehab dollars clears the tier dropdown back to "auto."
 
-| Price / ARV (no rehab) | Estimated Tier | Cost/sqft |
-|---|---|---|
-| 90%+ | Turnkey | $5 |
-| 80% - 90% | Light | $15 |
-| 60% - 80% | Medium | $30 |
-| Under 60% | Heavy | $50 |
+## Override Priority Rule
 
-This eliminates the "always Light" default and replaces it with a market-signal-based estimate. No circular dependency -- raw price/ARV determines the tier, then that tier feeds into the all-in calculation.
+```text
+User changes Rehab Tier dropdown
+  → rehab_tier_override = selected tier
+  → rehab_est_override = cleared (undefined)
+  → dollars auto-calculate from tier × sqft
 
-## Technical Changes
+User types into Rehab Dollars field
+  → rehab_est_override = entered value
+  → rehab_tier_override = cleared (undefined)
+  → tier display shows "Custom" or blank
+  → dollars used as-is, tier logic skipped
+```
 
-### 1. `src/lib/screening.ts`
+This is a **mutually exclusive** override model. Only one can be active at a time. The last one the user touched wins.
 
-- **`estimateRehabTier`** -- Change signature to accept `list_price` and `arv` instead of `year_built`. Compute `price / arv` ratio and return the appropriate tier based on the thresholds above.
+## Changes
 
-- **`computeDealMetrics`** -- 
-  - Before computing rehab, call `estimateRehabTier(list_price, arv_effective)` to get the system tier (unless an override exists)
-  - Change `rent_to_price_pct` from `rent / list_price` to `rent / (list_price + rehab_est)` (the all-in price)
-  - Update Turnkey and BRRRR screening thresholds to use the new RTP definition
+### 1. `src/lib/screening.ts` — Deal interface + computeDealMetrics
 
-- **`createDeal`** -- Update the call to `estimateRehabTier` to pass price and ARV instead of year_built
+**Add field to Deal interface:**
+- `rehab_est_override?: number` alongside existing `rehab_tier_override`
 
-### 2. `src/components/portal/BatchAnalysisTable.tsx`
-- Update the call to `estimateRehabTier` to pass `list_price` and `arv_system` instead of `year_built`
+**Update `computeDealMetrics` (lines 177-179):**
 
-### 3. `src/pages/portal/PortalSearchAnalyzer.tsx`
-- Update disclaimer text to explain the new rehab estimation logic (based on price-to-ARV ratio, not a flat default)
+Current:
+```typescript
+const rehabRate = getRehabRate(rehab_tier_effective, config);
+const rehab_est_effective = (deal.sqft ?? 0) * rehabRate;
+```
 
-### 4. `src/components/portal/ListingCard.tsx`
-- Ensure RTP Ratio tooltip/label reflects "Rent / All-In Price" definition
+New:
+```typescript
+let rehab_est_effective: number;
+if (deal.rehab_est_override && deal.rehab_est_override > 0) {
+  // Manual dollar override — bypass tier calculation entirely
+  rehab_est_effective = deal.rehab_est_override;
+} else {
+  const rehabRate = getRehabRate(rehab_tier_effective, config);
+  rehab_est_effective = (deal.sqft ?? 0) * rehabRate;
+}
+```
 
-## Example: 6247 Evergreen
-- Price: $59,000, ARV: $109,125 → price/ARV = 54% → **Heavy** tier
-- Rehab: ~860sf x $50 = $43,000
-- All-in: $102,000
-- All-in % of ARV: 93% (fails BRRRR's 75% max)
-- This correctly identifies it as a heavy rehab that doesn't pencil for BRRRR -- much more accurate than assuming Light
+No other changes to screening.ts. The function signature and return type stay the same.
+
+### 2. `src/components/portal/DealAnalyzer.tsx` — Use `computeDealMetrics`
+
+**Replace the inline `calculations` useMemo (lines 198-243)** with a call to `computeDealMetrics`. Map the DealAnalyzer's local state into a `Partial<Deal>` object:
+
+```typescript
+const calculations = useMemo(() => {
+  const partialDeal: Partial<Deal> = {
+    list_price: inputs.price,
+    sqft: inputs.sqft,
+    zip: inputs.zip,
+    beds: inputs.beds,
+    rent_system: getRentComp(inputs.zip, inputs.beds) || 0,
+    arv_system: calculateArvQuick(inputs.zip, inputs.sqft) || 0,
+    rent_override: inputs.isAvgRentManual ? inputs.avgRent : undefined,
+    arv_override: inputs.manualArv > 0 ? inputs.manualArv : undefined,
+    rehab_tier_override: inputs.rehabTierOverride,    // new field
+    rehab_est_override: inputs.manualRepairs > 0 ? inputs.manualRepairs : undefined,
+    mls_status: "Active",
+  };
+
+  const metrics = computeDealMetrics(partialDeal);
+
+  // Additional display-only values (FMR, rent comp, etc.)
+  const fmr = getFmr(inputs.zip, inputs.beds);
+  const rentComp = getRentComp(inputs.zip, inputs.beds);
+  const arvQuick = calculateArvQuick(inputs.zip, inputs.sqft);
+
+  return { ...metrics, fmr, rentComp, arvQuick };
+}, [inputs]);
+```
+
+**Update the DealInputs interface:**
+- Remove `repairPreset` (replaced by the rehab tier concept from screening.ts)
+- Add `rehabTierOverride?: RehabTier` (maps to the dropdown)
+- Keep `manualRepairs` (maps to `rehab_est_override`)
+
+**Update the Repair Preset dropdown** to use the four rehab tiers (Turnkey/$5, Light/$15, Medium/$30, Heavy/$50) instead of the old five-preset system. Add an "Auto" option that means "let price/ARV determine the tier."
+
+**Wire the mutual-exclusion behavior:**
+- When user selects a tier from dropdown: set `rehabTierOverride` to that tier, clear `manualRepairs` to 0
+- When user types into manual repairs field: set `manualRepairs` to the value, clear `rehabTierOverride` to undefined
+
+**Update results display** to use the new field names from `computeDealMetrics`:
+- `repairEstimate` → `rehab_est_effective`
+- `allIn` → computed from `list_price + rehab_est_effective`
+- `percentArv` → `all_in_pct_of_arv` (note: this is all-in/ARV, not just price/ARV — slight change in meaning but more accurate)
+- `likelyRtp` → `rent_to_price_pct`
+- `offer75` → keep as local calculation: `arv * 0.75 - rehab` (display-only, not part of screening)
+- `currentRtp` → keep as local calculation: `currentRent / price` (display-only)
+
+### 3. `src/data/stlZipData.ts` — Cleanup
+
+The old `RepairPreset`, `REPAIR_PRESET_LABELS`, and `getRepairEstimate` exports can be removed since the DealAnalyzer will now use screening.ts tiers. However, if `BatchAnalysisTable` or other components still import them, we keep them until those are migrated too. Will check usage and remove only if safe.
+
+## What Does NOT Change
+
+- `computeDealMetrics` function signature (still takes `Partial<Deal>`)
+- `ScreeningConfig` and its defaults
+- Turnkey/BRRRR evaluation logic
+- `createDeal` / `updateDeal` functions
+- Admin deal pipeline (mockDeals, useDeals hook)
+- `BatchAnalysisTable` (separate migration later if needed)
+
+## Technical Details
+
+The mutual-exclusion override is handled entirely in the UI component state. `screening.ts` simply checks: if `rehab_est_override > 0`, use it; otherwise fall back to tier-based calculation. The function does not need to know about the UI interaction pattern — it just respects whichever override is present.
 
