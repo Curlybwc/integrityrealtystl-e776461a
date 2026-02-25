@@ -21,15 +21,10 @@ function normalizeListing(listing: any) {
   const details = listing.details || {};
   const photos = listing.images || listing.photos || [];
 
-  // Log all sqft/area-related keys from first listing with sqft data
-  if (!loggedSqftOnce && details.sqft) {
-    const sqftKeys: Record<string, any> = {};
-    for (const [k, v] of Object.entries(details)) {
-      if (v != null && (k.toLowerCase().includes("sqft") || k.toLowerCase().includes("area") || k.toLowerCase().includes("living") || k.toLowerCase().includes("grade") || k.toLowerCase().includes("size") || k.toLowerCase().includes("square"))) {
-        sqftKeys[k] = v;
-      }
-    }
-    console.log("SQFT-RELATED FIELDS:", JSON.stringify(sqftKeys));
+  // Log ALL details keys from first listing to find above-grade sqft field
+  if (!loggedSqftOnce) {
+    console.log("ALL DETAILS KEYS:", JSON.stringify(Object.keys(details)));
+    console.log("ALL DETAILS VALUES:", JSON.stringify(details));
     loggedSqftOnce = true;
   }
 
