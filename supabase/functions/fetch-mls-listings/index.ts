@@ -15,18 +15,10 @@ function mapStatus(status: string | undefined): string {
   return "Unknown";
 }
 
-let loggedSqftOnce = false;
 function normalizeListing(listing: any) {
   const address = listing.address || {};
   const details = listing.details || {};
   const photos = listing.images || listing.photos || [];
-
-  // Log ALL details keys from first listing to find above-grade sqft field
-  if (!loggedSqftOnce) {
-    console.log("ALL DETAILS KEYS:", JSON.stringify(Object.keys(details)));
-    console.log("ALL DETAILS VALUES:", JSON.stringify(details));
-    loggedSqftOnce = true;
-  }
 
   return {
     mls_listing_id: listing.mlsNumber || listing.listingId || listing.id,
