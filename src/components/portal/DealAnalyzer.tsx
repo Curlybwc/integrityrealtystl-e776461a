@@ -17,14 +17,26 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  RepairPreset,
-  REPAIR_PRESET_LABELS,
-  getRepairEstimate,
   calculateArvQuick,
   getFmr,
   getRentComp,
   getSupportedZips,
 } from "@/data/stlZipData";
+import {
+  computeDealMetrics,
+  type RehabTier,
+  type Deal,
+  formatCurrency as screeningFormatCurrency,
+  getRehabRate,
+  DEFAULT_SCREENING_CONFIG,
+} from "@/lib/screening";
+
+const REHAB_TIER_LABELS: Record<RehabTier, string> = {
+  Turnkey: "Turnkey ($5/sf)",
+  Light: "Light ($15/sf)",
+  Medium: "Medium ($30/sf)",
+  Heavy: "Heavy ($50/sf)",
+};
 
 interface DealInputs {
   address: string;
@@ -37,7 +49,7 @@ interface DealInputs {
   currentRent: number;
   avgRent: number;
   isAvgRentManual: boolean;
-  repairPreset: RepairPreset;
+  rehabTierOverride?: RehabTier;
   manualRepairs: number;
   manualArv: number;
 }
@@ -53,7 +65,7 @@ const initialInputs: DealInputs = {
   currentRent: 0,
   avgRent: 0,
   isAvgRentManual: false,
-  repairPreset: "medium",
+  rehabTierOverride: undefined,
   manualRepairs: 0,
   manualArv: 0,
 };
@@ -186,7 +198,6 @@ const DealAnalyzer = () => {
   const handleAvgRentChange = (value: number) => {
     setInputs((prev) => {
       const rentComp = getRentComp(prev.zip, prev.beds);
-      // If user clears the field or sets it back to the zip average, revert to auto mode
       if (value === 0 || value === rentComp) {
         return { ...prev, avgRent: rentComp || 0, isAvgRentManual: false };
       }
@@ -194,67 +205,75 @@ const DealAnalyzer = () => {
     });
   };
 
-  // Calculated values
+  // Mutual exclusion: tier dropdown clears manual dollars, manual dollars clears tier
+  const handleRehabTierChange = (tier: string) => {
+    if (tier === "auto") {
+      setInputs((prev) => ({ ...prev, rehabTierOverride: undefined, manualRepairs: 0 }));
+    } else {
+      setInputs((prev) => ({ ...prev, rehabTierOverride: tier as RehabTier, manualRepairs: 0 }));
+    }
+  };
+
+  const handleManualRepairsChange = (value: number) => {
+    setInputs((prev) => ({
+      ...prev,
+      manualRepairs: value,
+      rehabTierOverride: value > 0 ? undefined : prev.rehabTierOverride,
+    }));
+  };
+
+  // All calculations centralized via computeDealMetrics
   const calculations = useMemo(() => {
-    const { zip, price, beds, sqft, currentRent, avgRent, repairPreset, manualRepairs, manualArv } = inputs;
+    const { zip, price, beds, sqft, currentRent, avgRent, isAvgRentManual, rehabTierOverride, manualRepairs, manualArv } = inputs;
 
-    // Repair estimate (manual overrides preset)
-    const repairEstimate = manualRepairs > 0 
-      ? manualRepairs 
-      : getRepairEstimate(sqft, repairPreset);
-
-    // ARV (manual overrides auto)
-    const arvQuick = calculateArvQuick(zip, sqft);
-    const arv = manualArv > 0 ? manualArv : (arvQuick ?? 0);
-
-    // All-in estimate
-    const allIn = price + repairEstimate;
-
-    // 75% ARV Offer (BRRR formula)
-    const offer75 = arv > 0 ? arv * 0.75 - repairEstimate : 0;
-
-    // % of ARV
-    const percentArv = arv > 0 ? price / arv : 0;
-
-    // Rent-to-Price ratios (monthly rent / price)
-    const currentRtp = price > 0 ? currentRent / price : 0;
-    const likelyRtp = allIn > 0 ? avgRent / allIn : 0;
-
-    // FMR-based ROI
-    const fmr = getFmr(zip, beds);
-    const fmrRoi = allIn > 0 && fmr ? fmr / allIn : 0;
-
-    // Market rent comp
-    const rentComp = getRentComp(zip, beds);
-
-    return {
-      repairEstimate,
-      arvQuick,
-      arv,
-      allIn,
-      offer75,
-      percentArv,
-      currentRtp,
-      likelyRtp,
-      fmr,
-      fmrRoi,
-      rentComp,
+    const partialDeal: Partial<Deal> = {
+      list_price: price,
+      sqft,
+      zip,
+      beds,
+      rent_system: getRentComp(zip, beds) || 0,
+      arv_system: calculateArvQuick(zip, sqft) || 0,
+      rent_override: isAvgRentManual ? avgRent : undefined,
+      arv_override: manualArv > 0 ? manualArv : undefined,
+      rehab_tier_override: rehabTierOverride,
+      rehab_est_override: manualRepairs > 0 ? manualRepairs : undefined,
+      mls_status: "Active",
     };
+
+    const metrics = computeDealMetrics(partialDeal);
+
+    // Display-only values
+    const fmr = getFmr(zip, beds);
+    const rentComp = getRentComp(zip, beds);
+    const arvQuick = calculateArvQuick(zip, sqft);
+    const currentRtp = price > 0 ? currentRent / price : 0;
+    const offer75 = metrics.arv_effective > 0 ? metrics.arv_effective * 0.75 - metrics.rehab_est_effective : 0;
+    const fmrRoi = (price + metrics.rehab_est_effective) > 0 && fmr ? fmr / (price + metrics.rehab_est_effective) : 0;
+
+    return { ...metrics, fmr, rentComp, arvQuick, currentRtp, offer75, fmrRoi };
   }, [inputs]);
 
-  // Determine RTP color coding (thresholds: green ≥1.3%, orange ≥1.0%, red <1.0%)
+  // Determine RTP color coding
   const getRtpColor = (rtp: number): string => {
     if (rtp >= 0.013) return "text-green-600";
     if (rtp >= 0.01) return "text-amber-500";
     return "text-red-600";
   };
 
-  // Determine % of ARV color coding (thresholds: green <75%, orange 75-80%, red >80%)
+  // Determine % of ARV color coding
   const getArvPercentColor = (percent: number): string => {
     if (percent < 0.75) return "text-green-600";
     if (percent <= 0.80) return "text-amber-500";
     return "text-red-600";
   };
+
+  // Derive display label for rehab tier/rate
+  const rehabRateDisplay = useMemo(() => {
+    if (inputs.manualRepairs > 0) return "Custom";
+    if (inputs.rehabTierOverride) return REHAB_TIER_LABELS[inputs.rehabTierOverride];
+    // Auto tier from screening
+    return `${calculations.rehab_tier_effective} (Auto)`;
+  }, [inputs.manualRepairs, inputs.rehabTierOverride, calculations.rehab_tier_effective]);
 
   return (
     <div className="space-y-6">
@@ -437,20 +456,22 @@ const DealAnalyzer = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="repairPreset">Repair Preset</Label>
+                <Label htmlFor="rehabTier">
+                  Rehab Tier
+                  <InfoTooltip content="Auto = determined by price/ARV ratio. Select to override, or enter manual dollars." />
+                </Label>
                 <Select
-                  value={inputs.repairPreset}
-                  onValueChange={(value) =>
-                    updateInput("repairPreset", value as RepairPreset)
-                  }
+                  value={inputs.manualRepairs > 0 ? "" : (inputs.rehabTierOverride || "auto")}
+                  onValueChange={handleRehabTierChange}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder={inputs.manualRepairs > 0 ? "Custom $" : "Auto"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(REPAIR_PRESET_LABELS).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>
-                        {label}
+                    <SelectItem value="auto">Auto (from ARV %)</SelectItem>
+                    {(Object.keys(REHAB_TIER_LABELS) as RehabTier[]).map((tier) => (
+                      <SelectItem key={tier} value={tier}>
+                        {REHAB_TIER_LABELS[tier]}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -459,7 +480,7 @@ const DealAnalyzer = () => {
               <div className="space-y-2">
                 <Label htmlFor="manualRepairs">
                   Manual Repairs
-                  <InfoTooltip content="Leave blank to use preset calculation" />
+                  <InfoTooltip content="Enter a dollar amount to override tier-based calculation" />
                 </Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -473,7 +494,7 @@ const DealAnalyzer = () => {
                     placeholder="Auto"
                     value={inputs.manualRepairs || ""}
                     onChange={(e) =>
-                      updateInput("manualRepairs", Number(e.target.value))
+                      handleManualRepairsChange(Number(e.target.value))
                     }
                   />
                 </div>
@@ -497,12 +518,12 @@ const DealAnalyzer = () => {
               </h4>
               <ResultRow
                 label="Repair Estimate"
-                value={formatCurrency(calculations.repairEstimate)}
-                tooltip="Based on preset or manual entry"
+                value={formatCurrency(calculations.rehab_est_effective)}
+                tooltip="Based on rehab tier or manual entry"
               />
               <ResultRow
                 label="All-In Cost"
-                value={formatCurrency(calculations.allIn)}
+                value={formatCurrency(inputs.price + calculations.rehab_est_effective)}
                 tooltip="Purchase price + repairs"
                 highlight
               />
@@ -530,7 +551,7 @@ const DealAnalyzer = () => {
               />
               <ResultRow
                 label="ARV (Used)"
-                value={formatCurrency(calculations.arv)}
+                value={formatCurrency(calculations.arv_effective)}
                 tooltip="Manual ARV if entered, otherwise auto"
                 highlight
               />
@@ -539,14 +560,14 @@ const DealAnalyzer = () => {
               >
                 <span className="text-sm text-muted-foreground flex items-center">
                   % of ARV
-                  <InfoTooltip content="Purchase price as % of ARV. Green <75%, Orange 75-80%, Red >80%" />
+                  <InfoTooltip content="All-in cost as % of ARV. Green <75%, Orange 75-80%, Red >80%" />
                 </span>
                 <span
                   className={`font-mono text-sm font-semibold ${getArvPercentColor(
-                    calculations.percentArv
+                    calculations.all_in_pct_of_arv
                   )}`}
                 >
-                  {formatPercent(calculations.percentArv)}
+                  {formatPercent(calculations.all_in_pct_of_arv)}
                 </span>
               </div>
             </div>
@@ -570,10 +591,10 @@ const DealAnalyzer = () => {
                 </span>
                 <span
                   className={`font-mono text-sm font-semibold ${getRtpColor(
-                    calculations.likelyRtp
+                    calculations.rent_to_price_pct
                   )}`}
                 >
-                  {formatPercent(calculations.likelyRtp)}
+                  {formatPercent(calculations.rent_to_price_pct)}
                 </span>
               </div>
               <ResultRow
@@ -614,9 +635,9 @@ const DealAnalyzer = () => {
                   </p>
                 </div>
                 <div className="bg-muted/50 rounded p-3">
-                  <p className="text-muted-foreground text-xs">Repair Rate</p>
+                  <p className="text-muted-foreground text-xs">Rehab Rate</p>
                   <p className="font-mono font-medium">
-                    {REPAIR_PRESET_LABELS[inputs.repairPreset]}
+                    {rehabRateDisplay}
                   </p>
                 </div>
               </div>
