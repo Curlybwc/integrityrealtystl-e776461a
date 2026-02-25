@@ -44,6 +44,7 @@ export interface Deal {
   rent_override?: number;
   arv_override?: number;
   rehab_tier_override?: RehabTier;
+  rehab_est_override?: number;
   
   // Computed/Effective Values
   rent_effective: number;
@@ -174,9 +175,14 @@ export function computeDealMetrics(
   const smartTier = estimateRehabTier(list_price, arv_effective);
   const rehab_tier_effective = deal.rehab_tier_override ?? smartTier;
   
-  // Compute rehab estimate
-  const rehabRate = getRehabRate(rehab_tier_effective, config);
-  const rehab_est_effective = (deal.sqft ?? 0) * rehabRate;
+  // Compute rehab estimate (manual dollar override bypasses tier calculation)
+  let rehab_est_effective: number;
+  if (deal.rehab_est_override && deal.rehab_est_override > 0) {
+    rehab_est_effective = deal.rehab_est_override;
+  } else {
+    const rehabRate = getRehabRate(rehab_tier_effective, config);
+    rehab_est_effective = (deal.sqft ?? 0) * rehabRate;
+  }
   
   // Compute metrics — RTP uses all-in price (price + repairs)
   const all_in = list_price + rehab_est_effective;
