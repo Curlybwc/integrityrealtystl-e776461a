@@ -26,6 +26,7 @@ export interface MlsListing {
   beds: number;
   baths: number;
   sqft: number;
+  below_grade_sqft?: number;
   year_built?: number;
   property_type: string;
   list_price: number;
