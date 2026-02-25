@@ -1,60 +1,53 @@
 
 
-# Plan: Use Above-Grade Sqft from Repliers Raw Data
+# Plan: Add Single-Listing Lookup to Debug & Find Sqft Field
 
-## Context
+## Problem
 
-Repliers confirmed that MLS raw fields are available via the `raw` object. The field `raw.AboveGradeFinishedAreaSrchSqFt` gives us above-grade square footage, which aligns with appraisal standards and our project's preference (per existing memory). Currently we use `details.sqft` which may include basement or non-living area.
+150 Saint Daniel Lane (MLS #26006837) is active on MARIS at $115k, 3 bed, ZIP 63031, but Repliers is not returning it in search results for that ZIP. Without seeing the raw Repliers data for this listing, we cannot identify which field contains the 864 sqft value, and we cannot determine why it's being excluded from search results.
+
+## Root Cause Hypotheses
+
+1. **Class mismatch**: Our edge function hardcodes `class=residential`. If Repliers classifies this listing differently, it would be excluded from all searches.
+2. **Repliers indexing delay**: The listing may not be fully indexed yet.
+3. **ZIP mismatch**: The listing's ZIP in Repliers' system may differ from MARIS.
 
 ## Changes
 
-### 1. `supabase/functions/fetch-mls-listings/index.ts` — `normalizeListing`
+### 1. `supabase/functions/fetch-mls-listings/index.ts` — Add single-listing lookup
 
-**Request the raw fields:** Add `fields` param to the Repliers URL in `buildRepliersUrl` to ensure the raw object is included in the response. By default Repliers returns the raw object, so this may already work without specifying `fields`. We will access it defensively.
+Add support for a `mlsNumber` parameter. When provided, fetch directly from Repliers' single-listing endpoint (`GET /listings/{mlsNumber}`) instead of the search endpoint. This bypasses all search filters (class, type, status, ZIP) and returns the full raw listing data.
 
-**Update sqft extraction (line 31):**
-
-Current:
 ```typescript
-sqft: parseInt(details.sqft || details.squareFeet || details.area || "0", 10),
+// If mlsNumber is provided, fetch single listing directly
+if (params.mlsNumber) {
+  const url = `https://api.repliers.io/listings/${params.mlsNumber}`;
+  const response = await fetch(url, {
+    headers: { "REPLIERS-API-KEY": apiKey, "Content-Type": "application/json" },
+  });
+  const data = await response.json();
+  const listing = normalizeListing(data);
+  return Response with { count: 1, page: 1, numPages: 1, listings: [listing] }
+}
 ```
 
-New priority order:
-```typescript
-const raw = listing.raw || {};
-const aboveGradeSqft = raw.AboveGradeFinishedAreaSrchSqFt;
+This lets us:
+- Fetch MLS #26006837 directly and inspect ALL raw fields to find where 864 lives
+- See what `class`, `status`, and `zip` Repliers has for this listing
+- Diagnose why it's not appearing in search results
 
-sqft: parseInt(aboveGradeSqft || details.sqft || details.squareFeet || details.area || "0", 10),
-```
+### 2. `src/hooks/useMlsSearch.tsx` — Add `mlsNumber` to search params
 
-Above-grade takes priority. Falls back to `details.sqft` if the raw field is null or missing. This is a single-line change in the normalization function.
+Add optional `mlsNumber` field to `MlsSearchParams` interface so the frontend can trigger single-listing lookups.
 
-**Also expose below-grade for future use (optional):**
-Add `below_grade_sqft` to the normalized output:
-```typescript
-below_grade_sqft: parseInt(raw.BelowGradeFinishedAreaSrchSqFt || "0", 10),
-```
+### 3. No UI changes in this step
 
-This is informational only — not used in screening calculations — but useful for the deal detail view and analyzer.
+This is a diagnostic step. Once we can see the full raw data for 26006837, we'll know:
+- Which field contains 864 (could be `details.sqft`, `raw.LivingAreaSrchSqFt`, `raw.TotalFinishedAreaSrchSqFt`, or another raw field)
+- Why the listing is excluded from search results
+- Whether we need to adjust our `class` filter or sqft fallback chain
 
-### 2. `src/hooks/useMlsSearch.tsx` — MlsListing interface
+## Impact
 
-Add optional field:
-```typescript
-below_grade_sqft?: number;
-```
-
-The `sqft` field continues to represent above-grade (primary) square footage. No interface name change needed.
-
-### 3. No changes to screening.ts or UI components
-
-The `sqft` field flows through the existing pipeline unchanged. All downstream consumers (screening, rehab cost calculation, ARV estimation) automatically use the corrected above-grade value. No UI changes needed unless we want to display below-grade sqft somewhere.
-
-## What This Fixes
-
-A property with 1,000 sqft above grade and 800 sqft finished basement currently reports 1,800 sqft (or whatever `details.sqft` contains). With this change, it correctly reports 1,000 sqft for rehab and ARV calculations, preventing inflated rehab estimates and skewed valuations.
-
-## Risk
-
-Low. The raw field may be null for some listings (Repliers said it depends on MLS data). The fallback chain (`details.sqft`) handles this gracefully.
+Low risk. Adds an optional code path that only activates when `mlsNumber` is explicitly provided. Does not affect existing search behavior.
 
