@@ -116,6 +116,31 @@ serve(async (req) => {
       searchParams.forEach((value, key) => { params[key] = value; });
     }
 
+    // Single-listing lookup by MLS number
+    if (params.mlsNumber) {
+      const mlsUrl = `https://api.repliers.io/listings/${params.mlsNumber}`;
+      console.log(`Fetching single listing: ${mlsUrl}`);
+      const mlsResp = await fetch(mlsUrl, {
+        headers: { "REPLIERS-API-KEY": apiKey, "Content-Type": "application/json" },
+      });
+      if (!mlsResp.ok) {
+        const errText = await mlsResp.text();
+        console.error(`Single listing error: ${mlsResp.status} ${errText}`);
+        return new Response(
+          JSON.stringify({ error: `Repliers returned ${mlsResp.status}`, details: errText }),
+          { status: mlsResp.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const mlsData = await mlsResp.json();
+      console.log(`Single listing raw keys: ${Object.keys(mlsData).join(", ")}`);
+      console.log(`Single listing raw JSON: ${JSON.stringify(mlsData).substring(0, 3000)}`);
+      const listing = normalizeListing(mlsData);
+      return new Response(
+        JSON.stringify({ count: 1, page: 1, numPages: 1, listings: [listing] }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Multi-ZIP support: split and fetch in parallel
     const zipValue = params.zip || "";
     const zips = zipValue.includes(",")
