@@ -19,6 +19,8 @@ function normalizeListing(listing: any) {
   const address = listing.address || {};
   const details = listing.details || {};
   const photos = listing.images || listing.photos || [];
+  const raw = listing.raw || {};
+  const aboveGradeSqft = raw.AboveGradeFinishedAreaSrchSqFt;
 
   return {
     mls_listing_id: listing.mlsNumber || listing.listingId || listing.id,
@@ -28,7 +30,8 @@ function normalizeListing(listing: any) {
     zip: address.zip || address.postalCode || "",
     beds: parseInt(details.numBedrooms || details.bedrooms || "0", 10),
     baths: parseInt(details.numBathrooms || details.bathrooms || "0", 10),
-    sqft: parseInt(details.sqft || details.squareFeet || details.area || "0", 10),
+    sqft: parseInt(aboveGradeSqft || details.sqft || details.squareFeet || details.area || "0", 10),
+    below_grade_sqft: parseInt(raw.BelowGradeFinishedAreaSrchSqFt || "0", 10),
     year_built: details.yearBuilt ? parseInt(details.yearBuilt, 10) : undefined,
     property_type: details.propertyType || listing.type || "Single Family",
     list_price: parseFloat(listing.listPrice || "0"),
