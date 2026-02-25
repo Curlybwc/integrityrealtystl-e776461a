@@ -24,13 +24,6 @@ import { Label } from "@/components/ui/label";
 import { useDeals } from "@/hooks/useDeals";
 import { formatCurrency, formatPercent, getStatusDisplayLabel, getScoringStatus } from "@/lib/screening";
 
-const strategyColors = {
-  Both: "bg-primary text-primary-foreground",
-  Turnkey: "bg-secondary text-secondary-foreground",
-  BRRRR: "bg-accent text-accent-foreground",
-  None: "bg-muted text-muted-foreground",
-};
-
 const statusColors = {
   Available: "bg-green-100 text-green-800",
   "Under Contract": "bg-yellow-100 text-yellow-800",
@@ -190,17 +183,6 @@ const PortalWholesaleDeals = () => {
           const displayStatus = getStatusDisplayLabel(deal);
           const statusColor = statusColors[displayStatus as keyof typeof statusColors] || statusColors.Unknown;
           const scoringStatus = getScoringStatus(deal);
-          
-          // Determine strategy badge styling
-          let strategyBadgeClass = "bg-muted/50 text-muted-foreground";
-          let strategyLabel = scoringStatus.label;
-          
-          if (scoringStatus.isScored && deal.strategy !== "None") {
-            strategyBadgeClass = strategyColors[deal.strategy as keyof typeof strategyColors];
-            strategyLabel = deal.strategy;
-          } else if (!scoringStatus.isScored) {
-            strategyBadgeClass = "bg-orange-100 text-orange-800";
-          }
 
           return (
             <Link
@@ -222,11 +204,17 @@ const PortalWholesaleDeals = () => {
                       <Store className="w-12 h-12 text-muted-foreground/30" />
                     </div>
                   )}
-                  {/* Strategy badge */}
-                  <div className="absolute top-3 left-3">
-                    <Badge className={strategyBadgeClass}>
-                      {strategyLabel}
-                    </Badge>
+                  <div className="absolute top-3 left-3 flex gap-1">
+                    {scoringStatus.isScored ? (
+                      <>
+                        {deal.passes_flip && <Badge variant="outline" className="bg-background/80 text-xs">Flip</Badge>}
+                        {deal.passes_brrrr && <Badge variant="secondary" className="text-xs">BRRRR</Badge>}
+                        {deal.passes_turnkey && <Badge variant="default" className="text-xs">Turnkey</Badge>}
+                        {!deal.passes_flip && !deal.passes_brrrr && !deal.passes_turnkey && <Badge className="bg-muted/50 text-muted-foreground text-xs">None</Badge>}
+                      </>
+                    ) : (
+                      <Badge className="bg-orange-100 text-orange-800 text-xs">{scoringStatus.label}</Badge>
+                    )}
                   </div>
                   {/* Status badge */}
                   <div className="absolute top-3 right-3">

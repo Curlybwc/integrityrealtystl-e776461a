@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { formatCurrency, formatPercent, type Strategy } from "@/lib/screening";
+import { formatCurrency, formatPercent } from "@/lib/screening";
 import { cn } from "@/lib/utils";
 
 interface ListingCardProps {
@@ -22,19 +22,15 @@ interface ListingCardProps {
     arv_effective: number;
     rent_to_price_pct: number;
     all_in_pct_of_arv: number;
-    strategy: Strategy;
+    passes_turnkey: boolean;
+    passes_brrrr: boolean;
+    passes_flip: boolean;
   };
   onPhotoClick: () => void;
 }
 
-const strategyVariant = (s: Strategy) => {
-  if (s === "Both") return "default" as const;
-  if (s === "Turnkey" || s === "BRRRR") return "secondary" as const;
-  return "outline" as const;
-};
-
 const ListingCard = ({ listing: l, onPhotoClick }: ListingCardProps) => {
-  const passes = l.strategy !== "None";
+  const passes = l.passes_turnkey || l.passes_brrrr || l.passes_flip;
   const hasPhotos = l.photo_urls && l.photo_urls.length > 0;
 
   return (
@@ -55,12 +51,11 @@ const ListingCard = ({ listing: l, onPhotoClick }: ListingCardProps) => {
           )}
         </AspectRatio>
         {/* Strategy badge overlay */}
-        <Badge
-          variant={strategyVariant(l.strategy)}
-          className="absolute top-2 left-2 text-xs"
-        >
-          {l.strategy}
-        </Badge>
+        <div className="absolute top-2 left-2 flex gap-1">
+          {l.passes_flip && <Badge variant="outline" className="text-xs">Flip</Badge>}
+          {l.passes_brrrr && <Badge variant="secondary" className="text-xs">BRRRR</Badge>}
+          {l.passes_turnkey && <Badge variant="default" className="text-xs">Turnkey</Badge>}
+        </div>
         {hasPhotos && (
           <span className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
             <Camera className="h-3 w-3" />

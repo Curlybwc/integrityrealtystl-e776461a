@@ -36,11 +36,12 @@ interface AnalyzedListing extends MlsListing {
   strategy: Strategy;
   passes_turnkey: boolean;
   passes_brrrr: boolean;
+  passes_flip: boolean;
 }
 
 type SortField = "list_price" | "rent_to_price_pct" | "all_in_pct_of_arv" | "strategy";
 type ViewMode = "table" | "grid";
-type StrategyFilter = "all" | "pass_any" | "Turnkey" | "BRRRR" | "Both" | "None";
+type StrategyFilter = "all" | "pass_any" | "Turnkey" | "BRRRR" | "Flip" | "None";
 
 interface BatchAnalysisTableProps {
   listings: MlsListing[];
@@ -52,12 +53,6 @@ const strategyOrder: Record<Strategy, number> = {
   BRRRR: 1,
   Turnkey: 2,
   None: 3,
-};
-
-const strategyVariant = (s: Strategy) => {
-  if (s === "Both") return "default";
-  if (s === "Turnkey" || s === "BRRRR") return "secondary";
-  return "outline";
 };
 
 const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTableProps) => {
@@ -92,18 +87,22 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
   }, [listings, config]);
 
   const stats = useMemo(() => {
-    const passAny = analyzed.filter((l) => l.strategy !== "None").length;
-    const turnkey = analyzed.filter((l) => l.passes_turnkey && !l.passes_brrrr).length;
-    const brrrr = analyzed.filter((l) => l.passes_brrrr && !l.passes_turnkey).length;
-    const both = analyzed.filter((l) => l.passes_turnkey && l.passes_brrrr).length;
-    const none = analyzed.filter((l) => l.strategy === "None").length;
-    return { total: analyzed.length, passAny, turnkey, brrrr, both, none };
+    const passAny = analyzed.filter((l) => l.passes_turnkey || l.passes_brrrr || l.passes_flip).length;
+    const turnkey = analyzed.filter((l) => l.passes_turnkey).length;
+    const brrrr = analyzed.filter((l) => l.passes_brrrr).length;
+    const flip = analyzed.filter((l) => l.passes_flip).length;
+    const none = analyzed.filter((l) => !l.passes_turnkey && !l.passes_brrrr && !l.passes_flip).length;
+    return { total: analyzed.length, passAny, turnkey, brrrr, flip, none };
   }, [analyzed]);
 
   const filtered = useMemo(() => {
     if (strategyFilter === "all") return analyzed;
-    if (strategyFilter === "pass_any") return analyzed.filter((l) => l.strategy !== "None");
-    return analyzed.filter((l) => l.strategy === strategyFilter);
+    if (strategyFilter === "pass_any") return analyzed.filter((l) => l.passes_turnkey || l.passes_brrrr || l.passes_flip);
+    if (strategyFilter === "Turnkey") return analyzed.filter((l) => l.passes_turnkey);
+    if (strategyFilter === "BRRRR") return analyzed.filter((l) => l.passes_brrrr);
+    if (strategyFilter === "Flip") return analyzed.filter((l) => l.passes_flip);
+    if (strategyFilter === "None") return analyzed.filter((l) => !l.passes_turnkey && !l.passes_brrrr && !l.passes_flip);
+    return analyzed;
   }, [analyzed, strategyFilter]);
 
   const sorted = useMemo(() => {
@@ -154,9 +153,9 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
         {([
           ["all", `All (${stats.total})`],
           ["pass_any", `Pass Any (${stats.passAny})`],
-          ["Both", `Both (${stats.both})`],
-          ["Turnkey", `Turnkey (${stats.turnkey})`],
+          ["Flip", `Flip (${stats.flip})`],
           ["BRRRR", `BRRRR (${stats.brrrr})`],
+          ["Turnkey", `Turnkey (${stats.turnkey})`],
           ["None", `None (${stats.none})`],
         ] as [StrategyFilter, string][]).map(([key, label]) => (
           <Button
@@ -231,7 +230,7 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
             </TableHeader>
             <TableBody>
               {sorted.map((l) => {
-                const passes = l.strategy !== "None";
+                const passes = l.passes_turnkey || l.passes_brrrr || l.passes_flip;
                 const photoCount = l.photo_urls?.length ?? 0;
                 return (
                   <TableRow
@@ -258,9 +257,12 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
                       {l.beds}/{l.baths}/{l.sqft?.toLocaleString()}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={strategyVariant(l.strategy)} className="text-xs">
-                        {l.strategy}
-                      </Badge>
+                      <div className="flex gap-1">
+                        {l.passes_flip && <Badge variant="outline" className="text-xs">Flip</Badge>}
+                        {l.passes_brrrr && <Badge variant="secondary" className="text-xs">BRRRR</Badge>}
+                        {l.passes_turnkey && <Badge variant="default" className="text-xs">Turnkey</Badge>}
+                        {!l.passes_flip && !l.passes_brrrr && !l.passes_turnkey && <Badge variant="destructive" className="text-xs">None</Badge>}
+                      </div>
                     </TableCell>
                     <TableCell className="text-xs">{formatCurrency(l.rent_effective)}</TableCell>
                     <TableCell className="text-xs">{formatCurrency(l.arv_effective)}</TableCell>
