@@ -59,6 +59,7 @@ export interface Deal {
   // Screening Results
   passes_turnkey: boolean;
   passes_brrrr: boolean;
+  passes_flip: boolean;
   strategy: Strategy;
   buyer_visible: boolean;
   
@@ -164,6 +165,7 @@ export function computeDealMetrics(
   | "all_in_pct_of_arv"
   | "passes_turnkey"
   | "passes_brrrr"
+  | "passes_flip"
   | "strategy"
   | "buyer_visible"
 > {
@@ -190,19 +192,20 @@ export function computeDealMetrics(
   const all_in_pct_of_arv = arv_effective > 0 ? all_in / arv_effective : 0;
   const price_to_arv = arv_effective > 0 ? list_price / arv_effective : 0;
   
-  // Evaluate Turnkey
+  // Evaluate Flip (base strategy)
+  const passes_flip = all_in_pct_of_arv <= config.brrrr_max_all_in_pct;
+  
+  // Evaluate BRRRR (Flip + RTP)
+  const passes_brrrr = 
+    passes_flip &&
+    rent_to_price_pct >= config.brrrr_min_rtp;
+  
+  // Evaluate Turnkey (RTP + Turnkey tier only)
   const passes_turnkey = 
     rent_to_price_pct >= config.turnkey_min_rtp &&
-    price_to_arv >= config.turnkey_min_arv_pct &&
-    price_to_arv <= config.turnkey_max_arv_pct &&
-    deal.mls_status !== "Sold";
+    rehab_tier_effective === "Turnkey";
   
-  // Evaluate BRRRR
-  const passes_brrrr = 
-    rent_to_price_pct >= config.brrrr_min_rtp &&
-    all_in_pct_of_arv <= config.brrrr_max_all_in_pct;
-  
-  // Determine strategy
+  // Determine strategy (backward compatibility)
   let strategy: Strategy = "None";
   if (passes_turnkey && passes_brrrr) {
     strategy = "Both";
@@ -218,7 +221,7 @@ export function computeDealMetrics(
     : deal.mls_status === "Sold";
   
   const buyer_visible = 
-    strategy !== "None" && 
+    (passes_turnkey || passes_brrrr || passes_flip) && 
     !isSold && 
     !deal.removed_reason;
   
@@ -231,6 +234,7 @@ export function computeDealMetrics(
     all_in_pct_of_arv,
     passes_turnkey,
     passes_brrrr,
+    passes_flip,
     strategy,
     buyer_visible,
   };

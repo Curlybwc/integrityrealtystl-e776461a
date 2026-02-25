@@ -24,13 +24,6 @@ import { Badge } from "@/components/ui/badge";
 import { useDeals } from "@/hooks/useDeals";
 import { formatCurrency, formatPercent, getStatusDisplayLabel } from "@/lib/screening";
 
-const strategyColors = {
-  Both: "bg-primary text-primary-foreground",
-  Turnkey: "bg-secondary text-secondary-foreground",
-  BRRRR: "bg-accent text-accent-foreground",
-  None: "bg-muted text-muted-foreground",
-};
-
 const statusColors = {
   Active: "bg-green-100 text-green-800",
   Available: "bg-green-100 text-green-800",
@@ -162,7 +155,6 @@ const PortalDealAlerts = () => {
         {filteredDeals.map((deal) => {
           const displayStatus = getStatusDisplayLabel(deal);
           const statusColor = statusColors[displayStatus as keyof typeof statusColors] || statusColors.Unknown;
-          const strategyColor = strategyColors[deal.strategy as keyof typeof strategyColors];
           const isWholesaler = deal.source_type === "WHOLESALER";
 
           return (
@@ -195,11 +187,10 @@ const PortalDealAlerts = () => {
                       🔥 Deal Alert
                     </Badge>
                   </div>
-                  {/* Strategy badge */}
-                  <div className="absolute bottom-3 left-3 flex gap-2">
-                    <Badge className={strategyColor}>
-                      {deal.strategy}
-                    </Badge>
+                  <div className="absolute bottom-3 left-3 flex gap-1">
+                    {deal.passes_flip && <Badge variant="outline" className="bg-background/80 text-xs">Flip</Badge>}
+                    {deal.passes_brrrr && <Badge variant="secondary" className="text-xs">BRRRR</Badge>}
+                    {deal.passes_turnkey && <Badge variant="default" className="text-xs">Turnkey</Badge>}
                     {isWholesaler && (
                       <Badge variant="outline" className="bg-background/80 text-xs">
                         Wholesaler
