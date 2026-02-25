@@ -1,121 +1,60 @@
 
 
-# Plan: Add `rehab_est_override` and Centralize DealAnalyzer Math
+# Plan: Use Above-Grade Sqft from Repliers Raw Data
 
-## Summary
+## Context
 
-Two changes: (1) Add a `rehab_est_override` field to the Deal interface and wire it into `computeDealMetrics`, (2) Refactor `DealAnalyzer.tsx` to use `computeDealMetrics` instead of inline math. The UI interaction rule: changing the rehab tier dropdown populates the rehab dollars field; manually entering rehab dollars clears the tier dropdown back to "auto."
-
-## Override Priority Rule
-
-```text
-User changes Rehab Tier dropdown
-  → rehab_tier_override = selected tier
-  → rehab_est_override = cleared (undefined)
-  → dollars auto-calculate from tier × sqft
-
-User types into Rehab Dollars field
-  → rehab_est_override = entered value
-  → rehab_tier_override = cleared (undefined)
-  → tier display shows "Custom" or blank
-  → dollars used as-is, tier logic skipped
-```
-
-This is a **mutually exclusive** override model. Only one can be active at a time. The last one the user touched wins.
+Repliers confirmed that MLS raw fields are available via the `raw` object. The field `raw.AboveGradeFinishedAreaSrchSqFt` gives us above-grade square footage, which aligns with appraisal standards and our project's preference (per existing memory). Currently we use `details.sqft` which may include basement or non-living area.
 
 ## Changes
 
-### 1. `src/lib/screening.ts` — Deal interface + computeDealMetrics
+### 1. `supabase/functions/fetch-mls-listings/index.ts` — `normalizeListing`
 
-**Add field to Deal interface:**
-- `rehab_est_override?: number` alongside existing `rehab_tier_override`
+**Request the raw fields:** Add `fields` param to the Repliers URL in `buildRepliersUrl` to ensure the raw object is included in the response. By default Repliers returns the raw object, so this may already work without specifying `fields`. We will access it defensively.
 
-**Update `computeDealMetrics` (lines 177-179):**
+**Update sqft extraction (line 31):**
 
 Current:
 ```typescript
-const rehabRate = getRehabRate(rehab_tier_effective, config);
-const rehab_est_effective = (deal.sqft ?? 0) * rehabRate;
+sqft: parseInt(details.sqft || details.squareFeet || details.area || "0", 10),
 ```
 
-New:
+New priority order:
 ```typescript
-let rehab_est_effective: number;
-if (deal.rehab_est_override && deal.rehab_est_override > 0) {
-  // Manual dollar override — bypass tier calculation entirely
-  rehab_est_effective = deal.rehab_est_override;
-} else {
-  const rehabRate = getRehabRate(rehab_tier_effective, config);
-  rehab_est_effective = (deal.sqft ?? 0) * rehabRate;
-}
+const raw = listing.raw || {};
+const aboveGradeSqft = raw.AboveGradeFinishedAreaSrchSqFt;
+
+sqft: parseInt(aboveGradeSqft || details.sqft || details.squareFeet || details.area || "0", 10),
 ```
 
-No other changes to screening.ts. The function signature and return type stay the same.
+Above-grade takes priority. Falls back to `details.sqft` if the raw field is null or missing. This is a single-line change in the normalization function.
 
-### 2. `src/components/portal/DealAnalyzer.tsx` — Use `computeDealMetrics`
-
-**Replace the inline `calculations` useMemo (lines 198-243)** with a call to `computeDealMetrics`. Map the DealAnalyzer's local state into a `Partial<Deal>` object:
-
+**Also expose below-grade for future use (optional):**
+Add `below_grade_sqft` to the normalized output:
 ```typescript
-const calculations = useMemo(() => {
-  const partialDeal: Partial<Deal> = {
-    list_price: inputs.price,
-    sqft: inputs.sqft,
-    zip: inputs.zip,
-    beds: inputs.beds,
-    rent_system: getRentComp(inputs.zip, inputs.beds) || 0,
-    arv_system: calculateArvQuick(inputs.zip, inputs.sqft) || 0,
-    rent_override: inputs.isAvgRentManual ? inputs.avgRent : undefined,
-    arv_override: inputs.manualArv > 0 ? inputs.manualArv : undefined,
-    rehab_tier_override: inputs.rehabTierOverride,    // new field
-    rehab_est_override: inputs.manualRepairs > 0 ? inputs.manualRepairs : undefined,
-    mls_status: "Active",
-  };
-
-  const metrics = computeDealMetrics(partialDeal);
-
-  // Additional display-only values (FMR, rent comp, etc.)
-  const fmr = getFmr(inputs.zip, inputs.beds);
-  const rentComp = getRentComp(inputs.zip, inputs.beds);
-  const arvQuick = calculateArvQuick(inputs.zip, inputs.sqft);
-
-  return { ...metrics, fmr, rentComp, arvQuick };
-}, [inputs]);
+below_grade_sqft: parseInt(raw.BelowGradeFinishedAreaSrchSqFt || "0", 10),
 ```
 
-**Update the DealInputs interface:**
-- Remove `repairPreset` (replaced by the rehab tier concept from screening.ts)
-- Add `rehabTierOverride?: RehabTier` (maps to the dropdown)
-- Keep `manualRepairs` (maps to `rehab_est_override`)
+This is informational only — not used in screening calculations — but useful for the deal detail view and analyzer.
 
-**Update the Repair Preset dropdown** to use the four rehab tiers (Turnkey/$5, Light/$15, Medium/$30, Heavy/$50) instead of the old five-preset system. Add an "Auto" option that means "let price/ARV determine the tier."
+### 2. `src/hooks/useMlsSearch.tsx` — MlsListing interface
 
-**Wire the mutual-exclusion behavior:**
-- When user selects a tier from dropdown: set `rehabTierOverride` to that tier, clear `manualRepairs` to 0
-- When user types into manual repairs field: set `manualRepairs` to the value, clear `rehabTierOverride` to undefined
+Add optional field:
+```typescript
+below_grade_sqft?: number;
+```
 
-**Update results display** to use the new field names from `computeDealMetrics`:
-- `repairEstimate` → `rehab_est_effective`
-- `allIn` → computed from `list_price + rehab_est_effective`
-- `percentArv` → `all_in_pct_of_arv` (note: this is all-in/ARV, not just price/ARV — slight change in meaning but more accurate)
-- `likelyRtp` → `rent_to_price_pct`
-- `offer75` → keep as local calculation: `arv * 0.75 - rehab` (display-only, not part of screening)
-- `currentRtp` → keep as local calculation: `currentRent / price` (display-only)
+The `sqft` field continues to represent above-grade (primary) square footage. No interface name change needed.
 
-### 3. `src/data/stlZipData.ts` — Cleanup
+### 3. No changes to screening.ts or UI components
 
-The old `RepairPreset`, `REPAIR_PRESET_LABELS`, and `getRepairEstimate` exports can be removed since the DealAnalyzer will now use screening.ts tiers. However, if `BatchAnalysisTable` or other components still import them, we keep them until those are migrated too. Will check usage and remove only if safe.
+The `sqft` field flows through the existing pipeline unchanged. All downstream consumers (screening, rehab cost calculation, ARV estimation) automatically use the corrected above-grade value. No UI changes needed unless we want to display below-grade sqft somewhere.
 
-## What Does NOT Change
+## What This Fixes
 
-- `computeDealMetrics` function signature (still takes `Partial<Deal>`)
-- `ScreeningConfig` and its defaults
-- Turnkey/BRRRR evaluation logic
-- `createDeal` / `updateDeal` functions
-- Admin deal pipeline (mockDeals, useDeals hook)
-- `BatchAnalysisTable` (separate migration later if needed)
+A property with 1,000 sqft above grade and 800 sqft finished basement currently reports 1,800 sqft (or whatever `details.sqft` contains). With this change, it correctly reports 1,000 sqft for rehab and ARV calculations, preventing inflated rehab estimates and skewed valuations.
 
-## Technical Details
+## Risk
 
-The mutual-exclusion override is handled entirely in the UI component state. `screening.ts` simply checks: if `rehab_est_override > 0`, use it; otherwise fall back to tier-based calculation. The function does not need to know about the UI interaction pattern — it just respects whichever override is present.
+Low. The raw field may be null for some listings (Repliers said it depends on MLS data). The fallback chain (`details.sqft`) handles this gracefully.
 
