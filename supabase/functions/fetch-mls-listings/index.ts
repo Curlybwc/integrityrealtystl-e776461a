@@ -195,6 +195,9 @@ async function fetchSingleZip(apiKey: string, params: Record<string, string>, zi
 
   const data = await response.json();
   console.log(`ZIP ${zip}: count=${data.count}, listings=${(data.listings || []).length}`);
+  if (data?.listings?.length > 0) {
+    console.log("RAW REPLIERS LISTING [0]:", JSON.stringify(data.listings[0], null, 2));
+  }
   return data;
 }
 
@@ -297,6 +300,9 @@ serve(async (req) => {
 
       const data = await response.json();
       console.log(`Repliers response: count=${data.count}, page=${data.page}, numPages=${data.numPages}, listings=${(data.listings || []).length}`);
+      if (data?.listings?.length > 0) {
+        console.log("RAW REPLIERS LISTING [0]:", JSON.stringify(data.listings[0], null, 2));
+      }
 
       listings = (data.listings || []).map(normalizeListing)
         .filter((l: any) => !l.property_type?.toLowerCase().includes("lease"));
