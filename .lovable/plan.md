@@ -1,37 +1,25 @@
 
 
-# Plan: Add Raw Repliers Listing Logging
+# Plan: Update Back to Deals Button Behavior
 
 ## Summary
-Add temporary discovery logging to dump the first raw listing object in both code paths. No flags, no state, no logic changes.
+Replace the history-based navigation with `window.opener` detection: close the tab if opened via `target="_blank"`, otherwise fallback to `/portal/search-analyzer`.
 
-## Changes
+## Change
 
-### `supabase/functions/fetch-mls-listings/index.ts`
+### `src/pages/portal/PortalAnalyzer.tsx`
 
-**1. `fetchSingleZip` function (after line 197)**
+Replace the `onClick` handler of the Back button (lines 14-20) with:
 
-After the existing `console.log` for ZIP count, insert:
-
-```typescript
-if (data?.listings?.length > 0) {
-  console.log("RAW REPLIERS LISTING [0]:", JSON.stringify(data.listings[0], null, 2));
-}
+```tsx
+onClick={() => {
+  if (window.opener) {
+    window.close();
+  } else {
+    navigate("/portal/search-analyzer");
+  }
+}}
 ```
 
-**2. Single-ZIP path (after line 299)**
-
-After the existing `console.log` for Repliers response, insert:
-
-```typescript
-if (data?.listings?.length > 0) {
-  console.log("RAW REPLIERS LISTING [0]:", JSON.stringify(data.listings[0], null, 2));
-}
-```
-
-## Files NOT modified
-- Normalization logic
-- Response structure
-- Frontend code
-- Routing or screening
+No other files modified.
 
