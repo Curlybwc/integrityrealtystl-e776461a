@@ -38,7 +38,7 @@ const ListingCard = ({ listing: l, onPhotoClick }: ListingCardProps) => {
 
   return (
     <Card className={cn("overflow-hidden transition-opacity", !passes && "opacity-50")}>
-      <div className="relative cursor-pointer" onClick={() => navigate(`/portal/listing/${l.mls_listing_id}`)}>
+      <div className="relative cursor-pointer" onClick={() => navigate(`/listing/${l.mls_listing_id}`, { state: { fromPortal: true } })}>
         <AspectRatio ratio={16 / 10}>
           {hasPhotos ? (
             <img
