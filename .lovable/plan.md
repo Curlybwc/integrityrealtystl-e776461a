@@ -1,41 +1,30 @@
 
 
-# Plan: Open Portal Listings in New Tab
+## Confirmed: All Variables in Scope
 
-## Changes
+- `arv_effective` — line 174
+- `list_price` — line 176
+- `rehab_est_effective` — lines 181–187
+- All declared before the flip logic at line 196. No risk of compile error.
 
-### 1. `src/components/portal/ListingCard.tsx`
+## Hardening Applied
 
-- Remove `useNavigate` import and `navigate` usage
-- Replace the `<div className="relative cursor-pointer" onClick={...}>` wrapper (line 41) with an `<a>` tag that opens in a new tab:
-  ```tsx
-  <a
-    href={`/portal/listing/${l.mls_listing_id}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="relative block"
-  >
-  ```
-- Close with `</a>` instead of `</div>`
+The Flip input `onChange` will use:
+```tsx
+onChange={(e) => {
+  const val = parseFloat(e.target.value);
+  if (!isNaN(val)) {
+    updateConfig("flip_max_arv_pct", val / 100);
+  }
+}}
+```
 
-### 2. `src/components/portal/BatchAnalysisTable.tsx`
+This prevents clearing the field from setting `flip_max_arv_pct` to 0 and wiping all flip matches.
 
-- Remove `useNavigate` and the `goToListing` function (lines 59, 131-133)
-- Replace the camera `<button>` in table view (lines 240-248) with an `<a>` tag:
-  ```tsx
-  <a
-    href={`/portal/listing/${l.mls_listing_id}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="flex items-center gap-0.5 text-muted-foreground hover:text-foreground transition-colors"
-    title="View listing"
-  >
-  ```
-- Remove `onPhotoClick` prop from `<ListingCard>` (line 198) since ListingCard handles its own navigation now
+## Plan Status
 
-### What stays the same
+Ready to implement. No blockers identified:
 
-- Public routes untouched
-- Backend, screening, analyzer logic untouched
-- All other portal components untouched
+1. `screening.ts`: Add `flip_max_arv_pct` to config type/defaults, replace flip logic with MAO calculation
+2. `PortalSearchAnalyzer.tsx`: Replace disclaimer, remove rehab section, add Flip column with hardened input, update grid to 3-col, update header text
 
