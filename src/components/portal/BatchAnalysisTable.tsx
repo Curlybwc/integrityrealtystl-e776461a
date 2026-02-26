@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { ArrowUpDown, ExternalLink, Camera, LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,6 @@ import {
 } from "@/lib/screening";
 import { cn } from "@/lib/utils";
 import ListingCard from "./ListingCard";
-import ListingPhotoModal from "./ListingPhotoModal";
 
 interface AnalyzedListing extends MlsListing {
   rent_effective: number;
@@ -56,11 +56,11 @@ const strategyOrder: Record<Strategy, number> = {
 };
 
 const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTableProps) => {
+  const navigate = useNavigate();
   const [sortField, setSortField] = useState<SortField>("strategy");
   const [sortAsc, setSortAsc] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [strategyFilter, setStrategyFilter] = useState<StrategyFilter>("all");
-  const [photoModal, setPhotoModal] = useState<{ photos: string[]; address: string } | null>(null);
 
   const config = screeningConfig ?? DEFAULT_SCREENING_CONFIG;
 
@@ -128,10 +128,8 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
     }
   };
 
-  const openPhotos = (l: AnalyzedListing) => {
-    if (l.photo_urls?.length) {
-      setPhotoModal({ photos: l.photo_urls, address: l.address });
-    }
+  const goToListing = (l: AnalyzedListing) => {
+    navigate(`/portal/listing/${l.mls_listing_id}`);
   };
 
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
@@ -197,7 +195,7 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
             <ListingCard
               key={l.mls_listing_id}
               listing={l}
-              onPhotoClick={() => openPhotos(l)}
+              onPhotoClick={() => goToListing(l)}
             />
           ))}
           {sorted.length === 0 && (
@@ -240,9 +238,9 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
                     <TableCell className="pr-0">
                       {photoCount > 0 ? (
                         <button
-                          onClick={() => openPhotos(l)}
+                          onClick={() => goToListing(l)}
                           className="flex items-center gap-0.5 text-muted-foreground hover:text-foreground transition-colors"
-                          title={`${photoCount} photos`}
+                          title={`View listing`}
                         >
                           <Camera className="h-3.5 w-3.5" />
                           <span className="text-[10px]">{photoCount}</span>
@@ -312,13 +310,6 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
         </div>
       )}
 
-      {/* Photo Modal */}
-      <ListingPhotoModal
-        open={!!photoModal}
-        onOpenChange={(open) => !open && setPhotoModal(null)}
-        photos={photoModal?.photos ?? []}
-        address={photoModal?.address ?? ""}
-      />
     </div>
   );
 };

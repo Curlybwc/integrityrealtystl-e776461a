@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,8 +45,17 @@ interface RawListing {
 }
 
 const PortalListingDetail = () => {
+  const navigate = useNavigate();
   const { mlsNumber } = useParams<{ mlsNumber: string }>();
   const [photoIndex, setPhotoIndex] = useState(0);
+
+  const goBack = () => {
+    if (window.history.length > 2) {
+      navigate(-1);
+    } else {
+      navigate("/portal/search-analyzer");
+    }
+  };
 
   const { data: listing, isLoading, error } = useQuery<RawListing | null>({
     queryKey: ["mls-listing", mlsNumber],
@@ -74,11 +83,9 @@ const PortalListingDetail = () => {
   if (error || !listing) {
     return (
       <div className="space-y-4">
-        <Link to="/portal/search-analyzer">
-          <Button variant="ghost" size="sm" className="gap-1">
-            <ArrowLeft className="h-4 w-4" /> Back to Search
-          </Button>
-        </Link>
+        <Button variant="ghost" size="sm" className="gap-1" onClick={goBack}>
+          <ArrowLeft className="h-4 w-4" /> Back to Results
+        </Button>
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground">
@@ -129,11 +136,9 @@ const PortalListingDetail = () => {
   return (
     <div className="space-y-6">
       {/* Back nav */}
-      <Link to="/portal/search-analyzer">
-        <Button variant="ghost" size="sm" className="gap-1">
-          <ArrowLeft className="h-4 w-4" /> Back to Search
-        </Button>
-      </Link>
+      <Button variant="ghost" size="sm" className="gap-1" onClick={goBack}>
+        <ArrowLeft className="h-4 w-4" /> ← Back to Results
+      </Button>
 
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
