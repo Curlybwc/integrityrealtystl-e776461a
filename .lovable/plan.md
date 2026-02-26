@@ -1,53 +1,109 @@
 
 
-# Plan: Add Single-Listing Lookup to Debug & Find Sqft Field
+# Plan: ArcGIS Sqft Supplementation with Safety Refinements
 
-## Problem
+## Summary
 
-150 Saint Daniel Lane (MLS #26006837) is active on MARIS at $115k, 3 bed, ZIP 63031, but Repliers is not returning it in search results for that ZIP. Without seeing the raw Repliers data for this listing, we cannot identify which field contains the 864 sqft value, and we cannot determine why it's being excluded from search results.
-
-## Root Cause Hypotheses
-
-1. **Class mismatch**: Our edge function hardcodes `class=residential`. If Repliers classifies this listing differently, it would be excluded from all searches.
-2. **Repliers indexing delay**: The listing may not be fully indexed yet.
-3. **ZIP mismatch**: The listing's ZIP in Repliers' system may differ from MARIS.
+All seven refinements from ChatGPT are sound and align with the existing plan. Here is the final implementation plan incorporating every point.
 
 ## Changes
 
-### 1. `supabase/functions/fetch-mls-listings/index.ts` — Add single-listing lookup
+### 1. `supabase/functions/fetch-mls-listings/index.ts`
 
-Add support for a `mlsNumber` parameter. When provided, fetch directly from Repliers' single-listing endpoint (`GET /listings/{mlsNumber}`) instead of the search endpoint. This bypasses all search filters (class, type, status, ZIP) and returns the full raw listing data.
+Add the following new code to the edge function:
 
+**a) St. Louis County ZIP set (constant)**
 ```typescript
-// If mlsNumber is provided, fetch single listing directly
-if (params.mlsNumber) {
-  const url = `https://api.repliers.io/listings/${params.mlsNumber}`;
-  const response = await fetch(url, {
-    headers: { "REPLIERS-API-KEY": apiKey, "Content-Type": "application/json" },
-  });
-  const data = await response.json();
-  const listing = normalizeListing(data);
-  return Response with { count: 1, page: 1, numPages: 1, listings: [listing] }
-}
+const STL_COUNTY_ZIPS = new Set([
+  "63005","63011","63017","63021","63025","63026","63031","63033","63034","63040",
+  "63042","63043","63044","63074","63088","63114","63117","63119","63121","63122",
+  "63123","63124","63125","63126","63127","63128","63129","63130","63131","63132",
+  "63133","63134","63135","63136","63137","63138","63140","63141","63143","63144","63146"
+]);
 ```
 
-This lets us:
-- Fetch MLS #26006837 directly and inspect ALL raw fields to find where 864 lives
-- See what `class`, `status`, and `zip` Repliers has for this listing
-- Diagnose why it's not appearing in search results
+**b) Address normalization function**
 
-### 2. `src/hooks/useMlsSearch.tsx` — Add `mlsNumber` to search params
+Uppercases the address, then applies a USPS abbreviation map (SAINT->ST, LANE->LN, DRIVE->DR, STREET->ST, ROAD->RD, AVENUE->AVE, BOULEVARD->BLVD, CIRCLE->CIR, COURT->CT, PLACE->PL, TERRACE->TER, TRAIL->TRL, PARKWAY->PKWY, HIGHWAY->HWY). Replaces each word-boundary match.
 
-Add optional `mlsNumber` field to `MlsSearchParams` interface so the frontend can trigger single-listing lookups.
+**c) `lookupCountySqft(address, zip)` function**
 
-### 3. No UI changes in this step
+Two-step query with 2-second timeout via `AbortController`:
 
-This is a diagnostic step. Once we can see the full raw data for 26006837, we'll know:
-- Which field contains 864 (could be `details.sqft`, `raw.LivingAreaSrchSqFt`, `raw.TotalFinishedAreaSrchSqFt`, or another raw field)
-- Why the listing is excluded from search results
-- Whether we need to adjust our `class` filter or sqft fallback chain
+1. **Exact match first**: `where=PROP_ADD='{NORMALIZED}'`
+2. **If zero results, LIKE fallback**: `where=PROP_ADD LIKE '%{NORMALIZED}%'`
+3. **If result count != 1, return null** (ambiguous or no match)
+4. **If exactly 1 result with RESQFT > 0**, return `{ resqft, yearblt }`
+5. **On any error or timeout, return null** (graceful degradation)
 
-## Impact
+```text
+Endpoint: https://services2.arcgis.com/w657bnjzrjguNyOy/arcgis/rest/services/
+          STLCO_STC_Parcels_SFD/FeatureServer/0/query
+Params:   outFields=RESQFT,YEARBLT&f=json&resultRecordCount=3
+```
 
-Low risk. Adds an optional code path that only activates when `mlsNumber` is explicitly provided. Does not affect existing search behavior.
+**d) Post-processing step after all listings are normalized**
+
+Before the final `return new Response(...)`, add:
+
+```text
+1. Filter listings where sqft === 0 AND zip is in STL_COUNTY_ZIPS
+2. Cap at 10 listings max
+3. Call lookupCountySqft for each via Promise.all (concurrency cap = 10)
+4. For each successful result:
+   - Set listing.sqft = result.resqft
+   - Set listing.sqft_source = "public_record"
+   - If listing.year_built is missing and result.yearblt exists, backfill it
+5. For all other listings: set listing.sqft_source = "mls"
+```
+
+This runs for both the single-ZIP and multi-ZIP code paths, inserted right before the final response.
+
+**Key safety rules enforced:**
+- Never overwrites non-zero MLS sqft
+- 2-second AbortController timeout per ArcGIS request
+- Max 10 concurrent ArcGIS lookups
+- Exact match attempted before LIKE fallback
+- Multiple matches treated as ambiguous (returns null)
+- Any failure silently skips (listing keeps sqft=0, source="mls")
+
+### 2. `src/hooks/useMlsSearch.tsx`
+
+Add `sqft_source?: "mls" | "public_record"` to the `MlsListing` interface.
+
+### 3. `src/components/portal/ListingCard.tsx`
+
+Two changes:
+- When `sqft === 0`: display "N/A" instead of "0" in the Bd/Ba/Sf line
+- When `sqft_source === "public_record"`: append a small "(PR)" indicator after the sqft value
+
+Line 82 changes from:
+```
+{l.beds}/{l.baths}/{l.sqft?.toLocaleString()}
+```
+to:
+```
+{l.beds}/{l.baths}/{l.sqft ? `${l.sqft.toLocaleString()}${l.sqft_source === 'public_record' ? ' (PR)' : ''}` : 'N/A'}
+```
+
+The `ListingCardProps` interface gains `sqft_source?: string`.
+
+### 4. `src/components/portal/BatchAnalysisTable.tsx`
+
+Same pattern in table view (line 257):
+- Show "N/A" when sqft is 0
+- Show "(PR)" suffix when `sqft_source === "public_record"`
+
+## Files NOT Modified
+
+- `src/lib/screening.ts` -- no changes to thresholds, rehab tiers, rates, or logic
+- Database schema -- no new tables or columns
+- `supabase/config.toml` -- no changes
+- No new secrets needed (ArcGIS endpoint is public, no API key)
+
+## Risk Assessment
+
+- **Low risk**: ArcGIS is free, public, keyless. All failures are silent.
+- **Performance**: Only fires for 0-sqft County listings (small minority). 2s timeout prevents blocking. Worst case adds ~500ms for a batch of 10 lookups.
+- **Scope limitation**: St. Louis County only. City, St. Charles, and Jefferson County listings with missing sqft will show "N/A" until those county endpoints are discovered and added.
 
