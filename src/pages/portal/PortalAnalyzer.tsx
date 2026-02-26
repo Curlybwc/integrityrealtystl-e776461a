@@ -10,8 +10,8 @@ const PortalAnalyzer = () => {
       {/* Back button */}
       <button
         onClick={() => {
-          if (window.history.length > 1) {
-            navigate(-1);
+          if (window.opener) {
+            window.close();
           } else {
             navigate("/portal/search-analyzer");
           }
