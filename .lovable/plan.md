@@ -1,88 +1,37 @@
 
 
-# Plan: Analyze Link Opens in New Tab + Back to Deals Button
+# Plan: Add Raw Repliers Listing Logging
 
-## Overview
-Three targeted UI changes: replace `Link` with `<a target="_blank">` using `URLSearchParams` and `Button asChild`, and add a "Back to Deals" button on the analyzer page.
+## Summary
+Add temporary discovery logging to dump the first raw listing object in both code paths. No flags, no state, no logic changes.
 
 ## Changes
 
-### 1. `src/components/portal/ListingCard.tsx`
+### `supabase/functions/fetch-mls-listings/index.ts`
 
-- **Line 1**: Remove `Link` import from `react-router-dom` (no longer used)
-- **Lines 113-122**: Replace `<Link>` block with `URLSearchParams` + `Button asChild`:
+**1. `fetchSingleZip` function (after line 197)**
 
-```tsx
-<Button asChild variant="outline" size="sm" className="w-full h-7 text-xs">
-  <a
-    href={`/portal/analyzer?${new URLSearchParams({
-      address: l.address ?? "",
-      zip: l.zip ?? "",
-      beds: String(l.beds ?? ""),
-      baths: String(l.baths ?? ""),
-      sqft: String(l.sqft ?? ""),
-      price: String(l.list_price ?? ""),
-    }).toString()}`}
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    <ExternalLink className="h-3 w-3 mr-1" />
-    Analyze
-  </a>
-</Button>
+After the existing `console.log` for ZIP count, insert:
+
+```typescript
+if (data?.listings?.length > 0) {
+  console.log("RAW REPLIERS LISTING [0]:", JSON.stringify(data.listings[0], null, 2));
+}
 ```
 
-### 2. `src/components/portal/BatchAnalysisTable.tsx`
+**2. Single-ZIP path (after line 299)**
 
-- **Line 2**: Remove `Link` import from `react-router-dom`
-- **Lines 281-290**: Same replacement in table view:
+After the existing `console.log` for Repliers response, insert:
 
-```tsx
-<TableCell>
-  <Button asChild variant="ghost" size="sm" className="h-7 px-2">
-    <a
-      href={`/portal/analyzer?${new URLSearchParams({
-        address: l.address ?? "",
-        zip: l.zip ?? "",
-        beds: String(l.beds ?? ""),
-        baths: String(l.baths ?? ""),
-        sqft: String(l.sqft ?? ""),
-        price: String(l.list_price ?? ""),
-      }).toString()}`}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <ExternalLink className="h-3 w-3 mr-1" />
-      Analyze
-    </a>
-  </Button>
-</TableCell>
-```
-
-### 3. `src/pages/portal/PortalAnalyzer.tsx`
-
-- Add `useNavigate` import
-- Add "Back to Deals" button with history-length guard above the header:
-
-```tsx
-import { useNavigate } from "react-router-dom";
-
-const navigate = useNavigate();
-
-<button
-  onClick={() => {
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate("/portal/search-analyzer");
-    }
-  }}
-  className="mb-4 text-sm font-medium text-primary hover:underline"
->
-  ← Back to Deals
-</button>
+```typescript
+if (data?.listings?.length > 0) {
+  console.log("RAW REPLIERS LISTING [0]:", JSON.stringify(data.listings[0], null, 2));
+}
 ```
 
 ## Files NOT modified
-- Routing, screening logic, edge functions, DealAnalyzer component, database schema
+- Normalization logic
+- Response structure
+- Frontend code
+- Routing or screening
 
