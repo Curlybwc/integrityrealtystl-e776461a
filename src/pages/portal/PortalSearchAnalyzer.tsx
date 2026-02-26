@@ -69,21 +69,15 @@ const PortalSearchAnalyzer = () => {
           Search & Analyze
         </h1>
         <p className="text-muted-foreground mt-1">
-          Search MLS listings and instantly screen them for Turnkey and BRRRR potential.
+          Search MLS listings and instantly screen them for Flip, BRRRR, and Turnkey potential.
         </p>
       </div>
 
       {/* Disclaimer */}
       <Alert className="py-3">
         <Info className="h-4 w-4" />
-        <AlertDescription className="text-xs leading-relaxed space-y-1.5">
-          <p className="font-semibold text-sm">Analysis is based on estimates only — click Analyze on any listing to customize.</p>
-          <ul className="list-disc list-inside text-muted-foreground space-y-0.5">
-            <li><strong>Rehab tier</strong> is estimated from price vs. ARV: 90%+ = Turnkey ($5/sf), 80–90% = Light ($15/sf), 60–80% = Medium ($30/sf), &lt;60% = Heavy ($50/sf)</li>
-            <li><strong>RTP Ratio</strong> = Monthly Rent ÷ All-In Price (purchase price + estimated repairs)</li>
-            <li><strong>All-In %</strong> = (Purchase Price + Estimated Repairs) ÷ ARV</li>
-            <li><strong>Rent</strong> estimated from ZIP-level comps &amp; Fair Market Rent data; <strong>ARV</strong> from median $/sqft by ZIP</li>
-          </ul>
+        <AlertDescription className="text-sm">
+          Screening results are generated using internal automated models and market assumptions. All projections require independent verification.
         </AlertDescription>
       </Alert>
 
@@ -101,7 +95,7 @@ const PortalSearchAnalyzer = () => {
         <CollapsibleContent className="mt-3">
           <Card>
             <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* BRRRR Settings */}
                 <div className="space-y-4">
                   <h3 className="font-semibold text-sm text-foreground">BRRRR Strategy</h3>
@@ -171,52 +165,29 @@ const PortalSearchAnalyzer = () => {
                   </div>
                 </div>
 
-                {/* Repair Cost Settings */}
-                <div className="space-y-4 md:col-span-2">
-                  <h3 className="font-semibold text-sm text-foreground">Repair Cost Estimates ($/sqft)</h3>
-                  <div className="grid grid-cols-4 gap-4">
+                {/* Flip Strategy */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-foreground">Flip Strategy</h3>
+                  <div className="space-y-3">
                     <div>
-                      <Label className="text-xs">Turnkey ($5/sf)</Label>
+                      <Label className="text-xs">Max Purchase % of ARV</Label>
                       <Input
                         type="number"
                         step="1"
-                        value={screeningConfig.rehab_rate_turnkey}
-                        onChange={(e) => updateConfig("rehab_rate_turnkey", parseFloat(e.target.value) || 0)}
+                        min="65"
+                        max="90"
+                        value={(screeningConfig.flip_max_arv_pct * 100).toFixed(0)}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          if (!isNaN(val)) {
+                            updateConfig("flip_max_arv_pct", val / 100);
+                          }
+                        }}
                         className="h-8 text-sm"
                       />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Light ($15/sf)</Label>
-                      <Input
-                        type="number"
-                        step="1"
-                        value={screeningConfig.rehab_rate_light}
-                        onChange={(e) => updateConfig("rehab_rate_light", parseFloat(e.target.value) || 0)}
-                        className="h-8 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Medium ($30/sf)</Label>
-                      <Input
-                        type="number"
-                        step="1"
-                        value={screeningConfig.rehab_rate_medium}
-                        onChange={(e) => updateConfig("rehab_rate_medium", parseFloat(e.target.value) || 0)}
-                        className="h-8 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Heavy ($50/sf)</Label>
-                      <Input
-                        type="number"
-                        step="1"
-                        value={screeningConfig.rehab_rate_heavy}
-                        onChange={(e) => updateConfig("rehab_rate_heavy", parseFloat(e.target.value) || 0)}
-                        className="h-8 text-sm"
-                      />
+                      <p className="text-[11px] text-muted-foreground mt-0.5">MAO = (ARV × this%) − Repairs. List price must be ≤ MAO (default: 75%)</p>
                     </div>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">Rehab tier is auto-estimated from price vs. ARV (90%+ = Turnkey, 80-90% = Light, 60-80% = Medium, &lt;60% = Heavy).</p>
                 </div>
               </div>
 
