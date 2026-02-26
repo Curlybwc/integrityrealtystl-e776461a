@@ -6,6 +6,110 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// --- St. Louis County ZIP codes ---
+const STL_COUNTY_ZIPS = new Set([
+  "63005","63011","63017","63021","63025","63026","63031","63033","63034","63040",
+  "63042","63043","63044","63074","63088","63114","63117","63119","63121","63122",
+  "63123","63124","63125","63126","63127","63128","63129","63130","63131","63132",
+  "63133","63134","63135","63136","63137","63138","63140","63141","63143","63144","63146"
+]);
+
+// --- USPS abbreviation map ---
+const USPS_ABBREVS: Record<string, string> = {
+  SAINT: "ST", LANE: "LN", DRIVE: "DR", STREET: "ST", ROAD: "RD",
+  AVENUE: "AVE", BOULEVARD: "BLVD", CIRCLE: "CIR", COURT: "CT",
+  PLACE: "PL", TERRACE: "TER", TRAIL: "TRL", PARKWAY: "PKWY", HIGHWAY: "HWY",
+};
+
+function normalizeAddress(addr: string): string {
+  let normalized = addr.toUpperCase().trim();
+  for (const [full, abbr] of Object.entries(USPS_ABBREVS)) {
+    normalized = normalized.replace(new RegExp(`\\b${full}\\b`, "g"), abbr);
+  }
+  return normalized;
+}
+
+// --- ArcGIS county sqft lookup ---
+const ARCGIS_BASE = "https://services2.arcgis.com/w657bnjzrjguNyOy/arcgis/rest/services/STLCO_STC_Parcels_SFD/FeatureServer/0/query";
+
+async function lookupCountySqft(address: string, zip: string): Promise<{ resqft: number; yearblt?: number } | null> {
+  if (!STL_COUNTY_ZIPS.has(zip)) return null;
+
+  const normalized = normalizeAddress(address);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2000);
+
+  try {
+    // Step 1: exact match
+    const exactUrl = `${ARCGIS_BASE}?where=${encodeURIComponent(`PROP_ADD='${normalized}'`)}&outFields=RESQFT,YEARBLT&f=json&resultRecordCount=3`;
+    const exactResp = await fetch(exactUrl, { signal: controller.signal });
+    const exactData = await exactResp.json();
+    const exactFeatures = exactData.features || [];
+
+    if (exactFeatures.length === 1) {
+      const attrs = exactFeatures[0].attributes;
+      if (attrs.RESQFT && attrs.RESQFT > 0) {
+        return { resqft: attrs.RESQFT, yearblt: attrs.YEARBLT || undefined };
+      }
+    }
+
+    if (exactFeatures.length > 1) return null; // ambiguous
+
+    // Step 2: LIKE fallback (only if exact returned 0)
+    const likeUrl = `${ARCGIS_BASE}?where=${encodeURIComponent(`PROP_ADD LIKE '%${normalized}%'`)}&outFields=RESQFT,YEARBLT&f=json&resultRecordCount=3`;
+    const likeResp = await fetch(likeUrl, { signal: controller.signal });
+    const likeData = await likeResp.json();
+    const likeFeatures = likeData.features || [];
+
+    if (likeFeatures.length === 1) {
+      const attrs = likeFeatures[0].attributes;
+      if (attrs.RESQFT && attrs.RESQFT > 0) {
+        return { resqft: attrs.RESQFT, yearblt: attrs.YEARBLT || undefined };
+      }
+    }
+
+    return null; // 0 or 2+ results
+  } catch (e) {
+    console.error(`ArcGIS lookup failed for "${address}": ${e.message}`);
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+// --- Post-process: supplement missing sqft from county records ---
+async function supplementMissingSqft(listings: any[]) {
+  const candidates = listings
+    .filter((l) => (!l.sqft || l.sqft === 0) && STL_COUNTY_ZIPS.has(l.zip))
+    .slice(0, 10); // cap at 10
+
+  if (candidates.length === 0) {
+    listings.forEach((l) => { l.sqft_source = "mls"; });
+    return;
+  }
+
+  console.log(`ArcGIS sqft lookup for ${candidates.length} listings`);
+  const results = await Promise.all(
+    candidates.map((l) => lookupCountySqft(l.address, l.zip))
+  );
+
+  const supplementedSet = new Set<string>();
+  candidates.forEach((l, i) => {
+    const result = results[i];
+    if (result) {
+      l.sqft = result.resqft;
+      l.sqft_source = "public_record";
+      if (!l.year_built && result.yearblt) l.year_built = result.yearblt;
+      supplementedSet.add(l.mls_listing_id);
+      console.log(`Supplemented ${l.address}: sqft=${result.resqft}`);
+    }
+  });
+
+  listings.forEach((l) => {
+    if (!l.sqft_source) l.sqft_source = "mls";
+  });
+}
+
 function mapStatus(status: string | undefined): string {
   if (!status) return "Unknown";
   const s = status.toUpperCase();
@@ -135,8 +239,10 @@ serve(async (req) => {
       console.log(`Single listing raw keys: ${Object.keys(mlsData).join(", ")}`);
       console.log(`Single listing raw JSON: ${JSON.stringify(mlsData).substring(0, 3000)}`);
       const listing = normalizeListing(mlsData);
+      const singleListings = [listing];
+      await supplementMissingSqft(singleListings);
       return new Response(
-        JSON.stringify({ count: 1, page: 1, numPages: 1, listings: [listing] }),
+        JSON.stringify({ count: 1, page: 1, numPages: 1, listings: singleListings }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -196,6 +302,9 @@ serve(async (req) => {
         .filter((l: any) => !l.property_type?.toLowerCase().includes("lease"));
       totalCount = listings.length;
     }
+
+    // Supplement missing sqft from St. Louis County ArcGIS
+    await supplementMissingSqft(listings);
 
     return new Response(
       JSON.stringify({

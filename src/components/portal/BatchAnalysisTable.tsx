@@ -254,7 +254,7 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
                     <TableCell className="text-xs">{l.zip}</TableCell>
                     <TableCell className="text-xs">{formatCurrency(l.list_price)}</TableCell>
                     <TableCell className="text-xs whitespace-nowrap">
-                      {l.beds}/{l.baths}/{l.sqft?.toLocaleString()}
+                      {l.beds}/{l.baths}/{l.sqft ? `${l.sqft.toLocaleString()}${(l as any).sqft_source === 'public_record' ? ' (PR)' : ''}` : 'N/A'}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">

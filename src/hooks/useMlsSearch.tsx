@@ -33,6 +33,7 @@ export interface MlsListing {
   list_price: number;
   mls_status: string;
   photo_urls: string[];
+  sqft_source?: "mls" | "public_record";
 }
 
 export interface MlsSearchResult {
