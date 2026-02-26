@@ -129,7 +129,7 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
   };
 
   const goToListing = (l: AnalyzedListing) => {
-    navigate(`/portal/listing/${l.mls_listing_id}`);
+    navigate(`/listing/${l.mls_listing_id}`, { state: { fromPortal: true } });
   };
 
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
