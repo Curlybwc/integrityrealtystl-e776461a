@@ -1,9 +1,26 @@
 import { AlertCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import DealAnalyzer from "@/components/portal/DealAnalyzer";
 
 const PortalAnalyzer = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      {/* Back button */}
+      <button
+        onClick={() => {
+          if (window.history.length > 1) {
+            navigate(-1);
+          } else {
+            navigate("/portal/search-analyzer");
+          }
+        }}
+        className="mb-4 text-sm font-medium text-primary hover:underline"
+      >
+        ← Back to Deals
+      </button>
+
       {/* Header */}
       <div>
         <h1 className="font-serif text-2xl text-foreground mb-2">

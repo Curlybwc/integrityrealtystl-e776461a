@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+
 import { Camera, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -111,15 +111,23 @@ const ListingCard = ({ listing: l, onPhotoClick }: ListingCardProps) => {
         </div>
 
         {/* Analyze link */}
-        <Link
-          to={`/portal/analyzer?address=${encodeURIComponent(l.address)}&zip=${l.zip}&beds=${l.beds}&baths=${l.baths}&sqft=${l.sqft}&price=${l.list_price}`}
-          className="block"
-        >
-          <Button variant="outline" size="sm" className="w-full h-7 text-xs">
+        <Button asChild variant="outline" size="sm" className="w-full h-7 text-xs">
+          <a
+            href={`/portal/analyzer?${new URLSearchParams({
+              address: l.address ?? "",
+              zip: l.zip ?? "",
+              beds: String(l.beds ?? ""),
+              baths: String(l.baths ?? ""),
+              sqft: String(l.sqft ?? ""),
+              price: String(l.list_price ?? ""),
+            }).toString()}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <ExternalLink className="h-3 w-3 mr-1" />
             Analyze
-          </Button>
-        </Link>
+          </a>
+        </Button>
       </CardContent>
     </Card>
   );
