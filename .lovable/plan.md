@@ -1,109 +1,88 @@
 
 
-# Plan: ArcGIS Sqft Supplementation with Safety Refinements
+# Plan: Analyze Link Opens in New Tab + Back to Deals Button
 
-## Summary
-
-All seven refinements from ChatGPT are sound and align with the existing plan. Here is the final implementation plan incorporating every point.
+## Overview
+Three targeted UI changes: replace `Link` with `<a target="_blank">` using `URLSearchParams` and `Button asChild`, and add a "Back to Deals" button on the analyzer page.
 
 ## Changes
 
-### 1. `supabase/functions/fetch-mls-listings/index.ts`
+### 1. `src/components/portal/ListingCard.tsx`
 
-Add the following new code to the edge function:
+- **Line 1**: Remove `Link` import from `react-router-dom` (no longer used)
+- **Lines 113-122**: Replace `<Link>` block with `URLSearchParams` + `Button asChild`:
 
-**a) St. Louis County ZIP set (constant)**
-```typescript
-const STL_COUNTY_ZIPS = new Set([
-  "63005","63011","63017","63021","63025","63026","63031","63033","63034","63040",
-  "63042","63043","63044","63074","63088","63114","63117","63119","63121","63122",
-  "63123","63124","63125","63126","63127","63128","63129","63130","63131","63132",
-  "63133","63134","63135","63136","63137","63138","63140","63141","63143","63144","63146"
-]);
+```tsx
+<Button asChild variant="outline" size="sm" className="w-full h-7 text-xs">
+  <a
+    href={`/portal/analyzer?${new URLSearchParams({
+      address: l.address ?? "",
+      zip: l.zip ?? "",
+      beds: String(l.beds ?? ""),
+      baths: String(l.baths ?? ""),
+      sqft: String(l.sqft ?? ""),
+      price: String(l.list_price ?? ""),
+    }).toString()}`}
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    <ExternalLink className="h-3 w-3 mr-1" />
+    Analyze
+  </a>
+</Button>
 ```
 
-**b) Address normalization function**
+### 2. `src/components/portal/BatchAnalysisTable.tsx`
 
-Uppercases the address, then applies a USPS abbreviation map (SAINT->ST, LANE->LN, DRIVE->DR, STREET->ST, ROAD->RD, AVENUE->AVE, BOULEVARD->BLVD, CIRCLE->CIR, COURT->CT, PLACE->PL, TERRACE->TER, TRAIL->TRL, PARKWAY->PKWY, HIGHWAY->HWY). Replaces each word-boundary match.
+- **Line 2**: Remove `Link` import from `react-router-dom`
+- **Lines 281-290**: Same replacement in table view:
 
-**c) `lookupCountySqft(address, zip)` function**
-
-Two-step query with 2-second timeout via `AbortController`:
-
-1. **Exact match first**: `where=PROP_ADD='{NORMALIZED}'`
-2. **If zero results, LIKE fallback**: `where=PROP_ADD LIKE '%{NORMALIZED}%'`
-3. **If result count != 1, return null** (ambiguous or no match)
-4. **If exactly 1 result with RESQFT > 0**, return `{ resqft, yearblt }`
-5. **On any error or timeout, return null** (graceful degradation)
-
-```text
-Endpoint: https://services2.arcgis.com/w657bnjzrjguNyOy/arcgis/rest/services/
-          STLCO_STC_Parcels_SFD/FeatureServer/0/query
-Params:   outFields=RESQFT,YEARBLT&f=json&resultRecordCount=3
+```tsx
+<TableCell>
+  <Button asChild variant="ghost" size="sm" className="h-7 px-2">
+    <a
+      href={`/portal/analyzer?${new URLSearchParams({
+        address: l.address ?? "",
+        zip: l.zip ?? "",
+        beds: String(l.beds ?? ""),
+        baths: String(l.baths ?? ""),
+        sqft: String(l.sqft ?? ""),
+        price: String(l.list_price ?? ""),
+      }).toString()}`}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <ExternalLink className="h-3 w-3 mr-1" />
+      Analyze
+    </a>
+  </Button>
+</TableCell>
 ```
 
-**d) Post-processing step after all listings are normalized**
+### 3. `src/pages/portal/PortalAnalyzer.tsx`
 
-Before the final `return new Response(...)`, add:
+- Add `useNavigate` import
+- Add "Back to Deals" button with history-length guard above the header:
 
-```text
-1. Filter listings where sqft === 0 AND zip is in STL_COUNTY_ZIPS
-2. Cap at 10 listings max
-3. Call lookupCountySqft for each via Promise.all (concurrency cap = 10)
-4. For each successful result:
-   - Set listing.sqft = result.resqft
-   - Set listing.sqft_source = "public_record"
-   - If listing.year_built is missing and result.yearblt exists, backfill it
-5. For all other listings: set listing.sqft_source = "mls"
+```tsx
+import { useNavigate } from "react-router-dom";
+
+const navigate = useNavigate();
+
+<button
+  onClick={() => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/portal/search-analyzer");
+    }
+  }}
+  className="mb-4 text-sm font-medium text-primary hover:underline"
+>
+  ← Back to Deals
+</button>
 ```
 
-This runs for both the single-ZIP and multi-ZIP code paths, inserted right before the final response.
-
-**Key safety rules enforced:**
-- Never overwrites non-zero MLS sqft
-- 2-second AbortController timeout per ArcGIS request
-- Max 10 concurrent ArcGIS lookups
-- Exact match attempted before LIKE fallback
-- Multiple matches treated as ambiguous (returns null)
-- Any failure silently skips (listing keeps sqft=0, source="mls")
-
-### 2. `src/hooks/useMlsSearch.tsx`
-
-Add `sqft_source?: "mls" | "public_record"` to the `MlsListing` interface.
-
-### 3. `src/components/portal/ListingCard.tsx`
-
-Two changes:
-- When `sqft === 0`: display "N/A" instead of "0" in the Bd/Ba/Sf line
-- When `sqft_source === "public_record"`: append a small "(PR)" indicator after the sqft value
-
-Line 82 changes from:
-```
-{l.beds}/{l.baths}/{l.sqft?.toLocaleString()}
-```
-to:
-```
-{l.beds}/{l.baths}/{l.sqft ? `${l.sqft.toLocaleString()}${l.sqft_source === 'public_record' ? ' (PR)' : ''}` : 'N/A'}
-```
-
-The `ListingCardProps` interface gains `sqft_source?: string`.
-
-### 4. `src/components/portal/BatchAnalysisTable.tsx`
-
-Same pattern in table view (line 257):
-- Show "N/A" when sqft is 0
-- Show "(PR)" suffix when `sqft_source === "public_record"`
-
-## Files NOT Modified
-
-- `src/lib/screening.ts` -- no changes to thresholds, rehab tiers, rates, or logic
-- Database schema -- no new tables or columns
-- `supabase/config.toml` -- no changes
-- No new secrets needed (ArcGIS endpoint is public, no API key)
-
-## Risk Assessment
-
-- **Low risk**: ArcGIS is free, public, keyless. All failures are silent.
-- **Performance**: Only fires for 0-sqft County listings (small minority). 2s timeout prevents blocking. Worst case adds ~500ms for a batch of 10 lookups.
-- **Scope limitation**: St. Louis County only. City, St. Charles, and Jefferson County listings with missing sqft will show "N/A" until those county endpoints are discovered and added.
+## Files NOT modified
+- Routing, screening logic, edge functions, DealAnalyzer component, database schema
 
