@@ -18,6 +18,7 @@ interface ListingCardProps {
     baths: number;
     sqft: number;
     photo_urls: string[];
+    sqft_source?: string;
     rent_effective: number;
     arv_effective: number;
     rent_to_price_pct: number;
@@ -79,7 +80,7 @@ const ListingCard = ({ listing: l, onPhotoClick }: ListingCardProps) => {
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Bd/Ba/Sf</span>
-            <span className="font-medium">{l.beds}/{l.baths}/{l.sqft?.toLocaleString()}</span>
+            <span className="font-medium">{l.beds}/{l.baths}/{l.sqft ? `${l.sqft.toLocaleString()}${l.sqft_source === 'public_record' ? ' (PR)' : ''}` : 'N/A'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Est. Rent</span>
