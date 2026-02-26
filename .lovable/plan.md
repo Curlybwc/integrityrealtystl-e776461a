@@ -1,51 +1,108 @@
 
 
-# Plan: Add Debug Logging and Redeploy Edge Function
+# Plan: Separate Listing Detail into Base Component + Two Pages
 
-## Findings
+## Architecture
 
-Both RAW REPLIERS LISTING log statements are **already present** in the deployed code at:
-- **Line 198-200**: `fetchSingleZip` path
-- **Line 303-305**: single-ZIP path
-
-The logs not appearing suggests the function may not have been redeployed after the last edit, or Cloud logs are truncating large payloads.
-
-## Changes
-
-### `supabase/functions/fetch-mls-listings/index.ts`
-
-**1. fetchSingleZip path (after line 196)**
-
-Insert a debug marker immediately after `const data = await response.json();`:
-
-```typescript
-  const data = await response.json();
-  console.log("DEBUG: After Repliers JSON parse (fetchSingleZip)");
-  console.log(`ZIP ${zip}: count=${data.count}, listings=${(data.listings || []).length}`);
+```text
+ListingDetailBase (pure brokerage UI)
+  ├── PublicListingPage    → /listing/:mlsNumber     (base only)
+  └── InvestorListingPage  → /portal/listing/:mlsNumber (base + investor analysis)
 ```
 
-No other changes to this block — the RAW REPLIERS LISTING log on lines 198-200 stays as-is.
+## Files to Create
 
-**2. Single-ZIP path (after line 301)**
+### 1. `src/components/listing/ListingDetailBase.tsx`
 
-Insert a debug marker immediately after `const data = await response.json();`:
+Extract all brokerage UI from the current `ListingDetail.tsx` into a reusable component that accepts a `RawListing` prop. Contains:
+- Price, address, beds/baths/sqft, status, DOM
+- Photo carousel with thumbnails
+- Description card
+- Property details grid (year built, lot size, taxes, garage, heating, cooling, sewer, water, basement, stories, sqft source)
+- Agent/office sidebar
+- Quick facts sidebar
+- Back button with `goBack` callback prop
 
+No investor logic. No screening imports. No strategy badges. No analyze buttons.
+
+**Props interface:**
 ```typescript
-      const data = await response.json();
-      console.log("DEBUG: After Repliers JSON parse (single-ZIP)");
-      console.log(`Repliers response: count=${data.count}, ...`);
+interface ListingDetailBaseProps {
+  listing: RawListing;
+  onBack: () => void;
+}
 ```
 
-No other changes — the RAW REPLIERS LISTING log on lines 303-305 stays as-is.
+The `RawListing` interface will be exported from this file for reuse.
 
-## What this confirms
+### 2. `src/pages/PublicListingPage.tsx`
 
-After redeployment, running a search should show:
-1. `DEBUG: After Repliers JSON parse (...)` — proves the code path executed
-2. `RAW REPLIERS LISTING [0]: {...}` — the full raw payload
+Replaces the current `ListingDetail.tsx`. This page:
+- Fetches listing via `useQuery` + `fetch-mls-listings` edge function (same logic as current)
+- Renders loading/error states wrapped in `<Layout>`
+- Renders `<ListingDetailBase listing={listing} onBack={goBack} />`
+- `goBack` falls back to `"/"` if no history
+- Zero investor logic
 
-If only the DEBUG line appears but not the RAW line, the payload is being truncated by the log system, and we may need to log specific fields instead of the full JSON.
+### 3. `src/pages/portal/InvestorListingPage.tsx`
 
-## Files NOT modified
-- Normalization logic, response structure, frontend code
+New page for `/portal/listing/:mlsNumber`. This page:
+- Same fetch logic as PublicListingPage
+- Renders `<ListingDetailBase listing={listing} onBack={goBack} />`
+- `goBack` falls back to `"/portal/search-analyzer"`
+- Below the base component, renders a collapsible "Investor Analysis" section containing:
+  - Strategy badges (Flip / BRRRR / Turnkey)
+  - Metrics grid (Est. Rent, ARV, RTP Ratio, All-In %)
+  - "Open Full Analyzer" button linking to `/portal/analyzer?...` in new tab
+- Uses `Collapsible` from Radix, collapsed by default
+- Wrapped in `<Layout>` (not the portal sidebar layout, since the route is nested under the portal layout in App.tsx)
+
+**Note:** Since `/portal/listing/:mlsNumber` is nested inside the `<InvestorPortalLayout>` route in App.tsx, InvestorListingPage should NOT wrap itself in `<Layout>` — it will already have the portal sidebar. It should just render content directly.
+
+## Files to Modify
+
+### 4. `src/App.tsx`
+
+- Change import: `ListingDetail` → `PublicListingPage`
+- Change import: `PortalListingDetail` → `InvestorListingPage`
+- Route `/listing/:mlsNumber` → `<PublicListingPage />`
+- Route `listing/:mlsNumber` (under portal) → `<InvestorListingPage />`
+
+### 5. `src/components/portal/ListingCard.tsx` (line 41)
+
+Change navigation from:
+```typescript
+navigate(`/listing/${l.mls_listing_id}`, { state: { fromPortal: true } })
+```
+to:
+```typescript
+navigate(`/portal/listing/${l.mls_listing_id}`)
+```
+
+No `state` param needed.
+
+### 6. `src/components/portal/BatchAnalysisTable.tsx` (line 132)
+
+Change `goToListing` from:
+```typescript
+navigate(`/listing/${l.mls_listing_id}`, { state: { fromPortal: true } });
+```
+to:
+```typescript
+navigate(`/portal/listing/${l.mls_listing_id}`);
+```
+
+## Files to Delete
+
+### 7. `src/pages/ListingDetail.tsx`
+
+Replaced by `PublicListingPage.tsx` + `ListingDetailBase.tsx`. Will be removed.
+
+## What is NOT changed
+
+- No backend/edge function changes
+- No screening logic changes
+- No database changes
+- No auth changes
+- No new API costs
 
