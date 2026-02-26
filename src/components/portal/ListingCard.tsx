@@ -1,5 +1,4 @@
 
-import { useNavigate } from "react-router-dom";
 import { Camera, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,14 +30,13 @@ interface ListingCardProps {
   onPhotoClick?: () => void;
 }
 
-const ListingCard = ({ listing: l, onPhotoClick }: ListingCardProps) => {
-  const navigate = useNavigate();
+const ListingCard = ({ listing: l }: ListingCardProps) => {
   const passes = l.passes_turnkey || l.passes_brrrr || l.passes_flip;
   const hasPhotos = l.photo_urls && l.photo_urls.length > 0;
 
   return (
     <Card className={cn("overflow-hidden transition-opacity", !passes && "opacity-50")}>
-      <div className="relative cursor-pointer" onClick={() => navigate(`/portal/listing/${l.mls_listing_id}`)}>
+      <a href={`/portal/listing/${l.mls_listing_id}`} target="_blank" rel="noopener noreferrer" className="relative block">
         <AspectRatio ratio={16 / 10}>
           {hasPhotos ? (
             <img
@@ -64,7 +62,7 @@ const ListingCard = ({ listing: l, onPhotoClick }: ListingCardProps) => {
             {l.photo_urls.length}
           </span>
         )}
-      </div>
+      </a>
 
       <CardContent className="p-3 space-y-2">
         {/* Address */}
