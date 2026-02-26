@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+
 import { ArrowUpDown, ExternalLink, Camera, LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -279,14 +279,23 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
                       {formatPercent(l.all_in_pct_of_arv)}
                     </TableCell>
                     <TableCell>
-                      <Link
-                        to={`/portal/analyzer?address=${encodeURIComponent(l.address)}&zip=${l.zip}&beds=${l.beds}&baths=${l.baths}&sqft=${l.sqft}&price=${l.list_price}`}
-                      >
-                        <Button variant="ghost" size="sm" className="h-7 px-2">
+                      <Button asChild variant="ghost" size="sm" className="h-7 px-2">
+                        <a
+                          href={`/portal/analyzer?${new URLSearchParams({
+                            address: l.address ?? "",
+                            zip: l.zip ?? "",
+                            beds: String(l.beds ?? ""),
+                            baths: String(l.baths ?? ""),
+                            sqft: String(l.sqft ?? ""),
+                            price: String(l.list_price ?? ""),
+                          }).toString()}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           <ExternalLink className="h-3 w-3 mr-1" />
                           Analyze
-                        </Button>
-                      </Link>
+                        </a>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 );
