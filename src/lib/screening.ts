@@ -90,6 +90,7 @@ export interface ScreeningConfig {
   turnkey_max_arv_pct: number;
   brrrr_min_rtp: number;
   brrrr_max_all_in_pct: number;
+  flip_max_arv_pct: number;
 }
 
 export const DEFAULT_SCREENING_CONFIG: ScreeningConfig = {
@@ -102,6 +103,7 @@ export const DEFAULT_SCREENING_CONFIG: ScreeningConfig = {
   turnkey_max_arv_pct: 1.00,
   brrrr_min_rtp: 0.013,
   brrrr_max_all_in_pct: 0.75,
+  flip_max_arv_pct: 0.75,
 };
 
 // Helper Functions
@@ -192,8 +194,9 @@ export function computeDealMetrics(
   const all_in_pct_of_arv = arv_effective > 0 ? all_in / arv_effective : 0;
   const price_to_arv = arv_effective > 0 ? list_price / arv_effective : 0;
   
-  // Evaluate Flip (base strategy)
-  const passes_flip = all_in_pct_of_arv <= config.brrrr_max_all_in_pct;
+  // Evaluate Flip (MAO-based)
+  const mao = (arv_effective * config.flip_max_arv_pct) - rehab_est_effective;
+  const passes_flip = list_price <= mao;
   
   // Evaluate BRRRR (Flip + RTP)
   const passes_brrrr = 
