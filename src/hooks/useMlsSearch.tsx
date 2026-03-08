@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export interface MlsSearchParams {
+  mlsNumber?: string;
   city?: string;
   zip?: string;
   minPrice?: string;
@@ -26,11 +27,13 @@ export interface MlsListing {
   beds: number;
   baths: number;
   sqft: number;
+  below_grade_sqft?: number;
   year_built?: number;
   property_type: string;
   list_price: number;
   mls_status: string;
   photo_urls: string[];
+  sqft_source?: "mls" | "public_record";
 }
 
 export interface MlsSearchResult {

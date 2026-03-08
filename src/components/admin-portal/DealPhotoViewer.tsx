@@ -166,21 +166,21 @@ export function DealPhotoViewer({
             {/* Strategy Results */}
             <div className="space-y-3">
               <h3 className="font-medium">Screening Results</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div className={cn(
                   "p-3 rounded-lg border",
-                  deal.passes_turnkey ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+                  deal.passes_flip ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
                 )}>
                   <div className="flex items-center gap-2">
-                    {deal.passes_turnkey ? (
+                    {deal.passes_flip ? (
                       <Check className="w-4 h-4 text-green-600" />
                     ) : (
                       <X className="w-4 h-4 text-red-600" />
                     )}
-                    <span className="font-medium">Turnkey</span>
+                    <span className="font-medium text-sm">Flip</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    RTP ≥ 1.35%, Price 80-100% ARV
+                    All-In ≤ 75% ARV
                   </p>
                 </div>
                 <div className={cn(
@@ -193,18 +193,28 @@ export function DealPhotoViewer({
                     ) : (
                       <X className="w-4 h-4 text-red-600" />
                     )}
-                    <span className="font-medium">BRRRR</span>
+                    <span className="font-medium text-sm">BRRRR</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    RTP ≥ 1.30%, All-In ≤ 75% ARV
+                    Flip + RTP ≥ 1.30%
                   </p>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Strategy:</span>
-                <Badge variant={deal.strategy === "None" ? "destructive" : "default"}>
-                  {deal.strategy}
-                </Badge>
+                <div className={cn(
+                  "p-3 rounded-lg border",
+                  deal.passes_turnkey ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+                )}>
+                  <div className="flex items-center gap-2">
+                    {deal.passes_turnkey ? (
+                      <Check className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <X className="w-4 h-4 text-red-600" />
+                    )}
+                    <span className="font-medium text-sm">Turnkey</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    RTP ≥ 1.35%, Turnkey tier
+                  </p>
+                </div>
               </div>
             </div>
 

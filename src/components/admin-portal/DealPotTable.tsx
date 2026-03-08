@@ -51,14 +51,14 @@ export function DealPotTable({
     }
   };
 
-  const getStrategyBadgeVariant = (strategy: string) => {
-    switch (strategy) {
-      case "Both": return "default";
-      case "Turnkey": return "secondary";
-      case "BRRRR": return "outline";
-      default: return "destructive";
-    }
-  };
+  const renderStrategyBadges = (deal: Deal) => (
+    <div className="flex gap-1 flex-wrap">
+      {deal.passes_flip && <Badge variant="outline" className="text-xs">Flip</Badge>}
+      {deal.passes_brrrr && <Badge variant="secondary" className="text-xs">BRRRR</Badge>}
+      {deal.passes_turnkey && <Badge variant="default" className="text-xs">Turnkey</Badge>}
+      {!deal.passes_flip && !deal.passes_brrrr && !deal.passes_turnkey && <Badge variant="destructive" className="text-xs">None</Badge>}
+    </div>
+  );
 
   const getStatusBadgeVariant = (deal: Deal) => {
     const status = getStatusDisplayLabel(deal);
@@ -139,9 +139,7 @@ export function DealPotTable({
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={getStrategyBadgeVariant(deal.strategy)} className="text-xs">
-                      {deal.strategy}
-                    </Badge>
+                    {renderStrategyBadges(deal)}
                   </TableCell>
                   <TableCell>
                     <Select

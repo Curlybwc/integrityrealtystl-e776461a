@@ -25,13 +25,6 @@ import { useDeals } from "@/hooks/useDeals";
 import { formatCurrency, formatPercent, getStatusDisplayLabel } from "@/lib/screening";
 import { cn } from "@/lib/utils";
 
-const strategyColors = {
-  Both: "bg-primary text-primary-foreground",
-  Turnkey: "bg-secondary text-secondary-foreground",
-  BRRRR: "bg-accent text-accent-foreground",
-  None: "bg-muted text-muted-foreground",
-};
-
 const PortalDealDetail = () => {
   const { dealId } = useParams();
   const { getDealById } = useDeals();
@@ -56,7 +49,6 @@ const PortalDealDetail = () => {
 
   const photos = deal.photo_urls.length > 0 ? deal.photo_urls : [];
   const displayStatus = getStatusDisplayLabel(deal);
-  const strategyColor = strategyColors[deal.strategy as keyof typeof strategyColors];
 
   const handlePrevPhoto = () => {
     setCurrentPhotoIndex((prev) => (prev > 0 ? prev - 1 : photos.length - 1));
@@ -116,10 +108,10 @@ const PortalDealDetail = () => {
               <Building2 className="w-16 h-16 text-muted-foreground/30" />
             </div>
           )}
-          <div className="absolute top-4 left-4 flex gap-2">
-            <Badge className={strategyColor}>
-              {deal.strategy}
-            </Badge>
+          <div className="absolute top-4 left-4 flex gap-1">
+            {deal.passes_flip && <Badge variant="outline" className="bg-background/80 text-xs">Flip</Badge>}
+            {deal.passes_brrrr && <Badge variant="secondary" className="text-xs">BRRRR</Badge>}
+            {deal.passes_turnkey && <Badge variant="default" className="text-xs">Turnkey</Badge>}
             {deal.source_type === "WHOLESALER" && (
               <Badge variant="outline" className="bg-background/80">
                 Wholesaler

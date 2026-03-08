@@ -16,6 +16,7 @@ import AdminLogin from "./pages/AdminLogin";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NetworkPartner from "./pages/NetworkPartner";
+import PublicListingPage from "./pages/PublicListingPage";
 import NotFound from "./pages/NotFound";
 
 // Investor Portal pages
@@ -41,6 +42,8 @@ import PortalResources from "./pages/portal/PortalResources";
 import PortalLinks from "./pages/portal/PortalLinks";
 import PortalDocuments from "./pages/portal/PortalDocuments";
 import PortalAccount from "./pages/portal/PortalAccount";
+import PortalSearchAnalyzer from "./pages/portal/PortalSearchAnalyzer";
+import InvestorListingPage from "./pages/portal/InvestorListingPage";
 
 // Wholesaler Portal pages
 import WholesalerPortalLayout from "./components/wholesaler-portal/WholesalerPortalLayout";
@@ -85,6 +88,7 @@ const App = () => (
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/network-partner" element={<NetworkPartner />} />
+          <Route path="/listing/:mlsNumber" element={<PublicListingPage />} />
 
           {/* Investor Portal routes */}
           <Route path="/portal" element={<InvestorPortalLayout />}>
@@ -109,6 +113,8 @@ const App = () => (
             <Route path="links" element={<PortalLinks />} />
             <Route path="documents" element={<PortalDocuments />} />
             <Route path="account" element={<PortalAccount />} />
+            <Route path="search-analyzer" element={<PortalSearchAnalyzer />} />
+            <Route path="listing/:mlsNumber" element={<InvestorListingPage />} />
           </Route>
 
           {/* Wholesaler Portal routes */}

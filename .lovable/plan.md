@@ -1,41 +1,30 @@
 
 
-# Enable Lovable Cloud + Repliers API Integration
+## Confirmed: All Variables in Scope
 
-## Step 1: Enable Lovable Cloud
-Lovable Cloud should already be available for your workspace. When I proceed with implementation, the system will prompt you to approve enabling Cloud features (database, edge functions, secrets) for this project.
+- `arv_effective` — line 174
+- `list_price` — line 176
+- `rehab_est_effective` — lines 181–187
+- All declared before the flip logic at line 196. No risk of compile error.
 
-## Step 2: Store the Repliers API Key Securely
-Once Cloud is enabled, I will use the secrets management tool to securely store your Repliers API key (`wzwvv2uaKeMRBNdg3DMWDI1WskkgKT`) as an environment variable called `REPLIERS_API_KEY`. This keeps it server-side only -- never exposed in the browser.
+## Hardening Applied
 
-## Step 3: Create an Edge Function for MLS Data
-Build a Supabase Edge Function (`fetch-mls-listings`) that:
-- Reads `REPLIERS_API_KEY` from environment
-- Calls the Repliers MLS API to search/fetch listings
-- Returns normalized listing data to the frontend
-- Includes proper CORS headers for browser calls
-
-## Step 4: Frontend Integration
-- Add a hook or service that calls the edge function from the admin portal
-- Wire the response into the existing `createDeal()` flow from `screening.ts` so imported MLS listings are auto-screened
-
-## Technical Details
-
-### Edge Function: `supabase/functions/fetch-mls-listings/index.ts`
-- Accepts search parameters (city, zip, price range, beds, etc.)
-- Calls Repliers API with the stored key
-- Maps Repliers response fields to our Deal schema
-- Returns JSON array of normalized listings
-
-### Config: `supabase/config.toml`
-```text
-[functions.fetch-mls-listings]
-verify_jwt = false
+The Flip input `onChange` will use:
+```tsx
+onChange={(e) => {
+  const val = parseFloat(e.target.value);
+  if (!isNaN(val)) {
+    updateConfig("flip_max_arv_pct", val / 100);
+  }
+}}
 ```
-JWT validation will be handled in code to allow flexible auth checking.
 
-### Security
-- API key stored as a Supabase secret, only accessible from edge functions
-- Never sent to or visible in the browser
-- Edge function validates caller authorization before returning data
+This prevents clearing the field from setting `flip_max_arv_pct` to 0 and wiping all flip matches.
+
+## Plan Status
+
+Ready to implement. No blockers identified:
+
+1. `screening.ts`: Add `flip_max_arv_pct` to config type/defaults, replace flip logic with MAO calculation
+2. `PortalSearchAnalyzer.tsx`: Replace disclaimer, remove rehab section, add Flip column with hardened input, update grid to 3-col, update header text
 

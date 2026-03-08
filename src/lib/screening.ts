@@ -7,7 +7,7 @@ import {
 } from "@/data/stlZipData";
 
 // Types
-export type RehabTier = "Light" | "Medium" | "Heavy";
+export type RehabTier = "Turnkey" | "Light" | "Medium" | "Heavy";
 export type MlsStatus = "Active" | "Pending" | "Sold" | "Unknown";
 export type WholesalerStatus = "Available" | "UnderContract" | "Sold";
 export type SourceType = "MLS" | "WHOLESALER";
@@ -44,6 +44,7 @@ export interface Deal {
   rent_override?: number;
   arv_override?: number;
   rehab_tier_override?: RehabTier;
+  rehab_est_override?: number;
   
   // Computed/Effective Values
   rent_effective: number;
@@ -58,6 +59,7 @@ export interface Deal {
   // Screening Results
   passes_turnkey: boolean;
   passes_brrrr: boolean;
+  passes_flip: boolean;
   strategy: Strategy;
   buyer_visible: boolean;
   
@@ -79,6 +81,7 @@ export interface Deal {
 
 // Screening Configuration
 export interface ScreeningConfig {
+  rehab_rate_turnkey: number;
   rehab_rate_light: number;
   rehab_rate_medium: number;
   rehab_rate_heavy: number;
@@ -87,9 +90,11 @@ export interface ScreeningConfig {
   turnkey_max_arv_pct: number;
   brrrr_min_rtp: number;
   brrrr_max_all_in_pct: number;
+  flip_max_arv_pct: number;
 }
 
 export const DEFAULT_SCREENING_CONFIG: ScreeningConfig = {
+  rehab_rate_turnkey: 5,
   rehab_rate_light: 15,
   rehab_rate_medium: 30,
   rehab_rate_heavy: 50,
@@ -98,11 +103,13 @@ export const DEFAULT_SCREENING_CONFIG: ScreeningConfig = {
   turnkey_max_arv_pct: 1.00,
   brrrr_min_rtp: 0.013,
   brrrr_max_all_in_pct: 0.75,
+  flip_max_arv_pct: 0.75,
 };
 
 // Helper Functions
 export function getRehabRate(tier: RehabTier, config: ScreeningConfig = DEFAULT_SCREENING_CONFIG): number {
   switch (tier) {
+    case "Turnkey": return config.rehab_rate_turnkey;
     case "Light": return config.rehab_rate_light;
     case "Medium": return config.rehab_rate_medium;
     case "Heavy": return config.rehab_rate_heavy;
@@ -138,11 +145,12 @@ export function estimateSystemArv(zip: string, sqft: number): number {
   return sqft * 100;
 }
 
-export function estimateRehabTier(year_built?: number): RehabTier {
-  if (!year_built) return "Medium";
-  const age = new Date().getFullYear() - year_built;
-  if (age <= 20) return "Light";
-  if (age <= 50) return "Medium";
+export function estimateRehabTier(list_price: number, arv: number): RehabTier {
+  if (!arv || arv <= 0) return "Medium";
+  const ratio = list_price / arv;
+  if (ratio >= 0.90) return "Turnkey";
+  if (ratio >= 0.80) return "Light";
+  if (ratio >= 0.60) return "Medium";
   return "Heavy";
 }
 
@@ -159,38 +167,48 @@ export function computeDealMetrics(
   | "all_in_pct_of_arv"
   | "passes_turnkey"
   | "passes_brrrr"
+  | "passes_flip"
   | "strategy"
   | "buyer_visible"
 > {
   // Compute effective values (overrides take precedence)
   const rent_effective = deal.rent_override ?? deal.rent_system ?? 0;
   const arv_effective = deal.arv_override ?? deal.arv_system ?? 0;
-  const rehab_tier_effective = deal.rehab_tier_override ?? deal.rehab_tier_system ?? "Medium";
-  
-  // Compute rehab estimate
-  const rehabRate = getRehabRate(rehab_tier_effective, config);
-  const rehab_est_effective = (deal.sqft ?? 0) * rehabRate;
-  
-  // Compute metrics
+  // Smart rehab tier: use price/ARV ratio to estimate tier (unless override exists)
   const list_price = deal.list_price ?? 0;
-  const rent_to_price_pct = list_price > 0 ? rent_effective / list_price : 0;
+  const smartTier = estimateRehabTier(list_price, arv_effective);
+  const rehab_tier_effective = deal.rehab_tier_override ?? smartTier;
+  
+  // Compute rehab estimate (manual dollar override bypasses tier calculation)
+  let rehab_est_effective: number;
+  if (deal.rehab_est_override && deal.rehab_est_override > 0) {
+    rehab_est_effective = deal.rehab_est_override;
+  } else {
+    const rehabRate = getRehabRate(rehab_tier_effective, config);
+    rehab_est_effective = (deal.sqft ?? 0) * rehabRate;
+  }
+  
+  // Compute metrics — RTP uses all-in price (price + repairs)
   const all_in = list_price + rehab_est_effective;
+  const rent_to_price_pct = all_in > 0 ? rent_effective / all_in : 0;
   const all_in_pct_of_arv = arv_effective > 0 ? all_in / arv_effective : 0;
   const price_to_arv = arv_effective > 0 ? list_price / arv_effective : 0;
   
-  // Evaluate Turnkey
+  // Evaluate Flip (MAO-based)
+  const mao = (arv_effective * config.flip_max_arv_pct) - rehab_est_effective;
+  const passes_flip = list_price <= mao;
+  
+  // Evaluate BRRRR (Flip + RTP)
+  const passes_brrrr = 
+    passes_flip &&
+    rent_to_price_pct >= config.brrrr_min_rtp;
+  
+  // Evaluate Turnkey (RTP + Turnkey tier only)
   const passes_turnkey = 
     rent_to_price_pct >= config.turnkey_min_rtp &&
-    price_to_arv >= config.turnkey_min_arv_pct &&
-    price_to_arv <= config.turnkey_max_arv_pct &&
-    deal.mls_status !== "Sold";
+    rehab_tier_effective === "Turnkey";
   
-  // Evaluate BRRRR
-  const passes_brrrr = 
-    rent_to_price_pct >= config.brrrr_min_rtp &&
-    all_in_pct_of_arv <= config.brrrr_max_all_in_pct;
-  
-  // Determine strategy
+  // Determine strategy (backward compatibility)
   let strategy: Strategy = "None";
   if (passes_turnkey && passes_brrrr) {
     strategy = "Both";
@@ -206,7 +224,7 @@ export function computeDealMetrics(
     : deal.mls_status === "Sold";
   
   const buyer_visible = 
-    strategy !== "None" && 
+    (passes_turnkey || passes_brrrr || passes_flip) && 
     !isSold && 
     !deal.removed_reason;
   
@@ -219,6 +237,7 @@ export function computeDealMetrics(
     all_in_pct_of_arv,
     passes_turnkey,
     passes_brrrr,
+    passes_flip,
     strategy,
     buyer_visible,
   };
@@ -245,7 +264,7 @@ export function createDeal(
   // Compute system estimates
   const rent_system = estimateSystemRent(input.zip, input.beds);
   const arv_system = estimateSystemArv(input.zip, input.sqft);
-  const rehab_tier_system = estimateRehabTier(input.year_built);
+  const rehab_tier_system = estimateRehabTier(input.list_price, arv_system);
   
   const baseDeal: Partial<Deal> = {
     id: input.id ?? crypto.randomUUID(),
