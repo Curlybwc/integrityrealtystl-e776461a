@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, Outlet, Navigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/integrity-logo.png";
 import { cn } from "@/lib/utils";
-import { usePortalAuth } from "@/hooks/usePortalAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
   { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
