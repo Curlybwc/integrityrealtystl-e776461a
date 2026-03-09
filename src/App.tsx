@@ -90,7 +90,7 @@ const App = () => (
           <Route path="/contact" element={<Contact />} />
           <Route path="/network-partner" element={<NetworkPartner />} />
           <Route path="/listing/:mlsNumber" element={<PublicListingPage />} />
-          <Route path="/portal" element={<PortalSelector />} />
+          <Route path="/portals" element={<PortalSelector />} />
 
           {/* Investor Portal routes */}
           <Route path="/portal" element={<InvestorPortalLayout />}>
