@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 const DEMO_EMAIL = "demo@investor.com";
 const DEMO_PASSWORD = "demo123";
 
-const Login = () => {
+const InvestorLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
@@ -52,10 +52,10 @@ const Login = () => {
         <div className="container mx-auto max-w-md">
           <div className="text-center mb-8">
             <h1 className="font-serif text-3xl md:text-4xl text-foreground mb-4">
-              Platform Login
+              Investor Portal
             </h1>
             <p className="text-muted-foreground">
-              Sign in to access your available portals.
+              Access your investment dashboard and portfolio details.
             </p>
           </div>
           
@@ -111,8 +111,8 @@ const Login = () => {
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:underline">
-                Create Account
+              <Link to="/contact" className="text-primary hover:underline">
+                Contact us
               </Link>
             </p>
           </div>
@@ -122,4 +122,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default InvestorLogin;

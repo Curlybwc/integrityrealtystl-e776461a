@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation, Outlet } from "react-router-dom";
+import { Link, useLocation, Outlet, Navigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Building2,
@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/integrity-logo.png";
 import { cn } from "@/lib/utils";
+import { usePortalAuth } from "@/hooks/usePortalAuth";
 
 const navItems = [
   { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -24,6 +25,11 @@ const navItems = [
 const AdminPortalLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const { isAuthenticated } = usePortalAuth("admin");
+
+  if (!isAuthenticated) {
+    return <Navigate to="/admin-login" replace />;
+  }
 
   const isActive = (path: string) => {
     if (path === "/admin") {
