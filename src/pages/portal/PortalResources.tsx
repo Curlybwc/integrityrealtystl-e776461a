@@ -23,7 +23,7 @@ import {
   ARV_PER_SF,
   RENT_COMPS_BY_ZIP,
 } from "@/data/stlZipData";
-import UtilityAllowanceCalculator from "@/components/portal/investor/UtilityAllowanceCalculator";
+import UtilityAllowanceCalculator from "@/components/portal/UtilityAllowanceCalculator";
 
 const PortalResources = () => {
   const [selectedZip, setSelectedZip] = useState<string>("");
