@@ -69,8 +69,8 @@ export function useMlsSearch() {
 
       setResults(data as MlsSearchResult);
       return data as MlsSearchResult;
-    } catch (err: any) {
-      const msg = err.message || "Failed to fetch MLS listings";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to fetch MLS listings";
       setError(msg);
       toast({
         title: "MLS Search Error",

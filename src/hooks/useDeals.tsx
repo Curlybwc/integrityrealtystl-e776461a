@@ -16,7 +16,7 @@ export function useDeals() {
 
   // Save deals whenever they change
   useEffect(() => {
-    if (!isLoading && deals.length > 0) {
+    if (!isLoading) {
       saveDeals(deals);
     }
   }, [deals, isLoading]);

@@ -19,20 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/integrity-logo.png";
 import { cn } from "@/lib/utils";
-
-// Mock auth state - replace with real auth when backend is enabled
-const useInvestorAuth = () => {
-  return {
-    isAuthenticated: true, // For mockup purposes
-    investor: {
-      name: "John Investor",
-      email: "john@example.com",
-    },
-    logout: () => {
-      window.location.href = "/invest";
-    },
-  };
-};
+import { usePortalAuth } from "@/hooks/usePortalAuth";
 
 const navItems = [
   { title: "Dashboard", href: "/portal", icon: LayoutDashboard },
@@ -52,7 +39,7 @@ const navItems = [
 const InvestorPortalLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { isAuthenticated, investor, logout } = useInvestorAuth();
+  const { isAuthenticated, user } = usePortalAuth("investor");
 
   // Redirect to login if not authenticated (will work when backend is enabled)
   if (!isAuthenticated) {
@@ -126,10 +113,10 @@ const InvestorPortalLayout = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  {investor.name}
+                  {user.name}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {investor.email}
+                  {user.email}
                 </p>
               </div>
             </div>
@@ -137,7 +124,9 @@ const InvestorPortalLayout = () => {
               variant="outline"
               size="sm"
               className="w-full"
-              onClick={logout}
+              onClick={() => {
+                window.location.href = "/invest";
+              }}
             >
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out
