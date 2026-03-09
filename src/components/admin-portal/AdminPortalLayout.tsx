@@ -5,6 +5,7 @@ import {
   Building2,
   Settings,
   Search,
+  PlugZap,
   Menu,
   LogOut,
   User,
@@ -19,6 +20,7 @@ const navItems = [
   { title: "Dashboard", href: "/portal/admin", icon: LayoutDashboard },
   { title: "Deal Pot", href: "/portal/admin/deal-pot", icon: Building2 },
   { title: "MLS Import", href: "/portal/admin/mls-import", icon: Search },
+  { title: "Integrations", href: "/portal/admin/integrations", icon: PlugZap },
   { title: "Settings", href: "/portal/admin/settings", icon: Settings },
 ];
 
