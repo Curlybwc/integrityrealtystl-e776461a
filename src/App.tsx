@@ -20,6 +20,7 @@ import PublicListingPage from "./pages/PublicListingPage";
 import NotFound from "./pages/NotFound";
 import PortalSelector from "@/pages/PortalSelector";
 import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 
 // Investor Portal pages
 import InvestorPortalLayout from "./components/portal/InvestorPortalLayout";
