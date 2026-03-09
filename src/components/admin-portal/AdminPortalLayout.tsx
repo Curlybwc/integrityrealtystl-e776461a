@@ -45,7 +45,8 @@ const AdminPortalLayout = () => {
     return location.pathname.startsWith(path);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     window.location.href = "/";
   };
 
