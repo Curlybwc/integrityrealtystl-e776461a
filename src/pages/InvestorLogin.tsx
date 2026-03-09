@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
-const Login = () => {
+const DEMO_EMAIL = "demo@investor.com";
+const DEMO_PASSWORD = "demo123";
+
+const InvestorLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
@@ -19,12 +21,10 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    if (!error) {
+    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
       toast({
         title: "Welcome back!",
         description: "Redirecting to your dashboard...",
@@ -33,12 +33,17 @@ const Login = () => {
     } else {
       toast({
         title: "Invalid credentials",
-        description: error.message,
+        description: "Please check your email and password.",
         variant: "destructive",
       });
     }
 
     setIsLoading(false);
+  };
+
+  const handleDemoLogin = () => {
+    setEmail(DEMO_EMAIL);
+    setPassword(DEMO_PASSWORD);
   };
 
   return (
@@ -47,10 +52,10 @@ const Login = () => {
         <div className="container mx-auto max-w-md">
           <div className="text-center mb-8">
             <h1 className="font-serif text-3xl md:text-4xl text-foreground mb-4">
-              Platform Login
+              Investor Portal
             </h1>
             <p className="text-muted-foreground">
-              Sign in to access your available portals.
+              Access your investment dashboard and portfolio details.
             </p>
           </div>
           
@@ -87,10 +92,27 @@ const Login = () => {
               </Button>
             </form>
 
+            <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-dashed border-border">
+              <p className="text-sm text-muted-foreground mb-2 text-center">
+                Demo credentials:
+              </p>
+              <p className="text-xs text-muted-foreground text-center font-mono">
+                {DEMO_EMAIL} / {DEMO_PASSWORD}
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full mt-2"
+                onClick={handleDemoLogin}
+              >
+                Fill Demo Credentials
+              </Button>
+            </div>
+
             <p className="mt-6 text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:underline">
-                Create Account
+              <Link to="/contact" className="text-primary hover:underline">
+                Contact us
               </Link>
             </p>
           </div>
@@ -100,4 +122,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default InvestorLogin;
