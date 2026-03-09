@@ -1,30 +1,30 @@
 
 
-## Analysis of Build Errors
+## Confirmed: All Variables in Scope
 
-There are two distinct issues breaking the preview:
+- `arv_effective` — line 174
+- `list_price` — line 176
+- `rehab_est_effective` — lines 181–187
+- All declared before the flip logic at line 196. No risk of compile error.
 
-### Issue 1: Wrong import paths referencing a non-existent `investor` subdirectory
+## Hardening Applied
 
-The build errors show four files importing from `@/components/portal/investor/...` but no such subdirectory exists. The components live directly in `@/components/portal/`. The files on disk currently show correct imports, which suggests a prior edit introduced the wrong paths and may not have been saved, or there's a build cache mismatch. Either way, these imports must use:
-- `@/components/portal/DealAnalyzer` (not `investor/DealAnalyzer`)
-- `@/components/portal/UtilityAllowanceCalculator` (not `investor/...`)
-- `@/components/portal/BatchAnalysisTable` (not `investor/...`)
-- `@/components/portal/Section8Calculator` (not `investor/...`)
+The Flip input `onChange` will use:
+```tsx
+onChange={(e) => {
+  const val = parseFloat(e.target.value);
+  if (!isNaN(val)) {
+    updateConfig("flip_max_arv_pct", val / 100);
+  }
+}}
+```
 
-**Affected files:** `PortalAnalyzer.tsx`, `PortalResources.tsx`, `PortalSearchAnalyzer.tsx`, `PortalSection8Calculator.tsx`
+This prevents clearing the field from setting `flip_max_arv_pct` to 0 and wiping all flip matches.
 
-### Issue 2: `useUserRoles.ts` cannot find `user_roles` table in generated types
+## Plan Status
 
-The hook queries `.from("user_roles")` but `src/integrations/supabase/types.ts` has empty table definitions (`[_ in never]: never`). The `user_roles` table migration exists but types were never regenerated.
+Ready to implement. No blockers identified:
 
-**Fix:** Create the `user_roles` table via the migration tool (if not already applied), then the types will auto-regenerate. Alternatively, if the migration has already run, just triggering a types regeneration will resolve it.
-
-### Plan
-
-1. **Verify and fix all four import paths** in the portal page files to point to `@/components/portal/` (no `investor/` subdirectory).
-2. **Apply the `user_roles` table migration** so the database schema includes the table and generated types update automatically.
-3. **Rebuild** — these two fixes should clear all six build errors and restore the preview.
-
-No other code changes needed for this fix.
+1. `screening.ts`: Add `flip_max_arv_pct` to config type/defaults, replace flip logic with MAO calculation
+2. `PortalSearchAnalyzer.tsx`: Replace disclaimer, remove rehab section, add Flip column with hardened input, update grid to 3-col, update header text
 
