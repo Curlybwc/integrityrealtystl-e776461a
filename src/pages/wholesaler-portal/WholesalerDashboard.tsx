@@ -70,7 +70,7 @@ const WholesalerDashboard = () => {
           </p>
         </div>
         <Button asChild>
-          <Link to="/wholesaler-portal/add-deal">
+          <Link to="/portal/wholesaler/add-deal">
             <PlusCircle className="w-4 h-4 mr-2" />
             Add New Deal
           </Link>
@@ -137,7 +137,7 @@ const WholesalerDashboard = () => {
               <CardDescription>Your most recently posted properties</CardDescription>
             </div>
             <Button variant="outline" size="sm" asChild>
-              <Link to="/wholesaler-portal/deals">View All</Link>
+              <Link to="/portal/wholesaler/deals">View All</Link>
             </Button>
           </div>
         </CardHeader>
@@ -182,7 +182,7 @@ const WholesalerDashboard = () => {
                       {deal.bids.length} bids
                     </div>
                     <Button variant="outline" size="sm" asChild>
-                      <Link to={`/wholesaler-portal/deals/${deal.id}`}>Manage</Link>
+                      <Link to={`/portal/wholesaler/deals/${deal.id}`}>Manage</Link>
                     </Button>
                   </div>
                   {deal.bids.length > 0 && (

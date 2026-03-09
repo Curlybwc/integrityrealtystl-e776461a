@@ -42,7 +42,7 @@ const usefulLinks: UsefulLink[] = [
   },
   {
     title: "FEMA Flood Map",
-    url: "https://msc.fema.gov/portal/search",
+    url: "https://msc.fema.gov/portal/investor/search",
     description: "Check if a property is in a flood plain",
     category: "Property Research",
   },

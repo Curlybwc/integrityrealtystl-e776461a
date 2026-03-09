@@ -73,7 +73,7 @@ const PartnerDashboard = () => {
           </CardHeader>
           <CardContent>
             <Button asChild>
-              <Link to="/partner-portal/profile">Edit Profile</Link>
+              <Link to="/portal/partner/profile">Edit Profile</Link>
             </Button>
           </CardContent>
         </Card>
@@ -90,7 +90,7 @@ const PartnerDashboard = () => {
           </CardHeader>
           <CardContent>
             <Button variant="outline" asChild>
-              <Link to="/partner-portal/testimonials">Add Testimonial</Link>
+              <Link to="/portal/partner/testimonials">Add Testimonial</Link>
             </Button>
           </CardContent>
         </Card>

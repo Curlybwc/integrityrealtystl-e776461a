@@ -76,7 +76,7 @@ const PortalMlsDeals = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link to="/portal/deals">
+        <Link to="/portal/investor/deals">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="w-4 h-4" />
           </Button>
@@ -158,7 +158,7 @@ const PortalMlsDeals = () => {
           return (
             <Link
               key={deal.id}
-              to={`/portal/deals/${deal.id}`}
+              to={`/portal/investor/deals/${deal.id}`}
               className="group"
             >
               <div className="bg-card border border-border rounded-lg overflow-hidden shadow-card hover:shadow-card-hover transition-shadow">

@@ -16,10 +16,10 @@ import { cn } from "@/lib/utils";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 
 const navItems = [
-  { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { title: "Deal Pot", href: "/admin/deal-pot", icon: Building2 },
-  { title: "MLS Import", href: "/admin/mls-import", icon: Search },
-  { title: "Settings", href: "/admin/settings", icon: Settings },
+  { title: "Dashboard", href: "/portal/admin", icon: LayoutDashboard },
+  { title: "Deal Pot", href: "/portal/admin/deal-pot", icon: Building2 },
+  { title: "MLS Import", href: "/portal/admin/mls-import", icon: Search },
+  { title: "Settings", href: "/portal/admin/settings", icon: Settings },
 ];
 
 const AdminPortalLayout = () => {
@@ -32,8 +32,8 @@ const AdminPortalLayout = () => {
   }
 
   const isActive = (path: string) => {
-    if (path === "/admin") {
-      return location.pathname === "/admin";
+    if (path === "/portal/admin") {
+      return location.pathname === "/portal/admin";
     }
     return location.pathname.startsWith(path);
   };
@@ -62,7 +62,7 @@ const AdminPortalLayout = () => {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-4 border-b border-border">
-            <Link to="/admin" className="flex items-center gap-2">
+            <Link to="/portal/admin" className="flex items-center gap-2">
               <img 
                 src={logo} 
                 alt="Integrity Realty STL" 

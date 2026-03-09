@@ -22,18 +22,18 @@ import { cn } from "@/lib/utils";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 
 const navItems = [
-  { title: "Dashboard", href: "/portal", icon: LayoutDashboard },
-  { title: "Deals", href: "/portal/deals", icon: Building2 },
-  { title: "My Offers", href: "/portal/my-offers", icon: FileSignature },
-  { title: "My Bids", href: "/portal/my-bids", icon: Wrench },
-  { title: "Search & Analyze", href: "/portal/search-analyzer", icon: Search },
-  { title: "Deal Analyzer", href: "/portal/analyzer", icon: Calculator },
-  { title: "Section 8 Calculator", href: "/portal/section8-calculator", icon: ClipboardCheck },
-  { title: "Network Partners", href: "/portal/local-network", icon: Users },
-  { title: "Resources", href: "/portal/resources", icon: FileText },
-  { title: "Links", href: "/portal/links", icon: ExternalLink },
-  { title: "Documents", href: "/portal/documents", icon: Folder },
-  { title: "Account", href: "/portal/account", icon: User },
+  { title: "Dashboard", href: "/portal/investor", icon: LayoutDashboard },
+  { title: "Deals", href: "/portal/investor/deals", icon: Building2 },
+  { title: "My Offers", href: "/portal/investor/my-offers", icon: FileSignature },
+  { title: "My Bids", href: "/portal/investor/my-bids", icon: Wrench },
+  { title: "Search & Analyze", href: "/portal/investor/search-analyzer", icon: Search },
+  { title: "Deal Analyzer", href: "/portal/investor/analyzer", icon: Calculator },
+  { title: "Section 8 Calculator", href: "/portal/investor/section8-calculator", icon: ClipboardCheck },
+  { title: "Network Partners", href: "/portal/investor/local-network", icon: Users },
+  { title: "Resources", href: "/portal/investor/resources", icon: FileText },
+  { title: "Links", href: "/portal/investor/links", icon: ExternalLink },
+  { title: "Documents", href: "/portal/investor/documents", icon: Folder },
+  { title: "Account", href: "/portal/investor/account", icon: User },
 ];
 
 const InvestorPortalLayout = () => {
@@ -47,8 +47,8 @@ const InvestorPortalLayout = () => {
   }
 
   const isActive = (path: string) => {
-    if (path === "/portal") {
-      return location.pathname === "/portal";
+    if (path === "/portal/investor") {
+      return location.pathname === "/portal/investor";
     }
     return location.pathname.startsWith(path);
   };
@@ -73,7 +73,7 @@ const InvestorPortalLayout = () => {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-4 border-b border-border">
-            <Link to="/portal" className="flex items-center gap-2">
+            <Link to="/portal/investor" className="flex items-center gap-2">
               <img 
                 src={logo} 
                 alt="Integrity Realty STL" 

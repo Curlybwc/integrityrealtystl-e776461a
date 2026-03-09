@@ -53,7 +53,7 @@ const PortalConsulting = () => {
     });
 
     setIsSubmitting(false);
-    navigate("/portal");
+    navigate("/portal/investor");
   };
 
   return (

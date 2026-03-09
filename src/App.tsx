@@ -97,7 +97,7 @@ const App = () => (
           <Route path="/portals" element={<PortalSelector />} />
 
           {/* Investor Portal routes */}
-          <Route path="/portal" element={<InvestorPortalLayout />}>
+          <Route path="/portal/investor" element={<InvestorPortalLayout />}>
             <Route index element={<PortalDashboard />} />
             <Route path="deals" element={<PortalDealsHub />} />
             <Route path="deals/mls" element={<PortalMlsDeals />} />
@@ -124,7 +124,7 @@ const App = () => (
           </Route>
 
           {/* Wholesaler Portal routes */}
-          <Route path="/wholesaler-portal" element={<WholesalerPortalLayout />}>
+          <Route path="/portal/wholesaler" element={<WholesalerPortalLayout />}>
             <Route index element={<WholesalerDashboard />} />
             <Route path="deals" element={<WholesalerDeals />} />
             <Route path="add-deal" element={<WholesalerAddDeal />} />
@@ -132,14 +132,14 @@ const App = () => (
           </Route>
 
           {/* Partner Portal routes */}
-          <Route path="/partner-portal" element={<PartnerPortalLayout />}>
+          <Route path="/portal/partner" element={<PartnerPortalLayout />}>
             <Route index element={<PartnerDashboard />} />
             <Route path="profile" element={<PartnerProfile />} />
             <Route path="testimonials" element={<PartnerTestimonials />} />
           </Route>
 
           {/* Admin Portal routes */}
-          <Route path="/admin" element={<AdminPortalLayout />}>
+          <Route path="/portal/admin" element={<AdminPortalLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="deal-pot" element={<AdminDealPot />} />
             <Route path="mls-import" element={<AdminMlsImport />} />

@@ -1,6 +1,6 @@
 import { AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import DealAnalyzer from "@/components/portal/DealAnalyzer";
+import DealAnalyzer from "@/components/portal/investor/DealAnalyzer";
 
 const PortalAnalyzer = () => {
   const navigate = useNavigate();
@@ -13,7 +13,7 @@ const PortalAnalyzer = () => {
           if (window.opener) {
             window.close();
           } else {
-            navigate("/portal/search-analyzer");
+            navigate("/portal/investor/search-analyzer");
           }
         }}
         className="mb-4 text-sm font-medium text-primary hover:underline"

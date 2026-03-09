@@ -14,10 +14,10 @@ import logo from "@/assets/integrity-logo.png";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 
 const navItems = [
-  { title: "Dashboard", href: "/wholesaler-portal", icon: LayoutDashboard },
-  { title: "My Deals", href: "/wholesaler-portal/deals", icon: Building2 },
-  { title: "Add New Deal", href: "/wholesaler-portal/add-deal", icon: PlusCircle },
-  { title: "Account", href: "/wholesaler-portal/account", icon: User },
+  { title: "Dashboard", href: "/portal/wholesaler", icon: LayoutDashboard },
+  { title: "My Deals", href: "/portal/wholesaler/deals", icon: Building2 },
+  { title: "Add New Deal", href: "/portal/wholesaler/add-deal", icon: PlusCircle },
+  { title: "Account", href: "/portal/wholesaler/account", icon: User },
 ];
 
 const WholesalerPortalLayout = () => {
@@ -31,8 +31,8 @@ const WholesalerPortalLayout = () => {
   }
 
   const isActive = (path: string) => {
-    if (path === "/wholesaler-portal") {
-      return location.pathname === "/wholesaler-portal";
+    if (path === "/portal/wholesaler") {
+      return location.pathname === "/portal/wholesaler";
     }
     return location.pathname.startsWith(path);
   };
@@ -57,7 +57,7 @@ const WholesalerPortalLayout = () => {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-4 border-b border-border">
-            <Link to="/wholesaler-portal" className="flex items-center gap-2">
+            <Link to="/portal/wholesaler" className="flex items-center gap-2">
               <img 
                 src={logo} 
                 alt="Integrity Realty STL" 
