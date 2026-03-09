@@ -11,6 +11,7 @@ import SellFast from "./pages/SellFast";
 import Wholesalers from "./pages/Wholesalers";
 import Login from "./pages/Login";
 import InvestorLogin from "./pages/InvestorLogin";
+import Signup from "./pages/Signup";
 import WholesalerLogin from "./pages/WholesalerLogin";
 import PartnerLogin from "./pages/PartnerLogin";
 import AdminLogin from "./pages/AdminLogin";
@@ -85,6 +86,7 @@ const App = () => (
           <Route path="/wholesalers" element={<Wholesalers />} />
           <Route path="/login" element={<Login />} />
           <Route path="/investor-login" element={<InvestorLogin />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/wholesaler-login" element={<WholesalerLogin />} />
           <Route path="/partner-login" element={<PartnerLogin />} />
           <Route path="/admin-login" element={<AdminLogin />} />
