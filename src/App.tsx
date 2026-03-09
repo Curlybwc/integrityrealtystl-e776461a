@@ -18,6 +18,7 @@ import Contact from "./pages/Contact";
 import NetworkPartner from "./pages/NetworkPartner";
 import PublicListingPage from "./pages/PublicListingPage";
 import NotFound from "./pages/NotFound";
+import PortalSelector from "@/pages/PortalSelector";
 
 // Investor Portal pages
 import InvestorPortalLayout from "./components/portal/InvestorPortalLayout";
@@ -89,6 +90,7 @@ const App = () => (
           <Route path="/contact" element={<Contact />} />
           <Route path="/network-partner" element={<NetworkPartner />} />
           <Route path="/listing/:mlsNumber" element={<PublicListingPage />} />
+          <Route path="/portals" element={<PortalSelector />} />
 
           {/* Investor Portal routes */}
           <Route path="/portal" element={<InvestorPortalLayout />}>

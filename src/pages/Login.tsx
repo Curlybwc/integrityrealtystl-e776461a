@@ -29,7 +29,7 @@ const Login = () => {
         title: "Welcome back!",
         description: "Redirecting to your dashboard...",
       });
-      navigate("/portal");
+      navigate("/portals");
     } else {
       toast({
         title: "Invalid credentials",
