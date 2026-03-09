@@ -10,6 +10,7 @@ const allPortals = [
   { id: "admin", label: "Admin Portal", href: "/admin", icon: Shield, description: "Deal screening, MLS import, and system settings." },
 ];
 
+
 const PortalSelector = () => {
   const { hasRole } = useHasRole();
   const isAdmin = hasRole("admin");
