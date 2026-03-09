@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import logo from "@/assets/integrity-logo.png";
 import { cn } from "@/lib/utils";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
   { title: "Dashboard", href: "/portal/admin", icon: LayoutDashboard },
@@ -25,7 +26,11 @@ const navItems = [
 const AdminPortalLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { isAuthenticated } = usePortalAuth("admin");
+  const { isAuthenticated, loading, user } = usePortalAuth("admin");
+
+  if (loading) {
+    return <div className="min-h-screen bg-background" />;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/admin-login" replace />;
@@ -38,7 +43,8 @@ const AdminPortalLayout = () => {
     return location.pathname.startsWith(path);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     window.location.href = "/";
   };
 
@@ -110,10 +116,10 @@ const AdminPortalLayout = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  Admin User
+                  {user.name}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  admin@integrityrealty.com
+                  {user.email ?? ""}
                 </p>
               </div>
             </div>

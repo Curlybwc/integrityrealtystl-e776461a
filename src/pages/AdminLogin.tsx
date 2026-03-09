@@ -6,9 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Shield } from "lucide-react";
-
-const DEMO_EMAIL = "admin@integrity.com";
-const DEMO_PASSWORD = "admin123";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -21,29 +19,47 @@ const AdminLogin = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+    if (error || !data.user) {
       toast({
-        title: "Welcome, Admin!",
-        description: "Redirecting to the admin dashboard...",
-      });
-      navigate("/portal/admin");
-    } else {
-      toast({
-        title: "Invalid credentials",
-        description: "Please check your email and password.",
+        title: "Sign in failed",
+        description: error?.message ?? "Unable to sign in.",
         variant: "destructive",
       });
+      setIsLoading(false);
+      return;
     }
 
-    setIsLoading(false);
-  };
+    const { data: roleRows, error: roleError } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", data.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
 
-  const handleDemoLogin = () => {
-    setEmail(DEMO_EMAIL);
-    setPassword(DEMO_PASSWORD);
+    const isAdmin = !roleError && !!roleRows;
+
+    if (!isAdmin) {
+      await supabase.auth.signOut();
+      toast({
+        title: "Access denied",
+        description: "Your account does not have admin access.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    toast({
+      title: "Welcome, Admin!",
+      description: "Redirecting to the admin dashboard...",
+    });
+    navigate("/portal/admin");
+    setIsLoading(false);
   };
 
   return (
@@ -61,14 +77,14 @@ const AdminLogin = () => {
               Authorized personnel only. Access the deal screening system.
             </p>
           </div>
-          
+
           <div className="bg-card border border-border rounded-lg p-8 shadow-card">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
+                <Input
+                  id="email"
+                  type="email"
                   placeholder="admin@integrity.com"
                   className="w-full"
                   value={email}
@@ -76,12 +92,12 @@ const AdminLogin = () => {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
+                <Input
+                  id="password"
+                  type="password"
                   placeholder="••••••••"
                   className="w-full"
                   value={password}
@@ -94,23 +110,6 @@ const AdminLogin = () => {
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
-
-            <div className="mt-4 p-4 bg-destructive/5 rounded-lg border border-dashed border-destructive/30">
-              <p className="text-sm text-muted-foreground mb-2 text-center">
-                Demo credentials:
-              </p>
-              <p className="text-xs text-muted-foreground text-center font-mono">
-                {DEMO_EMAIL} / {DEMO_PASSWORD}
-              </p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full mt-2"
-                onClick={handleDemoLogin}
-              >
-                Fill Demo Credentials
-              </Button>
-            </div>
           </div>
         </div>
       </section>
