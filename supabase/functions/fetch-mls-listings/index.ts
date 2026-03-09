@@ -70,7 +70,7 @@ async function lookupCountySqft(address: string, zip: string): Promise<{ resqft:
 
     return null; // 0 or 2+ results
   } catch (e) {
-    console.error(`ArcGIS lookup failed for "${address}": ${e.message}`);
+    console.error(`ArcGIS lookup failed for "${address}": ${(e as Error).message}`);
     return null;
   } finally {
     clearTimeout(timeout);
