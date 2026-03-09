@@ -67,6 +67,10 @@ import AdminDashboard from "./pages/admin-portal/AdminDashboard";
 import AdminDealPot from "./pages/admin-portal/AdminDealPot";
 import AdminMlsImport from "./pages/admin-portal/AdminMlsImport";
 import AdminSettings from "./pages/admin-portal/AdminSettings";
+import AdminUsers from "./pages/admin-portal/AdminUsers";
+import AdminUserDetail from "./pages/admin-portal/AdminUserDetail";
+import AdminApprovals from "./pages/admin-portal/AdminApprovals";
+import AdminAuditLog from "./pages/admin-portal/AdminAuditLog";
 
 const queryClient = new QueryClient();
 
@@ -144,6 +148,10 @@ const App = () => (
             <Route path="deal-pot" element={<AdminDealPot />} />
             <Route path="mls-import" element={<AdminMlsImport />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="users/:userId" element={<AdminUserDetail />} />
+            <Route path="approvals" element={<AdminApprovals />} />
+            <Route path="audit" element={<AdminAuditLog />} />
           </Route>
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
