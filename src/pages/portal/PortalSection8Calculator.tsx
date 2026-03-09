@@ -1,5 +1,5 @@
 import { AlertCircle } from "lucide-react";
-import Section8Calculator from "@/components/portal/investor/Section8Calculator";
+import Section8Calculator from "@/components/portal/Section8Calculator";
 
 const PortalSection8Calculator = () => {
   return (

@@ -70,7 +70,7 @@ async function lookupCountySqft(address: string, zip: string): Promise<{ resqft:
 
     return null; // 0 or 2+ results
   } catch (e) {
-    console.error(`ArcGIS lookup failed for "${address}": ${e.message}`);
+    console.error(`ArcGIS lookup failed for "${address}": ${(e as Error).message}`);
     return null;
   } finally {
     clearTimeout(timeout);
@@ -326,7 +326,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Edge function error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

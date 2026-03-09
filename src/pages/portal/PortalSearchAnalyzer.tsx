@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/collapsible";
 import { useMlsSearch, type MlsSearchParams } from "@/hooks/useMlsSearch";
 import { DEFAULT_SCREENING_CONFIG, type ScreeningConfig } from "@/lib/screening";
-import BatchAnalysisTable from "@/components/portal/investor/BatchAnalysisTable";
+import BatchAnalysisTable from "@/components/portal/BatchAnalysisTable";
 
 const PortalSearchAnalyzer = () => {
   const { results, isLoading, search } = useMlsSearch();

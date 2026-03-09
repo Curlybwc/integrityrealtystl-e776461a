@@ -1,44 +1,30 @@
 
 
-# Fix Plan: Resolve All Build Errors
+## Confirmed: All Variables in Scope
 
-There are **three categories** of errors breaking the build. Here's the minimal fix for each:
+- `arv_effective` — line 174
+- `list_price` — line 176
+- `rehab_est_effective` — lines 181–187
+- All declared before the flip logic at line 196. No risk of compile error.
 
-## 1. Fix component import paths (4 files)
+## Hardening Applied
 
-Components exist at `src/components/portal/` but pages import from `src/components/portal/investor/` (a path that doesn't exist).
+The Flip input `onChange` will use:
+```tsx
+onChange={(e) => {
+  const val = parseFloat(e.target.value);
+  if (!isNaN(val)) {
+    updateConfig("flip_max_arv_pct", val / 100);
+  }
+}}
+```
 
-| File | Bad import | Fix to |
-|------|-----------|--------|
-| `src/pages/portal/PortalAnalyzer.tsx` | `@/components/portal/investor/DealAnalyzer` | `@/components/portal/DealAnalyzer` |
-| `src/pages/portal/PortalResources.tsx` | `@/components/portal/investor/UtilityAllowanceCalculator` | `@/components/portal/UtilityAllowanceCalculator` |
-| `src/pages/portal/PortalSearchAnalyzer.tsx` | `@/components/portal/investor/BatchAnalysisTable` | `@/components/portal/BatchAnalysisTable` |
-| `src/pages/portal/PortalSection8Calculator.tsx` | `@/components/portal/investor/Section8Calculator` | `@/components/portal/Section8Calculator` |
+This prevents clearing the field from setting `flip_max_arv_pct` to 0 and wiping all flip matches.
 
-## 2. Fix AdminPortalLayout.tsx — undefined `user` variable
+## Plan Status
 
-Lines 121/124 reference `user.name` and `user.email` but no `user` variable is declared. The layout uses `session` from Supabase auth. Fix: replace `user.name` with `session?.user?.email?.split("@")[0] ?? "Admin"` and `user.email` with `session?.user?.email ?? ""`.
+Ready to implement. No blockers identified:
 
-## 3. Fix admin pages referencing non-existent DB tables/functions
-
-These pages reference tables (`portal_access_requests`, `admin_audit_log`, `profiles`) and RPC functions (`admin_list_users`, `admin_review_access_request`, etc.) that don't exist in the database. Two options:
-
-**Option A (recommended):** Replace the Supabase calls with placeholder/stub implementations that show "Coming soon" or empty states, so the pages render without errors. This unblocks the build immediately.
-
-**Option B:** Remove the broken admin pages from routing entirely and restore the original admin portal routes (Dashboard, Deal Pot, MLS Import, Settings only).
-
-## 4. Fix edge function type errors
-
-In `supabase/functions/fetch-mls-listings/index.ts`, two `catch` blocks use untyped error variables. Fix: cast to `(e as Error).message` on lines 73 and 329.
-
-## Summary
-
-| Change | Files affected |
-|--------|---------------|
-| Fix import paths | 4 page files |
-| Fix `user` variable | `AdminPortalLayout.tsx` |
-| Stub or remove broken admin pages | `AdminApprovals.tsx`, `AdminAuditLog.tsx`, `AdminUsers.tsx`, `AdminUserDetail.tsx` + `App.tsx` routes |
-| Fix edge function types | `fetch-mls-listings/index.ts` |
-
-This is purely a build-fix pass — no new features, no schema changes.
+1. `screening.ts`: Add `flip_max_arv_pct` to config type/defaults, replace flip logic with MAO calculation
+2. `PortalSearchAnalyzer.tsx`: Replace disclaimer, remove rehab section, add Flip column with hardened input, update grid to 3-col, update header text
 
