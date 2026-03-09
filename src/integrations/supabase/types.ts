@@ -14,228 +14,20 @@ export type Database = {
   }
   public: {
     Tables: {
-      admin_impersonation_sessions: {
-        Row: {
-          admin_user_id: string
-          created_at: string
-          ended_at: string | null
-          id: string
-          reason: string
-          revoked_at: string | null
-          started_at: string
-          target_user_id: string
-        }
-        Insert: {
-          admin_user_id: string
-          created_at?: string
-          ended_at?: string | null
-          id?: string
-          reason: string
-          revoked_at?: string | null
-          started_at?: string
-          target_user_id: string
-        }
-        Update: {
-          admin_user_id?: string
-          created_at?: string
-          ended_at?: string | null
-          id?: string
-          reason?: string
-          revoked_at?: string | null
-          started_at?: string
-          target_user_id?: string
-        }
-        Relationships: []
-      }
-
-      admin_audit_log: {
-        Row: {
-          action_type: string
-          actor_user_id: string
-          created_at: string
-          id: string
-          metadata: Json
-          target_id: string | null
-          target_table: string | null
-          target_user_id: string | null
-        }
-        Insert: {
-          action_type: string
-          actor_user_id: string
-          created_at?: string
-          id?: string
-          metadata?: Json
-          target_id?: string | null
-          target_table?: string | null
-          target_user_id?: string | null
-        }
-        Update: {
-          action_type?: string
-          actor_user_id?: string
-          created_at?: string
-          id?: string
-          metadata?: Json
-          target_id?: string | null
-          target_table?: string | null
-          target_user_id?: string | null
-        }
-        Relationships: []
-      }
-      company_integrations: {
-        Row: {
-          access_token_expires_at: string | null
-          account_label: string | null
-          connected: boolean
-          connected_at: string | null
-          connected_by: string | null
-          created_at: string
-          error_metadata: Json | null
-          health_status: string | null
-          id: string
-          last_sync_at: string | null
-          provider: string
-          updated_at: string
-        }
-        Insert: {
-          access_token_expires_at?: string | null
-          account_label?: string | null
-          connected?: boolean
-          connected_at?: string | null
-          connected_by?: string | null
-          created_at?: string
-          error_metadata?: Json | null
-          health_status?: string | null
-          id?: string
-          last_sync_at?: string | null
-          provider: string
-          updated_at?: string
-        }
-        Update: {
-          access_token_expires_at?: string | null
-          account_label?: string | null
-          connected?: boolean
-          connected_at?: string | null
-          connected_by?: string | null
-          created_at?: string
-          error_metadata?: Json | null
-          health_status?: string | null
-          id?: string
-          last_sync_at?: string | null
-          provider?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      portal_access_requests: {
-        Row: {
-          admin_notes: string | null
-          created_at: string
-          id: string
-          requested_role: string
-          reviewed_at: string | null
-          reviewed_by: string | null
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          admin_notes?: string | null
-          created_at?: string
-          id?: string
-          requested_role: string
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          admin_notes?: string | null
-          created_at?: string
-          id?: string
-          requested_role?: string
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          address_line1: string | null
-          address_line2: string | null
-          city: string | null
-          company: string | null
-          created_at: string
-          display_name: string | null
-          email: string | null
-          first_name: string | null
-          last_name: string | null
-          notes: string | null
-          phone: string | null
-          postal_code: string | null
-          state: string | null
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          address_line1?: string | null
-          address_line2?: string | null
-          city?: string | null
-          company?: string | null
-          created_at?: string
-          display_name?: string | null
-          email?: string | null
-          first_name?: string | null
-          last_name?: string | null
-          notes?: string | null
-          phone?: string | null
-          postal_code?: string | null
-          state?: string | null
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          address_line1?: string | null
-          address_line2?: string | null
-          city?: string | null
-          company?: string | null
-          created_at?: string
-          display_name?: string | null
-          email?: string | null
-          first_name?: string | null
-          last_name?: string | null
-          notes?: string | null
-          phone?: string | null
-          postal_code?: string | null
-          state?: string | null
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
-          created_at: string | null
           id: string
-          role: string
+          role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
-          created_at?: string | null
           id?: string
-          role: string
+          role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
-          created_at?: string | null
           id?: string
-          role?: string
+          role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
         Relationships: []
@@ -245,78 +37,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_end_impersonation: {
-        Args: { _revoked?: boolean; _session_id: string }
-        Returns: undefined
-      }
-      admin_start_impersonation: {
-        Args: { _reason: string; _target_user_id: string }
-        Returns: string
-      }
-
-      admin_grant_role: {
-        Args: { _role: string; _target_user_id: string }
-        Returns: undefined
-      }
-      admin_list_users: {
-        Args: { _search?: string | null; _status?: string | null }
-        Returns: {
-          approval_status: string | null
-          company: string | null
-          created_at: string
-          display_name: string | null
-          email: string | null
-          first_name: string | null
-          last_name: string | null
-          last_sign_in_at: string | null
-          phone: string | null
-          profile_status: string | null
-          roles: string[] | null
-          user_id: string
-        }[]
-      }
-      admin_review_access_request: {
-        Args: { _admin_notes?: string | null; _decision: string; _request_id: string }
-        Returns: undefined
-      }
-      admin_revoke_role: {
-        Args: { _role: string; _target_user_id: string }
-        Returns: undefined
-      }
-      admin_set_user_status: {
-        Args: { _status: string; _target_user_id: string }
-        Returns: undefined
-      }
-      admin_update_profile: {
-        Args: {
-          _address_line1: string | null
-          _address_line2: string | null
-          _city: string | null
-          _company: string | null
-          _display_name: string | null
-          _email: string | null
-          _first_name: string | null
-          _last_name: string | null
-          _notes: string | null
-          _phone: string | null
-          _postal_code: string | null
-          _state: string | null
-          _status: string | null
-          _target_user_id: string
-        }
-        Returns: undefined
-      }
       has_role: {
-        Args: { _role: string; _user_id: string }
-        Returns: boolean
-      }
-      is_admin: {
-        Args: { _user_id: string }
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
         Returns: boolean
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -443,6 +173,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const

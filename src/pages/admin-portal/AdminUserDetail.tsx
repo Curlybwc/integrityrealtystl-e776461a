@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { saveActiveImpersonation } from "@/hooks/useImpersonation";
 
 type ProfileStatus = "pending" | "active" | "disabled" | "archived";
 
@@ -48,7 +47,6 @@ const AdminUserDetail = () => {
   const [roles, setRoles] = useState<string[]>([]);
   const [auditRows, setAuditRows] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [impersonationReason, setImpersonationReason] = useState("");
 
   const loadData = async () => {
     if (!userId) return;
@@ -162,48 +160,6 @@ const AdminUserDetail = () => {
     void loadData();
   };
 
-
-  const startImpersonation = async () => {
-    if (!userId || !profile) return;
-
-    const reason = impersonationReason.trim();
-    if (!reason) {
-      toast({ title: "Reason required", description: "Enter a support reason before impersonation.", variant: "destructive" });
-      return;
-    }
-
-    const { data: authData } = await supabase.auth.getUser();
-    if (!authData.user) {
-      toast({ title: "Not authenticated", description: "Please sign in again.", variant: "destructive" });
-      return;
-    }
-
-    const { data, error } = await supabase.rpc("admin_start_impersonation", {
-      _target_user_id: userId,
-      _reason: reason,
-    });
-
-    if (error || !data) {
-      toast({ title: "Impersonation start failed", description: error?.message ?? "Unable to start impersonation.", variant: "destructive" });
-      return;
-    }
-
-    saveActiveImpersonation({
-      sessionId: data,
-      adminUserId: authData.user.id,
-      adminEmail: authData.user.email ?? "admin",
-      targetUserId: userId,
-      targetEmail: profile.email ?? profile.display_name ?? userId,
-      reason,
-      startedAt: new Date().toISOString(),
-    });
-
-    toast({
-      title: "Support view started",
-      description: "Impersonation banner is now active. Auth session remains your admin session.",
-    });
-  };
-
   if (loading || !profile) {
     return <div className="text-sm text-muted-foreground">Loading user details...</div>;
   }
@@ -249,15 +205,7 @@ const AdminUserDetail = () => {
             <Button onClick={() => void saveProfile()}>Save Profile</Button>
             <Button variant="secondary" onClick={() => void setStatus("disabled")}>Disable</Button>
             <Button variant="secondary" onClick={() => void setStatus("archived")}>Archive</Button>
-            <div className="w-full md:w-auto min-w-[280px]">
-              <Label>Impersonation Reason (required)</Label>
-              <Input
-                value={impersonationReason}
-                onChange={(e) => setImpersonationReason(e.target.value)}
-                placeholder="Support/debug reason"
-              />
-            </div>
-            <Button variant="outline" onClick={() => void startImpersonation()}>Start Impersonation</Button>
+            <Button variant="outline" disabled title="Phase 3">Start Impersonation (Phase 3)</Button>
           </div>
         </CardContent>
       </Card>

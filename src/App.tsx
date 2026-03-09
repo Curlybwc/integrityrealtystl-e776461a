@@ -21,7 +21,8 @@ import NetworkPartner from "./pages/NetworkPartner";
 import PublicListingPage from "./pages/PublicListingPage";
 import NotFound from "./pages/NotFound";
 import PortalSelector from "@/pages/PortalSelector";
-import ImpersonationBanner from "@/components/ImpersonationBanner";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 
 // Investor Portal pages
 import InvestorPortalLayout from "./components/portal/InvestorPortalLayout";
@@ -72,7 +73,6 @@ import AdminUsers from "./pages/admin-portal/AdminUsers";
 import AdminUserDetail from "./pages/admin-portal/AdminUserDetail";
 import AdminApprovals from "./pages/admin-portal/AdminApprovals";
 import AdminAuditLog from "./pages/admin-portal/AdminAuditLog";
-import AdminIntegrations from "./pages/admin-portal/AdminIntegrations";
 
 const queryClient = new QueryClient();
 
@@ -102,6 +102,8 @@ const App = () => (
           <Route path="/network-partner" element={<NetworkPartner />} />
           <Route path="/listing/:mlsNumber" element={<PublicListingPage />} />
           <Route path="/portals" element={<PortalSelector />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
 
           {/* Investor Portal routes */}
           <Route path="/portal/investor" element={<InvestorPortalLayout />}>
@@ -155,7 +157,6 @@ const App = () => (
             <Route path="users/:userId" element={<AdminUserDetail />} />
             <Route path="approvals" element={<AdminApprovals />} />
             <Route path="audit" element={<AdminAuditLog />} />
-            <Route path="integrations" element={<AdminIntegrations />} />
           </Route>
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
