@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, Outlet, Navigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/integrity-logo.png";
 import { cn } from "@/lib/utils";
-import { usePortalAuth } from "@/hooks/usePortalAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
@@ -26,15 +25,18 @@ const navItems = [
 const AdminPortalLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { isAuthenticated, loading, user } = usePortalAuth("admin");
+  const [session, setSession] = useState<any>(undefined); // undefined = loading
 
-  if (loading) {
-    return <div className="min-h-screen bg-background" />;
-  }
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
-  if (!isAuthenticated) {
-    return <Navigate to="/admin-login" replace />;
-  }
+  if (session === undefined) return null; // loading
+  if (!session) return <Navigate to="/admin-login" replace />;
 
   const isActive = (path: string) => {
     if (path === "/portal/admin") {

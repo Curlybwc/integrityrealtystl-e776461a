@@ -19,35 +19,32 @@ const AdminLogin = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error || !data.user) {
+    if (error) {
       toast({
-        title: "Sign in failed",
-        description: error?.message ?? "Unable to sign in.",
+        title: "Invalid credentials",
+        description: error.message,
         variant: "destructive",
       });
       setIsLoading(false);
       return;
     }
 
-    const { data: roleRows, error: roleError } = await supabase
+    // Check for admin role
+    const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", data.user.id)
-      .eq("role", "admin")
-      .maybeSingle();
+      .eq("role", "admin");
 
-    const isAdmin = !roleError && !!roleRows;
-
-    if (!isAdmin) {
+    if (!roles || roles.length === 0) {
       await supabase.auth.signOut();
       toast({
         title: "Access denied",
-        description: "Your account does not have admin access.",
+        description: "You do not have admin privileges.",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -58,7 +55,7 @@ const AdminLogin = () => {
       title: "Welcome, Admin!",
       description: "Redirecting to the admin dashboard...",
     });
-    navigate("/portal/admin");
+    navigate("/admin");
     setIsLoading(false);
   };
 

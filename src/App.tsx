@@ -21,6 +21,8 @@ import NetworkPartner from "./pages/NetworkPartner";
 import PublicListingPage from "./pages/PublicListingPage";
 import NotFound from "./pages/NotFound";
 import PortalSelector from "@/pages/PortalSelector";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 
 // Investor Portal pages
 import InvestorPortalLayout from "./components/portal/InvestorPortalLayout";
@@ -99,6 +101,8 @@ const App = () => (
           <Route path="/network-partner" element={<NetworkPartner />} />
           <Route path="/listing/:mlsNumber" element={<PublicListingPage />} />
           <Route path="/portals" element={<PortalSelector />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
 
           {/* Investor Portal routes */}
           <Route path="/portal/investor" element={<InvestorPortalLayout />}>

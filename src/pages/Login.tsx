@@ -24,18 +24,18 @@ const Login = () => {
       password,
     });
 
-    if (!error) {
-      toast({
-        title: "Welcome back!",
-        description: "Redirecting to your dashboard...",
-      });
-      navigate("/portals");
-    } else {
+    if (error) {
       toast({
         title: "Invalid credentials",
         description: error.message,
         variant: "destructive",
       });
+    } else {
+      toast({
+        title: "Welcome back!",
+        description: "Redirecting to your dashboard...",
+      });
+      navigate("/portals");
     }
 
     setIsLoading(false);
