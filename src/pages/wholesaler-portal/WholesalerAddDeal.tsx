@@ -35,7 +35,7 @@ const WholesalerAddDeal = () => {
     });
 
     setIsSubmitting(false);
-    navigate("/wholesaler-portal/deals");
+    navigate("/portal/wholesaler/deals");
   };
 
   return (

@@ -121,7 +121,7 @@ const WholesalerDeals = () => {
           </p>
         </div>
         <Button asChild>
-          <Link to="/wholesaler-portal/add-deal">
+          <Link to="/portal/wholesaler/add-deal">
             <PlusCircle className="w-4 h-4 mr-2" />
             Add New Deal
           </Link>
@@ -206,13 +206,13 @@ const WholesalerDeals = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <Link to={`/wholesaler-portal/deals/${deal.id}`} className="flex items-center">
+                        <Link to={`/portal/wholesaler/deals/${deal.id}`} className="flex items-center">
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to={`/wholesaler-portal/deals/${deal.id}/edit`} className="flex items-center">
+                        <Link to={`/portal/wholesaler/deals/${deal.id}/edit`} className="flex items-center">
                           <Pencil className="w-4 h-4 mr-2" />
                           Edit Deal
                         </Link>
@@ -241,7 +241,7 @@ const WholesalerDeals = () => {
             <CardContent className="p-12 text-center">
               <p className="text-muted-foreground mb-4">No deals found</p>
               <Button asChild>
-                <Link to="/wholesaler-portal/add-deal">
+                <Link to="/portal/wholesaler/add-deal">
                   <PlusCircle className="w-4 h-4 mr-2" />
                   Add Your First Deal
                 </Link>

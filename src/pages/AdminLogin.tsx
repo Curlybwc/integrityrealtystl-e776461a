@@ -74,14 +74,14 @@ const AdminLogin = () => {
               Authorized personnel only. Access the deal screening system.
             </p>
           </div>
-          
+
           <div className="bg-card border border-border rounded-lg p-8 shadow-card">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
+                <Input
+                  id="email"
+                  type="email"
                   placeholder="admin@integrity.com"
                   className="w-full"
                   value={email}
@@ -89,12 +89,12 @@ const AdminLogin = () => {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
+                <Input
+                  id="password"
+                  type="password"
                   placeholder="••••••••"
                   className="w-full"
                   value={password}

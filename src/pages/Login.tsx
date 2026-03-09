@@ -47,10 +47,10 @@ const Login = () => {
         <div className="container mx-auto max-w-md">
           <div className="text-center mb-8">
             <h1 className="font-serif text-3xl md:text-4xl text-foreground mb-4">
-              Investor Portal
+              Platform Login
             </h1>
             <p className="text-muted-foreground">
-              Access your investment dashboard and portfolio details.
+              Sign in to access your available portals.
             </p>
           </div>
           
@@ -89,8 +89,8 @@ const Login = () => {
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <Link to="/contact" className="text-primary hover:underline">
-                Contact us
+              <Link to="/signup" className="text-primary hover:underline">
+                Create Account
               </Link>
             </p>
           </div>

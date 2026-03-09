@@ -92,28 +92,28 @@ const PortalDashboard = () => {
         <h2 className="font-serif text-xl text-foreground">Quick Actions</h2>
         
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link to="/portal/deals">
+          <Link to="/portal/investor/deals">
             <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2">
               <Building2 className="w-5 h-5 text-primary" />
               <span>View Deals</span>
             </Button>
           </Link>
 
-          <Link to="/portal/deals">
+          <Link to="/portal/investor/deals">
             <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2">
               <FileText className="w-5 h-5 text-primary" />
               <span>Submit Offer</span>
             </Button>
           </Link>
 
-          <Link to="/portal/deals">
+          <Link to="/portal/investor/deals">
             <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2">
               <Wrench className="w-5 h-5 text-primary" />
               <span>Request Walkthrough</span>
             </Button>
           </Link>
 
-          <Link to="/portal/consulting">
+          <Link to="/portal/investor/consulting">
             <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2">
               <MessageSquare className="w-5 h-5 text-primary" />
               <span>Consulting Request</span>

@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
-const DEMO_EMAIL = "demo@partner.com";
+const DEMO_EMAIL = "demo@investor.com";
 const DEMO_PASSWORD = "demo123";
 
-const PartnerLogin = () => {
+const InvestorLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
@@ -28,7 +29,7 @@ const PartnerLogin = () => {
         title: "Welcome back!",
         description: "Redirecting to your dashboard...",
       });
-      navigate("/portal/partner");
+      navigate("/portals");
     } else {
       toast({
         title: "Invalid credentials",
@@ -51,10 +52,10 @@ const PartnerLogin = () => {
         <div className="container mx-auto max-w-md">
           <div className="text-center mb-8">
             <h1 className="font-serif text-3xl md:text-4xl text-foreground mb-4">
-              Partner Portal
+              Investor Portal
             </h1>
             <p className="text-muted-foreground">
-              Access your profile to update your business information, testimonials, and availability.
+              Access your investment dashboard and portfolio details.
             </p>
           </div>
           
@@ -108,14 +109,12 @@ const PartnerLogin = () => {
               </Button>
             </div>
 
-            <div className="mt-6 text-center space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Want to join our network?{" "}
-                <Link to="/network-partner" className="text-primary hover:underline">
-                  Apply here
-                </Link>
-              </p>
-            </div>
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <Link to="/contact" className="text-primary hover:underline">
+                Contact us
+              </Link>
+            </p>
           </div>
         </div>
       </section>
@@ -123,4 +122,4 @@ const PartnerLogin = () => {
   );
 };
 
-export default PartnerLogin;
+export default InvestorLogin;

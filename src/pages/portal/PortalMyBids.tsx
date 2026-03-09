@@ -167,7 +167,7 @@ const PortalMyBids = () => {
                     </div>
                     <div>
                       <Link
-                        to={`/portal/deals/${bid.dealId}`}
+                        to={`/portal/investor/deals/${bid.dealId}`}
                         className="font-medium text-foreground hover:text-primary transition-colors flex items-center gap-1"
                       >
                         <MapPin className="w-3 h-3" />
@@ -259,7 +259,7 @@ const PortalMyBids = () => {
         <div className="text-center py-12 bg-card border border-border rounded-lg">
           <Wrench className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-muted-foreground mb-4">No bid requests found.</p>
-          <Link to="/portal/deals">
+          <Link to="/portal/investor/deals">
             <Button>Browse Deals</Button>
           </Link>
         </div>

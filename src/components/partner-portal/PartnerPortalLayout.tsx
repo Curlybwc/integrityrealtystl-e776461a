@@ -22,9 +22,9 @@ const PartnerPortalLayout = () => {
   }
 
   const navItems = [
-    { path: "/partner-portal", label: "Dashboard", icon: LayoutDashboard, exact: true },
-    { path: "/partner-portal/profile", label: "My Profile", icon: User },
-    { path: "/partner-portal/testimonials", label: "Testimonials", icon: Star },
+    { path: "/portal/partner", label: "Dashboard", icon: LayoutDashboard, exact: true },
+    { path: "/portal/partner/profile", label: "My Profile", icon: User },
+    { path: "/portal/partner/testimonials", label: "Testimonials", icon: Star },
   ];
 
   const isActive = (path: string, exact = false) => {

@@ -10,6 +10,8 @@ import Sellers from "./pages/Sellers";
 import SellFast from "./pages/SellFast";
 import Wholesalers from "./pages/Wholesalers";
 import Login from "./pages/Login";
+import InvestorLogin from "./pages/InvestorLogin";
+import Signup from "./pages/Signup";
 import WholesalerLogin from "./pages/WholesalerLogin";
 import PartnerLogin from "./pages/PartnerLogin";
 import AdminLogin from "./pages/AdminLogin";
@@ -67,6 +69,10 @@ import AdminDashboard from "./pages/admin-portal/AdminDashboard";
 import AdminDealPot from "./pages/admin-portal/AdminDealPot";
 import AdminMlsImport from "./pages/admin-portal/AdminMlsImport";
 import AdminSettings from "./pages/admin-portal/AdminSettings";
+import AdminUsers from "./pages/admin-portal/AdminUsers";
+import AdminUserDetail from "./pages/admin-portal/AdminUserDetail";
+import AdminApprovals from "./pages/admin-portal/AdminApprovals";
+import AdminAuditLog from "./pages/admin-portal/AdminAuditLog";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +91,8 @@ const App = () => (
           <Route path="/sellfast" element={<SellFast />} />
           <Route path="/wholesalers" element={<Wholesalers />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/investor-login" element={<InvestorLogin />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/wholesaler-login" element={<WholesalerLogin />} />
           <Route path="/partner-login" element={<PartnerLogin />} />
           <Route path="/admin-login" element={<AdminLogin />} />
@@ -97,7 +105,7 @@ const App = () => (
           <Route path="/terms" element={<Terms />} />
 
           {/* Investor Portal routes */}
-          <Route path="/portal" element={<InvestorPortalLayout />}>
+          <Route path="/portal/investor" element={<InvestorPortalLayout />}>
             <Route index element={<PortalDashboard />} />
             <Route path="deals" element={<PortalDealsHub />} />
             <Route path="deals/mls" element={<PortalMlsDeals />} />
@@ -124,7 +132,7 @@ const App = () => (
           </Route>
 
           {/* Wholesaler Portal routes */}
-          <Route path="/wholesaler-portal" element={<WholesalerPortalLayout />}>
+          <Route path="/portal/wholesaler" element={<WholesalerPortalLayout />}>
             <Route index element={<WholesalerDashboard />} />
             <Route path="deals" element={<WholesalerDeals />} />
             <Route path="add-deal" element={<WholesalerAddDeal />} />
@@ -132,18 +140,22 @@ const App = () => (
           </Route>
 
           {/* Partner Portal routes */}
-          <Route path="/partner-portal" element={<PartnerPortalLayout />}>
+          <Route path="/portal/partner" element={<PartnerPortalLayout />}>
             <Route index element={<PartnerDashboard />} />
             <Route path="profile" element={<PartnerProfile />} />
             <Route path="testimonials" element={<PartnerTestimonials />} />
           </Route>
 
           {/* Admin Portal routes */}
-          <Route path="/admin" element={<AdminPortalLayout />}>
+          <Route path="/portal/admin" element={<AdminPortalLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="deal-pot" element={<AdminDealPot />} />
             <Route path="mls-import" element={<AdminMlsImport />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="users/:userId" element={<AdminUserDetail />} />
+            <Route path="approvals" element={<AdminApprovals />} />
+            <Route path="audit" element={<AdminAuditLog />} />
           </Route>
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
