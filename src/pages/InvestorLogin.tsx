@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 const DEMO_EMAIL = "demo@investor.com";
 const DEMO_PASSWORD = "demo123";
 
-const Login = () => {
+const InvestorLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
@@ -122,4 +122,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default InvestorLogin;
