@@ -19,6 +19,7 @@ import NetworkPartner from "./pages/NetworkPartner";
 import PublicListingPage from "./pages/PublicListingPage";
 import NotFound from "./pages/NotFound";
 import PortalSelector from "@/pages/PortalSelector";
+import Privacy from "./pages/Privacy";
 
 // Investor Portal pages
 import InvestorPortalLayout from "./components/portal/InvestorPortalLayout";
