@@ -44,13 +44,13 @@ const PortalRequestWalkthrough = () => {
     });
 
     setIsSubmitting(false);
-    navigate(`/portal/deals/${dealId}`);
+    navigate(`/portal/investor/deals/${dealId}`);
   };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Back button */}
-      <Link to={`/portal/deals/${dealId}`}>
+      <Link to={`/portal/investor/deals/${dealId}`}>
         <Button variant="ghost" size="sm">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Deal

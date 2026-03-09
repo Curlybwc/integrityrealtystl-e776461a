@@ -37,7 +37,7 @@ const PortalDealDetail = () => {
       <div className="text-center py-12">
         <Building2 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
         <p className="text-muted-foreground mb-4">Deal not found.</p>
-        <Link to="/portal/deals">
+        <Link to="/portal/investor/deals">
           <Button variant="outline">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Deals
@@ -61,7 +61,7 @@ const PortalDealDetail = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Back button */}
-      <Link to="/portal/deals">
+      <Link to="/portal/investor/deals">
         <Button variant="ghost" size="sm">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Deals
@@ -274,25 +274,25 @@ const PortalDealDetail = () => {
           Take Action
         </h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link to={`/portal/deals/${deal.id}/offer`}>
+          <Link to={`/portal/investor/deals/${deal.id}/offer`}>
             <Button className="w-full" size="lg">
               <FileSignature className="w-4 h-4 mr-2" />
               Submit Offer
             </Button>
           </Link>
-          <Link to={`/portal/deals/${deal.id}/bid`}>
+          <Link to={`/portal/investor/deals/${deal.id}/bid`}>
             <Button variant="outline" className="w-full" size="lg">
               <Wrench className="w-4 h-4 mr-2" />
               Request Walkthrough / Bid
             </Button>
           </Link>
-          <Link to={`/portal/deals/${deal.id}/consult`}>
+          <Link to={`/portal/investor/deals/${deal.id}/consult`}>
             <Button variant="outline" className="w-full" size="lg">
               <Phone className="w-4 h-4 mr-2" />
               Request Paid Consult
             </Button>
           </Link>
-          <Link to={`/portal/consulting?deal=${deal.id}`}>
+          <Link to={`/portal/investor/consulting?deal=${deal.id}`}>
             <Button variant="outline" className="w-full" size="lg">
               <MessageSquare className="w-4 h-4 mr-2" />
               Ask a Question
@@ -311,7 +311,7 @@ const PortalDealDetail = () => {
         </p>
         <div className="grid sm:grid-cols-2 gap-4">
           <Link
-            to={`/portal/analyzer?address=${encodeURIComponent(deal.address)}&city=${encodeURIComponent(deal.city)}&zip=${deal.zip}&beds=${deal.beds}&baths=${deal.baths}&sqft=${deal.sqft}&price=${deal.list_price}&rent=${deal.rent_effective}&arv=${deal.arv_effective}`}
+            to={`/portal/investor/analyzer?address=${encodeURIComponent(deal.address)}&city=${encodeURIComponent(deal.city)}&zip=${deal.zip}&beds=${deal.beds}&baths=${deal.baths}&sqft=${deal.sqft}&price=${deal.list_price}&rent=${deal.rent_effective}&arv=${deal.arv_effective}`}
           >
             <Button variant="secondary" className="w-full" size="lg">
               <Calculator className="w-4 h-4 mr-2" />
@@ -319,7 +319,7 @@ const PortalDealDetail = () => {
             </Button>
           </Link>
           <Link
-            to={`/portal/section8-calculator?address=${encodeURIComponent(deal.address)}&city=${encodeURIComponent(deal.city)}&zip=${deal.zip}&beds=${deal.beds}&rent=${deal.rent_effective}`}
+            to={`/portal/investor/section8-calculator?address=${encodeURIComponent(deal.address)}&city=${encodeURIComponent(deal.city)}&zip=${deal.zip}&beds=${deal.beds}&rent=${deal.rent_effective}`}
           >
             <Button variant="secondary" className="w-full" size="lg">
               <ClipboardCheck className="w-4 h-4 mr-2" />

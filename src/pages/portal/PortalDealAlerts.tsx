@@ -73,7 +73,7 @@ const PortalDealAlerts = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link to="/portal/deals">
+        <Link to="/portal/investor/deals">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="w-4 h-4" />
           </Button>
@@ -160,7 +160,7 @@ const PortalDealAlerts = () => {
           return (
             <Link
               key={deal.id}
-              to={`/portal/deals/${deal.id}`}
+              to={`/portal/investor/deals/${deal.id}`}
               className="group"
             >
               <div className="bg-card border-2 border-primary/50 rounded-lg overflow-hidden shadow-card hover:shadow-card-hover hover:border-primary transition-all">
@@ -276,7 +276,7 @@ const PortalDealAlerts = () => {
           <p className="text-sm text-muted-foreground mt-2">
             Check back soon or browse other deals in the hub.
           </p>
-          <Link to="/portal/deals">
+          <Link to="/portal/investor/deals">
             <Button variant="link">Back to Deals Hub</Button>
           </Link>
         </div>

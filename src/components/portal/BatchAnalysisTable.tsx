@@ -232,7 +232,7 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
                     <TableCell className="pr-0">
                       {photoCount > 0 ? (
                         <a
-                          href={`/portal/listing/${l.mls_listing_id}`}
+                          href={`/portal/investor/listing/${l.mls_listing_id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-0.5 text-muted-foreground hover:text-foreground transition-colors"
@@ -275,7 +275,7 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
                     <TableCell>
                       <Button asChild variant="ghost" size="sm" className="h-7 px-2">
                         <a
-                          href={`/portal/analyzer?${new URLSearchParams({
+                          href={`/portal/investor/analyzer?${new URLSearchParams({
                             address: l.address ?? "",
                             zip: l.zip ?? "",
                             beds: String(l.beds ?? ""),

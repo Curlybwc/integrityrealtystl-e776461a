@@ -6,9 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-
-const DEMO_EMAIL = "demo@investor.com";
-const DEMO_PASSWORD = "demo123";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,29 +19,26 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+    if (!error) {
       toast({
         title: "Welcome back!",
         description: "Redirecting to your dashboard...",
       });
-      navigate("/portal");
+      navigate("/portals");
     } else {
       toast({
         title: "Invalid credentials",
-        description: "Please check your email and password.",
+        description: error.message,
         variant: "destructive",
       });
     }
 
     setIsLoading(false);
-  };
-
-  const handleDemoLogin = () => {
-    setEmail(DEMO_EMAIL);
-    setPassword(DEMO_PASSWORD);
   };
 
   return (
@@ -52,10 +47,10 @@ const Login = () => {
         <div className="container mx-auto max-w-md">
           <div className="text-center mb-8">
             <h1 className="font-serif text-3xl md:text-4xl text-foreground mb-4">
-              Investor Portal
+              Platform Login
             </h1>
             <p className="text-muted-foreground">
-              Access your investment dashboard and portfolio details.
+              Sign in to access your available portals.
             </p>
           </div>
           
@@ -92,27 +87,10 @@ const Login = () => {
               </Button>
             </form>
 
-            <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-dashed border-border">
-              <p className="text-sm text-muted-foreground mb-2 text-center">
-                Demo credentials:
-              </p>
-              <p className="text-xs text-muted-foreground text-center font-mono">
-                {DEMO_EMAIL} / {DEMO_PASSWORD}
-              </p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full mt-2"
-                onClick={handleDemoLogin}
-              >
-                Fill Demo Credentials
-              </Button>
-            </div>
-
             <p className="mt-6 text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <Link to="/contact" className="text-primary hover:underline">
-                Contact us
+              <Link to="/signup" className="text-primary hover:underline">
+                Create Account
               </Link>
             </p>
           </div>

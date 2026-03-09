@@ -4,13 +4,13 @@ import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Shield } from "lucide-react";
 
-const DEMO_EMAIL = "admin@integrity.com";
-const DEMO_PASSWORD = "admin123";
+const DEMO_EMAIL = "demo@investor.com";
+const DEMO_PASSWORD = "demo123";
 
-const AdminLogin = () => {
+const InvestorLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
@@ -26,10 +26,10 @@ const AdminLogin = () => {
 
     if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
       toast({
-        title: "Welcome, Admin!",
-        description: "Redirecting to the admin dashboard...",
+        title: "Welcome back!",
+        description: "Redirecting to your dashboard...",
       });
-      navigate("/portal/admin");
+      navigate("/portals");
     } else {
       toast({
         title: "Invalid credentials",
@@ -51,14 +51,11 @@ const AdminLogin = () => {
       <section className="pt-32 pb-20 px-6">
         <div className="container mx-auto max-w-md">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive/10 mb-4">
-              <Shield className="w-8 h-8 text-destructive" />
-            </div>
             <h1 className="font-serif text-3xl md:text-4xl text-foreground mb-4">
-              Admin Portal
+              Investor Portal
             </h1>
             <p className="text-muted-foreground">
-              Authorized personnel only. Access the deal screening system.
+              Access your investment dashboard and portfolio details.
             </p>
           </div>
           
@@ -69,7 +66,7 @@ const AdminLogin = () => {
                 <Input 
                   id="email" 
                   type="email" 
-                  placeholder="admin@integrity.com"
+                  placeholder="you@example.com"
                   className="w-full"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -95,7 +92,7 @@ const AdminLogin = () => {
               </Button>
             </form>
 
-            <div className="mt-4 p-4 bg-destructive/5 rounded-lg border border-dashed border-destructive/30">
+            <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-dashed border-border">
               <p className="text-sm text-muted-foreground mb-2 text-center">
                 Demo credentials:
               </p>
@@ -111,6 +108,13 @@ const AdminLogin = () => {
                 Fill Demo Credentials
               </Button>
             </div>
+
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <Link to="/contact" className="text-primary hover:underline">
+                Contact us
+              </Link>
+            </p>
           </div>
         </div>
       </section>
@@ -118,4 +122,4 @@ const AdminLogin = () => {
   );
 };
 
-export default AdminLogin;
+export default InvestorLogin;

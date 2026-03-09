@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, Navigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
   User, 
@@ -10,15 +10,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import logo from "@/assets/integrity-logo.png";
+import { usePortalAuth } from "@/hooks/usePortalAuth";
 
 const PartnerPortalLayout = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isAuthenticated } = usePortalAuth("partner");
+
+  if (!isAuthenticated) {
+    return <Navigate to="/partner-login" replace />;
+  }
 
   const navItems = [
-    { path: "/partner-portal", label: "Dashboard", icon: LayoutDashboard, exact: true },
-    { path: "/partner-portal/profile", label: "My Profile", icon: User },
-    { path: "/partner-portal/testimonials", label: "Testimonials", icon: Star },
+    { path: "/portal/partner", label: "Dashboard", icon: LayoutDashboard, exact: true },
+    { path: "/portal/partner/profile", label: "My Profile", icon: User },
+    { path: "/portal/partner/testimonials", label: "Testimonials", icon: Star },
   ];
 
   const isActive = (path: string, exact = false) => {

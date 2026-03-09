@@ -28,7 +28,7 @@ const PartnerLogin = () => {
         title: "Welcome back!",
         description: "Redirecting to your dashboard...",
       });
-      navigate("/partner-portal");
+      navigate("/portal/partner");
     } else {
       toast({
         title: "Invalid credentials",

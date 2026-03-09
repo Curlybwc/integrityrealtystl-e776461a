@@ -24,7 +24,7 @@ const PortalLocalNetwork = () => {
   // Reusable clickable partner card
   const PartnerCard = ({ partner }: { partner: typeof networkPartners[0] }) => (
     <Link
-      to={`/portal/partner/${partner.id}`}
+      to={`/portal/investor/partner/${partner.id}`}
       className="block bg-card border border-border rounded-lg p-5 shadow-card hover:border-primary/50 hover:shadow-md transition-all group"
     >
       <div className="flex items-start justify-between">

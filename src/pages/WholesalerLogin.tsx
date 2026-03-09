@@ -29,7 +29,7 @@ const WholesalerLogin = () => {
         title: "Welcome back!",
         description: "Redirecting to your dashboard...",
       });
-      navigate("/wholesaler-portal");
+      navigate("/portal/wholesaler");
     } else {
       toast({
         title: "Invalid credentials",

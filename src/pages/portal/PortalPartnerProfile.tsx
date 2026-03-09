@@ -55,7 +55,7 @@ const PortalPartnerProfile = () => {
   if (!partner) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
-      <Link to="/portal/local-network">
+      <Link to="/portal/investor/local-network">
         <Button variant="ghost" size="sm" className="gap-2">
           <ArrowLeft className="w-4 h-4" />
           Back to Network Partners
@@ -75,7 +75,7 @@ const PortalPartnerProfile = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Back button */}
-      <Link to="/portal/local-network">
+      <Link to="/portal/investor/local-network">
         <Button variant="ghost" size="sm" className="gap-2">
           <ArrowLeft className="w-4 h-4" />
           Back to Network Partners

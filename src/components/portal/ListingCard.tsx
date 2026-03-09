@@ -36,7 +36,7 @@ const ListingCard = ({ listing: l }: ListingCardProps) => {
 
   return (
     <Card className={cn("overflow-hidden transition-opacity", !passes && "opacity-50")}>
-      <a href={`/portal/listing/${l.mls_listing_id}`} target="_blank" rel="noopener noreferrer" className="relative block">
+      <a href={`/portal/investor/listing/${l.mls_listing_id}`} target="_blank" rel="noopener noreferrer" className="relative block">
         <AspectRatio ratio={16 / 10}>
           {hasPhotos ? (
             <img
@@ -112,7 +112,7 @@ const ListingCard = ({ listing: l }: ListingCardProps) => {
         {/* Analyze link */}
         <Button asChild variant="outline" size="sm" className="w-full h-7 text-xs">
           <a
-            href={`/portal/analyzer?${new URLSearchParams({
+            href={`/portal/investor/analyzer?${new URLSearchParams({
               address: l.address ?? "",
               zip: l.zip ?? "",
               beds: String(l.beds ?? ""),

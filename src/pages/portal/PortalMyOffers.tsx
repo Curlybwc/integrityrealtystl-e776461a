@@ -221,7 +221,7 @@ const PortalMyOffers = () => {
                     </div>
                     <div>
                       <Link
-                        to={`/portal/deals/${offer.dealId}`}
+                        to={`/portal/investor/deals/${offer.dealId}`}
                         className="font-medium text-foreground hover:text-primary transition-colors flex items-center gap-1"
                       >
                         <MapPin className="w-3 h-3" />
@@ -272,7 +272,7 @@ const PortalMyOffers = () => {
                         Contact Integrity Realty STL to discuss next steps.
                       </p>
                     </div>
-                    <Link to="/portal/consulting">
+                    <Link to="/portal/investor/consulting">
                       <Button variant="outline" size="sm">
                         Discuss
                       </Button>
@@ -361,7 +361,7 @@ const PortalMyOffers = () => {
         <div className="text-center py-12 bg-card border border-border rounded-lg">
           <FileSignature className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-muted-foreground mb-4">No offers found.</p>
-          <Link to="/portal/deals">
+          <Link to="/portal/investor/deals">
             <Button>Browse Deals</Button>
           </Link>
         </div>

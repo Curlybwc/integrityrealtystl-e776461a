@@ -25,7 +25,7 @@ const InvestorListingPage = () => {
     if (window.history.length > 2) {
       navigate(-1);
     } else {
-      navigate("/portal/search-analyzer");
+      navigate("/portal/investor/search-analyzer");
     }
   };
 
@@ -85,7 +85,7 @@ const InvestorListingPage = () => {
     rehab_tier_system,
   });
 
-  const analyzeUrl = `/portal/analyzer?${new URLSearchParams({
+  const analyzeUrl = `/portal/investor/analyzer?${new URLSearchParams({
     address: listing.address ?? "",
     zip: listing.zip ?? "",
     beds: String(listing.beds ?? ""),
