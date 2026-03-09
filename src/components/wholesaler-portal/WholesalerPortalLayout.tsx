@@ -11,21 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/integrity-logo.png";
-
-// Mock auth state - replace with real auth when backend is enabled
-const useWholesalerAuth = () => {
-  return {
-    isAuthenticated: true, // For mockup purposes
-    wholesaler: {
-      name: "Mike Wholesaler",
-      email: "mike@deals.com",
-      company: "Quick Flip Properties",
-    },
-    logout: () => {
-      window.location.href = "/wholesalers";
-    },
-  };
-};
+import { usePortalAuth } from "@/hooks/usePortalAuth";
 
 const navItems = [
   { title: "Dashboard", href: "/wholesaler-portal", icon: LayoutDashboard },
@@ -37,7 +23,7 @@ const navItems = [
 const WholesalerPortalLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { isAuthenticated, wholesaler, logout } = useWholesalerAuth();
+  const { isAuthenticated, user } = usePortalAuth("wholesaler");
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
@@ -111,10 +97,10 @@ const WholesalerPortalLayout = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  {wholesaler.name}
+                  {user.name}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {wholesaler.company}
+                  {user.company}
                 </p>
               </div>
             </div>
@@ -122,7 +108,9 @@ const WholesalerPortalLayout = () => {
               variant="outline"
               size="sm"
               className="w-full"
-              onClick={logout}
+              onClick={() => {
+                window.location.href = "/wholesalers";
+              }}
             >
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out
