@@ -6,9 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Shield } from "lucide-react";
-
-const DEMO_EMAIL = "admin@integrity.com";
-const DEMO_PASSWORD = "admin123";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -21,29 +19,44 @@ const AdminLogin = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-      toast({
-        title: "Welcome, Admin!",
-        description: "Redirecting to the admin dashboard...",
-      });
-      navigate("/admin");
-    } else {
+    if (error) {
       toast({
         title: "Invalid credentials",
-        description: "Please check your email and password.",
+        description: error.message,
         variant: "destructive",
       });
+      setIsLoading(false);
+      return;
     }
 
-    setIsLoading(false);
-  };
+    // Check for admin role
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("role", "admin");
 
-  const handleDemoLogin = () => {
-    setEmail(DEMO_EMAIL);
-    setPassword(DEMO_PASSWORD);
+    if (!roles || roles.length === 0) {
+      await supabase.auth.signOut();
+      toast({
+        title: "Access denied",
+        description: "You do not have admin privileges.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    toast({
+      title: "Welcome, Admin!",
+      description: "Redirecting to the admin dashboard...",
+    });
+    navigate("/admin");
+    setIsLoading(false);
   };
 
   return (
@@ -94,23 +107,6 @@ const AdminLogin = () => {
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
-
-            <div className="mt-4 p-4 bg-destructive/5 rounded-lg border border-dashed border-destructive/30">
-              <p className="text-sm text-muted-foreground mb-2 text-center">
-                Demo credentials:
-              </p>
-              <p className="text-xs text-muted-foreground text-center font-mono">
-                {DEMO_EMAIL} / {DEMO_PASSWORD}
-              </p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full mt-2"
-                onClick={handleDemoLogin}
-              >
-                Fill Demo Credentials
-              </Button>
-            </div>
           </div>
         </div>
       </section>
