@@ -39,7 +39,7 @@ export function useUserRoles(): UseUserRolesResult {
       }
 
       if (isMounted) {
-        setRoles(data.map((row) => row.role).filter((role): role is string => typeof role === "string"));
+        setRoles(data.map((row) => row.role));
         setLoading(false);
       }
     };
