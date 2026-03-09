@@ -1,49 +1,55 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-const DEMO_EMAIL = "demo@investor.com";
-const DEMO_PASSWORD = "demo123";
-
-const Login = () => {
+const Signup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+    if (password !== confirmPassword) {
       toast({
-        title: "Welcome back!",
-        description: "Redirecting to your dashboard...",
-      });
-      navigate("/portals");
-    } else {
-      toast({
-        title: "Invalid credentials",
-        description: "Please check your email and password.",
+        title: "Password mismatch",
+        description: "Password and confirm password must match.",
         variant: "destructive",
       });
+      return;
     }
 
-    setIsLoading(false);
-  };
+    setIsLoading(true);
 
-  const handleDemoLogin = () => {
-    setEmail(DEMO_EMAIL);
-    setPassword(DEMO_PASSWORD);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      toast({
+        title: "Sign up failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    toast({
+      title: "Account created",
+      description: "Redirecting to your portals...",
+    });
+    navigate("/portals");
+    setIsLoading(false);
   };
 
   return (
@@ -52,20 +58,20 @@ const Login = () => {
         <div className="container mx-auto max-w-md">
           <div className="text-center mb-8">
             <h1 className="font-serif text-3xl md:text-4xl text-foreground mb-4">
-              Platform Login
+              Create Account
             </h1>
             <p className="text-muted-foreground">
-              Sign in to access your available portals.
+              Sign up to access your available portals.
             </p>
           </div>
-          
+
           <div className="bg-card border border-border rounded-lg p-8 shadow-card">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
+                <Input
+                  id="email"
+                  type="email"
                   placeholder="you@example.com"
                   className="w-full"
                   value={email}
@@ -73,12 +79,12 @@ const Login = () => {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
+                <Input
+                  id="password"
+                  type="password"
                   placeholder="••••••••"
                   className="w-full"
                   value={password}
@@ -87,32 +93,28 @@ const Login = () => {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  className="w-full"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              </div>
+
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? "Creating account..." : "Create Account"}
               </Button>
             </form>
 
-            <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-dashed border-border">
-              <p className="text-sm text-muted-foreground mb-2 text-center">
-                Demo credentials:
-              </p>
-              <p className="text-xs text-muted-foreground text-center font-mono">
-                {DEMO_EMAIL} / {DEMO_PASSWORD}
-              </p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full mt-2"
-                onClick={handleDemoLogin}
-              >
-                Fill Demo Credentials
-              </Button>
-            </div>
-
             <p className="mt-6 text-center text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:underline">
-                Create Account
+              Already have an account?{" "}
+              <Link to="/login" className="text-primary hover:underline">
+                Sign In
               </Link>
             </p>
           </div>
@@ -122,4 +124,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Signup;
