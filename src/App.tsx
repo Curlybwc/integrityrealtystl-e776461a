@@ -94,6 +94,7 @@ const App = () => (
           <Route path="/listing/:mlsNumber" element={<PublicListingPage />} />
           <Route path="/portals" element={<PortalSelector />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
 
           {/* Investor Portal routes */}
           <Route path="/portal" element={<InvestorPortalLayout />}>
