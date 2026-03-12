@@ -4,7 +4,7 @@ import Layout from "@/components/Layout";
 import { Shield, TrendingUp, Handshake, Users } from "lucide-react";
 
 const allPortals = [
-  { id: "investor", label: "Investor Portal", href: "/portal", icon: TrendingUp, description: "Access deals, analytics, and your investment dashboard." },
+  { id: "investor", label: "Investor Portal", href: "/portal/investor", icon: TrendingUp, description: "Access deals, analytics, and your investment dashboard." },
   { id: "wholesaler", label: "Wholesaler Portal", href: "/wholesaler-portal", icon: Handshake, description: "Submit and manage wholesale deals." },
   { id: "partner", label: "Partner Portal", href: "/partner-portal", icon: Users, description: "Network partner dashboard and resources." },
   { id: "admin", label: "Admin Portal", href: "/admin", icon: Shield, description: "Deal screening, MLS import, and system settings." },
