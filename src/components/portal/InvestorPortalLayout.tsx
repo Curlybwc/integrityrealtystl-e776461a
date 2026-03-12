@@ -39,9 +39,12 @@ const navItems = [
 const InvestorPortalLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { isAuthenticated, user } = usePortalAuth("investor");
+  const { isAuthenticated, loading, user } = usePortalAuth("investor");
 
-  // Redirect to login if not authenticated (will work when backend is enabled)
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
