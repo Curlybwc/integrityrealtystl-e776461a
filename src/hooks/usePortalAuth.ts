@@ -21,56 +21,71 @@ const mockAuthEnabled = import.meta.env.VITE_ENABLE_MOCK_AUTH !== "false";
 
 export function usePortalAuth(portal: PortalType) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(portal === "admin");
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<PortalUser>(MOCK_USERS[portal]);
 
   useEffect(() => {
     let isMounted = true;
 
-    if (portal !== "admin") {
-      if (isMounted) {
-        setIsAuthenticated(mockAuthEnabled);
-        setLoading(false);
-        setUser(MOCK_USERS[portal]);
-      }
-      return () => {
-        isMounted = false;
-      };
-    }
-
-    const loadAdminAuth = async () => {
+    const checkAuth = async () => {
       setLoading(true);
 
+      // Check real Supabase auth first
       const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError || !authData.user) {
+
+      if (!authError && authData.user) {
+        // User is authenticated via Supabase
+        if (portal === "admin") {
+          // Admin requires role check
+          const { data: roleRows, error: roleError } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", authData.user.id)
+            .eq("role", "admin")
+            .maybeSingle();
+
+          if (isMounted) {
+            const hasAdminRole = !roleError && !!roleRows;
+            setIsAuthenticated(hasAdminRole);
+            setUser({
+              id: authData.user.id,
+              name: authData.user.email ?? "Admin",
+              email: authData.user.email ?? undefined,
+            });
+            setLoading(false);
+          }
+        } else {
+          // Non-admin portals: authenticated user has access
+          if (isMounted) {
+            setIsAuthenticated(true);
+            setUser({
+              id: authData.user.id,
+              name: authData.user.email ?? MOCK_USERS[portal].name,
+              email: authData.user.email ?? undefined,
+            });
+            setLoading(false);
+          }
+        }
+        return;
+      }
+
+      // Fallback to mock auth for non-admin portals
+      if (portal !== "admin" && mockAuthEnabled) {
         if (isMounted) {
-          setIsAuthenticated(false);
-          setUser(MOCK_USERS.admin);
+          setIsAuthenticated(true);
+          setUser(MOCK_USERS[portal]);
           setLoading(false);
         }
         return;
       }
 
-      const { data: roleRows, error: roleError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", authData.user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-
       if (isMounted) {
-        const hasAdminRole = !roleError && !!roleRows;
-        setIsAuthenticated(hasAdminRole);
-        setUser({
-          id: authData.user.id,
-          name: authData.user.email ?? "Admin",
-          email: authData.user.email ?? undefined,
-        });
+        setIsAuthenticated(false);
         setLoading(false);
       }
     };
 
-    void loadAdminAuth();
+    void checkAuth();
 
     return () => {
       isMounted = false;
