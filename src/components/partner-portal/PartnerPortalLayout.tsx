@@ -15,10 +15,14 @@ import { usePortalAuth } from "@/hooks/usePortalAuth";
 const PartnerPortalLayout = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated } = usePortalAuth("partner");
+  const { isAuthenticated, loading } = usePortalAuth("partner");
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
+  }
 
   if (!isAuthenticated) {
-    return <Navigate to="/partner-login" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   const navItems = [
