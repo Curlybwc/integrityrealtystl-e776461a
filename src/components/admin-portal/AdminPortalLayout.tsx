@@ -35,8 +35,8 @@ const AdminPortalLayout = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (session === undefined) return null; // loading
-  if (!session) return <Navigate to="/admin-login" replace />;
+  if (session === undefined) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
+  if (!session) return <Navigate to="/login" replace />;
 
   const isActive = (path: string) => {
     if (path === "/portal/admin") {

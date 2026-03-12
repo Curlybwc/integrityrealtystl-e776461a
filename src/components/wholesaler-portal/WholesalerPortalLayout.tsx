@@ -23,11 +23,14 @@ const navItems = [
 const WholesalerPortalLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { isAuthenticated, user } = usePortalAuth("wholesaler");
+  const { isAuthenticated, loading, user } = usePortalAuth("wholesaler");
 
-  // Redirect to login if not authenticated
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
+  }
+
   if (!isAuthenticated) {
-    return <Navigate to="/wholesaler-login" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   const isActive = (path: string) => {
