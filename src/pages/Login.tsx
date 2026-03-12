@@ -22,6 +22,16 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+      toast({
+        title: "Welcome back!",
+        description: "Redirecting to your dashboard...",
+      });
+      navigate("/portals");
+      setIsLoading(false);
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -42,6 +52,11 @@ const Login = () => {
     }
 
     setIsLoading(false);
+  };
+
+  const handleDemoLogin = () => {
+    setEmail(DEMO_EMAIL);
+    setPassword(DEMO_PASSWORD);
   };
 
   return (
