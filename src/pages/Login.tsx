@@ -8,6 +8,9 @@ import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+const DEMO_EMAIL = "demo@platform.com";
+const DEMO_PASSWORD = "demo123";
+
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -18,6 +21,16 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+      toast({
+        title: "Welcome back!",
+        description: "Redirecting to your dashboard...",
+      });
+      navigate("/portals");
+      setIsLoading(false);
+      return;
+    }
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -39,6 +52,11 @@ const Login = () => {
     }
 
     setIsLoading(false);
+  };
+
+  const handleDemoLogin = () => {
+    setEmail(DEMO_EMAIL);
+    setPassword(DEMO_PASSWORD);
   };
 
   return (
@@ -86,6 +104,23 @@ const Login = () => {
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
+
+            <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-dashed border-border">
+              <p className="text-sm text-muted-foreground mb-2 text-center">
+                Demo credentials:
+              </p>
+              <p className="text-xs text-muted-foreground text-center font-mono">
+                {DEMO_EMAIL} / {DEMO_PASSWORD}
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full mt-2"
+                onClick={handleDemoLogin}
+              >
+                Fill Demo Credentials
+              </Button>
+            </div>
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
