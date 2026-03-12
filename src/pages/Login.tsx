@@ -105,6 +105,23 @@ const Login = () => {
               </Button>
             </form>
 
+            <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-dashed border-border">
+              <p className="text-sm text-muted-foreground mb-2 text-center">
+                Demo credentials:
+              </p>
+              <p className="text-xs text-muted-foreground text-center font-mono">
+                {DEMO_EMAIL} / {DEMO_PASSWORD}
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full mt-2"
+                onClick={handleDemoLogin}
+              >
+                Fill Demo Credentials
+              </Button>
+            </div>
+
             <p className="mt-6 text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
               <Link to="/signup" className="text-primary hover:underline">
