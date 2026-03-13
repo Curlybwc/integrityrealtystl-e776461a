@@ -195,7 +195,7 @@ const AdminApprovals = () => {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Clock className="w-5 h-5 text-amber-600" />
+            <Clock className="w-5 h-5 text-muted-foreground" />
             Pending Requests ({pending.length})
           </CardTitle>
         </CardHeader>
