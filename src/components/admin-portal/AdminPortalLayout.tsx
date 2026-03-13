@@ -8,6 +8,8 @@ import {
   Menu,
   LogOut,
   User,
+  Users,
+  CheckCircle,
   Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
