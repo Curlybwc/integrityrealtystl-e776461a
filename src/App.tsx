@@ -10,6 +10,8 @@ import Sellers from "./pages/Sellers";
 import SellFast from "./pages/SellFast";
 import Wholesalers from "./pages/Wholesalers";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import InvestorLogin from "./pages/InvestorLogin";
 import Signup from "./pages/Signup";
 import WholesalerLogin from "./pages/WholesalerLogin";
@@ -91,6 +93,8 @@ const App = () => (
           <Route path="/sellfast" element={<SellFast />} />
           <Route path="/wholesalers" element={<Wholesalers />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/investor-login" element={<InvestorLogin />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/wholesaler-login" element={<WholesalerLogin />} />
