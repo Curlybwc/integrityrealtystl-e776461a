@@ -103,9 +103,9 @@ const AdminApprovals = () => {
   const statusBadge = (status: string) => {
     switch (status) {
       case "pending":
-        return <Badge variant="outline" className="text-amber-600 border-amber-300"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
+        return <Badge variant="outline"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
       case "approved":
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100"><Check className="w-3 h-3 mr-1" />Approved</Badge>;
+        return <Badge variant="secondary"><Check className="w-3 h-3 mr-1" />Approved</Badge>;
       case "denied":
         return <Badge variant="destructive"><X className="w-3 h-3 mr-1" />Denied</Badge>;
       default:
