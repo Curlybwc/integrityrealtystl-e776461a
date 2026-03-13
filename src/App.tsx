@@ -10,6 +10,8 @@ import Sellers from "./pages/Sellers";
 import SellFast from "./pages/SellFast";
 import Wholesalers from "./pages/Wholesalers";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import InvestorLogin from "./pages/InvestorLogin";
 import Signup from "./pages/Signup";
 import WholesalerLogin from "./pages/WholesalerLogin";
