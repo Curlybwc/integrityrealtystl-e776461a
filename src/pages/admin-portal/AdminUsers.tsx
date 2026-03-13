@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, UserPlus, UserMinus, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Search, UserPlus, UserMinus, Loader2, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -29,6 +30,13 @@ const AdminUsers = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [togglingRole, setTogglingRole] = useState<string | null>(null);
+
+  // Add user dialog state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newName, setNewName] = useState("");
+  const [creating, setCreating] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -82,6 +90,52 @@ const AdminUsers = () => {
     setTogglingRole(null);
   };
 
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const trimmedEmail = newEmail.trim();
+    const trimmedName = newName.trim();
+
+    if (!trimmedEmail || !newPassword) {
+      toast({ title: "Error", description: "Email and password are required.", variant: "destructive" });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      toast({ title: "Error", description: "Please enter a valid email.", variant: "destructive" });
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast({ title: "Error", description: "Password must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+
+    setCreating(true);
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+
+    const res = await supabase.functions.invoke("admin-create-user", {
+      body: { email: trimmedEmail, password: newPassword, full_name: trimmedName },
+    });
+
+    if (res.error || res.data?.error) {
+      toast({
+        title: "Error creating user",
+        description: res.data?.error || res.error?.message || "Unknown error",
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: "User created", description: `${trimmedEmail} has been added.` });
+      setNewEmail("");
+      setNewPassword("");
+      setNewName("");
+      setDialogOpen(false);
+      fetchData();
+    }
+
+    setCreating(false);
+  };
+
   const filtered = users.filter(
     (u) =>
       (u.email ?? "").toLowerCase().includes(search.toLowerCase()) ||
@@ -90,11 +144,77 @@ const AdminUsers = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-serif font-medium text-foreground">Users</h1>
-        <p className="text-muted-foreground">
-          Manage portal access for all registered users.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-serif font-medium text-foreground">Users</h1>
+          <p className="text-muted-foreground">
+            Manage portal access for all registered users.
+          </p>
+        </div>
+
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Add User
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New User</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateUser} className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="new-name">Full Name</Label>
+                <Input
+                  id="new-name"
+                  placeholder="Jane Doe"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  maxLength={100}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-email">Email *</Label>
+                <Input
+                  id="new-email"
+                  type="email"
+                  placeholder="jane@example.com"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  required
+                  maxLength={255}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-password">Password *</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  placeholder="Min 6 characters"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  maxLength={128}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                The user's email will be pre-confirmed. You can assign portal roles after creation.
+              </p>
+              <Button type="submit" className="w-full" disabled={creating}>
+                {creating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create User"
+                )}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="relative max-w-sm">
