@@ -21,6 +21,8 @@ const navItems = [
   { title: "Dashboard", href: "/portal/admin", icon: LayoutDashboard },
   { title: "Deal Pot", href: "/portal/admin/deal-pot", icon: Building2 },
   { title: "MLS Import", href: "/portal/admin/mls-import", icon: Search },
+  { title: "Users", href: "/portal/admin/users", icon: Users },
+  { title: "Approvals", href: "/portal/admin/approvals", icon: CheckCircle },
   { title: "Settings", href: "/portal/admin/settings", icon: Settings },
 ];
 
