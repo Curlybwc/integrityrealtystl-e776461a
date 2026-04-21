@@ -14,9 +14,10 @@ const allPortals = [
 const PortalSelector = () => {
   const { hasRole } = useHasRole();
   const isAdmin = hasRole("admin");
+  const isDemoMode = sessionStorage.getItem("demo_mode") === "true";
 
-  // Admins see all portals; others see based on their roles
-  const portals = isAdmin
+  // Demo users and admins see all portals; others see based on their roles
+  const portals = (isDemoMode || isAdmin)
     ? allPortals
     : allPortals.filter((portal) => hasRole(portal.id as any));
 
