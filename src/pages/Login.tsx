@@ -23,6 +23,7 @@ const Login = () => {
     setIsLoading(true);
 
     if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+      sessionStorage.setItem("demo_mode", "true");
       toast({
         title: "Welcome back!",
         description: "Redirecting to your dashboard...",
