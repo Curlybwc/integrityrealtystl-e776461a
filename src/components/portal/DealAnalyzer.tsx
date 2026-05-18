@@ -270,13 +270,7 @@ const DealAnalyzer = () => {
     }));
   };
 
-  // Trigger comp ARV fetch when subject inputs are valid
-  useEffect(() => {
-    const { zip, beds, baths, sqft } = inputs;
-    if (zip && sqft > 0 && beds >= 0) {
-      runComps({ zip, beds, baths, sqft });
-    }
-  }, [inputs.zip, inputs.beds, inputs.baths, inputs.sqft, runComps]);
+  // Comp ARV is loaded/refreshed via useCompReport (saved snapshot, no auto-fetch on edit).
 
   // All calculations centralized via computeDealMetrics
   const calculations = useMemo(() => {
