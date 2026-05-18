@@ -57,7 +57,7 @@ const PortalDealsHub = () => {
       </div>
 
       {/* Hub Cards */}
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         {hubCards.map((card) => {
           const Icon = card.icon;
           return (
