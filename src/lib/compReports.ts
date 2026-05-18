@@ -215,7 +215,7 @@ export async function saveNewSnapshot(args: {
 
   const { data, error } = await supabase
     .from("comp_reports")
-    .insert(insertRow)
+    .insert([insertRow])
     .select("*")
     .single();
 
