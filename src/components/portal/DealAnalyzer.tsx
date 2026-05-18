@@ -136,6 +136,10 @@ const DealAnalyzer = () => {
   const supportedZips = getSupportedZips();
 
   const mlsIdParam = searchParams.get("mlsId");
+  const sourceTagsParam = (searchParams.get("sourceTags") ?? "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
 
   // Derive property key from mlsId (preferred) or normalized address+zip
   useEffect(() => {
