@@ -26,10 +26,8 @@ import {
 } from "@/data/stlZipData";
 import {
   computeDealMetrics,
-  type RehabTier,
   type Deal,
   formatCurrency as screeningFormatCurrency,
-  getRehabRate,
   DEFAULT_SCREENING_CONFIG,
 } from "@/lib/screening";
 import { useCompReport } from "@/hooks/useCompReport";
@@ -39,14 +37,10 @@ import CompArvPanel from "./CompArvPanel";
 import CompReportStatus from "./CompReportStatus";
 import RepairBreakdownPanel from "./RepairBreakdownPanel";
 import { useRepairAnalysis } from "@/hooks/useRepairAnalysis";
-import { isAnalysisComplete } from "@/lib/repairAnalysis";
+import { isAnalysisComplete, repairStateFromRow } from "@/lib/repairAnalysis";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
-const REHAB_TIER_LABELS: Record<RehabTier, string> = {
-  Turnkey: "Turnkey ($5/sf)",
-  Light: "Light ($15/sf)",
-  Medium: "Medium ($30/sf)",
-  Heavy: "Heavy ($50/sf)",
-};
 
 interface DealInputs {
   address: string;
