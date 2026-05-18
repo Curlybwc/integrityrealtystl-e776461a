@@ -166,10 +166,10 @@ export function estimateRehabTier(list_price: number, arv: number): RehabTier {
 export function computeDealMetrics(
   deal: Partial<Deal>,
   config: ScreeningConfig = DEFAULT_SCREENING_CONFIG
-): Pick<Deal, 
-  | "rent_effective" 
-  | "arv_effective" 
-  | "rehab_tier_effective" 
+): Pick<Deal,
+  | "rent_effective"
+  | "arv_effective"
+  | "rehab_tier_effective"
   | "rehab_est_effective"
   | "rent_to_price_pct"
   | "all_in_pct_of_arv"
@@ -178,45 +178,80 @@ export function computeDealMetrics(
   | "passes_flip"
   | "strategy"
   | "buyer_visible"
+  | "analysis_pending"
 > {
   // Compute effective values (overrides take precedence)
   const rent_effective = deal.rent_override ?? deal.rent_system ?? 0;
   const arv_effective = deal.arv_override ?? deal.arv_system ?? 0;
-  // Smart rehab tier: use price/ARV ratio to estimate tier (unless override exists)
   const list_price = deal.list_price ?? 0;
-  const smartTier = estimateRehabTier(list_price, arv_effective);
-  const rehab_tier_effective = deal.rehab_tier_override ?? smartTier;
-  
-  // Compute rehab estimate (manual dollar override bypasses tier calculation)
-  let rehab_est_effective: number;
-  if (deal.rehab_est_override && deal.rehab_est_override > 0) {
-    rehab_est_effective = deal.rehab_est_override;
-  } else {
-    const rehabRate = getRehabRate(rehab_tier_effective, config);
-    rehab_est_effective = (deal.sqft ?? 0) * rehabRate;
+
+  // Resolve repair estimate from evidence-based analysis or manual dollar override only.
+  // No price/ARV-derived rehab tier inference here.
+  const analysisStatus = deal.repair_analysis_status ?? null;
+  const rehabFromAnalysis =
+    deal.rehab_est_from_analysis != null && deal.rehab_est_from_analysis > 0
+      ? deal.rehab_est_from_analysis
+      : null;
+  const rehabFromOverride =
+    deal.rehab_est_override != null && deal.rehab_est_override > 0
+      ? deal.rehab_est_override
+      : null;
+
+  const rehab_est_effective_nullable: number | null =
+    rehabFromOverride ?? rehabFromAnalysis;
+
+  // Analysis is pending when no manual override and no completed analysis dollar amount.
+  const analysis_pending =
+    rehabFromOverride == null &&
+    rehabFromAnalysis == null &&
+    analysisStatus !== "complete" &&
+    analysisStatus !== null
+      ? true
+      : rehabFromOverride == null && rehabFromAnalysis == null;
+
+  // Keep a display tier for back-compat callers; not used in screening math.
+  const rehab_tier_effective: RehabTier = deal.rehab_tier_override ?? "Medium";
+
+  if (analysis_pending) {
+    // Block MAO / RTP / strategy until repair estimate is known.
+    return {
+      rent_effective,
+      arv_effective,
+      rehab_tier_effective,
+      rehab_est_effective: 0,
+      rent_to_price_pct: 0,
+      all_in_pct_of_arv: 0,
+      passes_turnkey: false,
+      passes_brrrr: false,
+      passes_flip: false,
+      strategy: "None",
+      buyer_visible: false,
+      analysis_pending: true,
+    };
   }
-  
+
+  const rehab_est_effective = rehab_est_effective_nullable ?? 0;
+
   // Compute metrics — RTP uses all-in price (price + repairs)
   const all_in = list_price + rehab_est_effective;
   const rent_to_price_pct = all_in > 0 ? rent_effective / all_in : 0;
   const all_in_pct_of_arv = arv_effective > 0 ? all_in / arv_effective : 0;
-  const price_to_arv = arv_effective > 0 ? list_price / arv_effective : 0;
-  
+
   // Evaluate Flip (MAO-based)
   const mao = (arv_effective * config.flip_max_arv_pct) - rehab_est_effective;
-  const passes_flip = list_price <= mao;
-  
+  const passes_flip = list_price <= mao && arv_effective > 0;
+
   // Evaluate BRRRR (Flip + RTP)
-  const passes_brrrr = 
+  const passes_brrrr =
     passes_flip &&
     rent_to_price_pct >= config.brrrr_min_rtp;
-  
-  // Evaluate Turnkey (RTP + Turnkey tier only)
-  const passes_turnkey = 
+
+  // Turnkey requires explicit admin tier override (no auto-inferred tier anymore)
+  const passes_turnkey =
     rent_to_price_pct >= config.turnkey_min_rtp &&
-    rehab_tier_effective === "Turnkey";
-  
-  // Determine strategy (backward compatibility)
+    deal.rehab_tier_override === "Turnkey";
+
+  // Determine strategy
   let strategy: Strategy = "None";
   if (passes_turnkey && passes_brrrr) {
     strategy = "Both";
@@ -225,17 +260,17 @@ export function computeDealMetrics(
   } else if (passes_brrrr) {
     strategy = "BRRRR";
   }
-  
+
   // Determine buyer visibility
-  const isSold = deal.source_type === "WHOLESALER" 
+  const isSold = deal.source_type === "WHOLESALER"
     ? deal.wholesaler_status === "Sold"
     : deal.mls_status === "Sold";
-  
-  const buyer_visible = 
-    (passes_turnkey || passes_brrrr || passes_flip) && 
-    !isSold && 
+
+  const buyer_visible =
+    (passes_turnkey || passes_brrrr || passes_flip) &&
+    !isSold &&
     !deal.removed_reason;
-  
+
   return {
     rent_effective,
     arv_effective,
@@ -248,6 +283,7 @@ export function computeDealMetrics(
     passes_flip,
     strategy,
     buyer_visible,
+    analysis_pending: false,
   };
 }
 
