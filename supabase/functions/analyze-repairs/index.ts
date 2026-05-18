@@ -93,21 +93,31 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userData } = await userClient.auth.getUser();
-    const userId = userData?.user?.id;
-    if (!userId) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
     const body = await req.json();
     const mlsListingId: string = body?.mlsListingId;
     const source: "user" | "admin" | "system_core" = body?.source ?? "user";
     if (!mlsListingId || typeof mlsListingId !== "string") {
       return new Response(JSON.stringify({ error: "mlsListingId required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // system_core bypasses user identity and quota; requires service-role bearer token
+    const isServiceRole = authHeader === `Bearer ${SERVICE_ROLE}`;
+    let userId: string | null = null;
+    if (source === "system_core") {
+      if (!isServiceRole) {
+        return new Response(JSON.stringify({ error: "system_core requires service role" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    } else {
+      const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: userData } = await userClient.auth.getUser();
+      userId = userData?.user?.id ?? null;
+      if (!userId) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
+
 
     const svc = createClient(SUPABASE_URL, SERVICE_ROLE);
 

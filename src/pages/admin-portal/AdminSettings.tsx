@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DEFAULT_SCREENING_CONFIG } from "@/lib/screening";
+import RepairPricingEditor from "@/components/admin-portal/RepairPricingEditor";
 
 const AdminSettings = () => {
   const config = DEFAULT_SCREENING_CONFIG;
@@ -17,9 +18,20 @@ const AdminSettings = () => {
         </p>
       </div>
 
+      <section>
+        <div className="mb-4">
+          <h2 className="text-lg font-medium">Repair Pricing Library</h2>
+          <p className="text-sm text-muted-foreground">
+            Admin-controlled unit costs used by the evidence-based repair analysis engine.
+          </p>
+        </div>
+        <RepairPricingEditor />
+      </section>
+
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Rehab Rates */}
         <Card>
+
           <CardHeader>
             <CardTitle className="text-lg">Rehab Rates ($/sqft)</CardTitle>
             <CardDescription>

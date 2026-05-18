@@ -20,6 +20,7 @@ import {
 import { useMlsSearch, type MlsSearchParams } from "@/hooks/useMlsSearch";
 import { DEFAULT_SCREENING_CONFIG, type ScreeningConfig } from "@/lib/screening";
 import BatchAnalysisTable from "@/components/portal/BatchAnalysisTable";
+import RepairQuotaChip from "@/components/portal/RepairQuotaChip";
 
 const PortalSearchAnalyzer = () => {
   const { results, isLoading, search } = useMlsSearch();
@@ -64,14 +65,18 @@ const PortalSearchAnalyzer = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-serif font-bold text-foreground">
-          Search & Analyze
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Search MLS listings and instantly screen them for Flip, BRRRR, and Turnkey potential.
-        </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-serif font-bold text-foreground">
+            Search & Analyze
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Search MLS listings and instantly screen them for Flip, BRRRR, and Turnkey potential.
+          </p>
+        </div>
+        <RepairQuotaChip />
       </div>
+
 
       {/* Disclaimer */}
       <Alert className="py-3">

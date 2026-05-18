@@ -26,10 +26,8 @@ import {
 } from "@/data/stlZipData";
 import {
   computeDealMetrics,
-  type RehabTier,
   type Deal,
   formatCurrency as screeningFormatCurrency,
-  getRehabRate,
   DEFAULT_SCREENING_CONFIG,
 } from "@/lib/screening";
 import { useCompReport } from "@/hooks/useCompReport";
@@ -39,14 +37,10 @@ import CompArvPanel from "./CompArvPanel";
 import CompReportStatus from "./CompReportStatus";
 import RepairBreakdownPanel from "./RepairBreakdownPanel";
 import { useRepairAnalysis } from "@/hooks/useRepairAnalysis";
-import { isAnalysisComplete } from "@/lib/repairAnalysis";
+import { isAnalysisComplete, repairStateFromRow } from "@/lib/repairAnalysis";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
-const REHAB_TIER_LABELS: Record<RehabTier, string> = {
-  Turnkey: "Turnkey ($5/sf)",
-  Light: "Light ($15/sf)",
-  Medium: "Medium ($30/sf)",
-  Heavy: "Heavy ($50/sf)",
-};
 
 interface DealInputs {
   address: string;
@@ -59,7 +53,6 @@ interface DealInputs {
   currentRent: number;
   avgRent: number;
   isAvgRentManual: boolean;
-  rehabTierOverride?: RehabTier;
   manualRepairs: number;
   manualArv: number;
 }
@@ -75,10 +68,10 @@ const initialInputs: DealInputs = {
   currentRent: 0,
   avgRent: 0,
   isAvgRentManual: false,
-  rehabTierOverride: undefined,
   manualRepairs: 0,
   manualArv: 0,
 };
+
 
 const formatCurrency = (value: number): string => {
   return new Intl.NumberFormat("en-US", {
@@ -264,28 +257,15 @@ const DealAnalyzer = () => {
     });
   };
 
-  // Mutual exclusion: tier dropdown clears manual dollars, manual dollars clears tier
-  const handleRehabTierChange = (tier: string) => {
-    if (tier === "auto") {
-      setInputs((prev) => ({ ...prev, rehabTierOverride: undefined, manualRepairs: 0 }));
-    } else {
-      setInputs((prev) => ({ ...prev, rehabTierOverride: tier as RehabTier, manualRepairs: 0 }));
-    }
-  };
-
   const handleManualRepairsChange = (value: number) => {
-    setInputs((prev) => ({
-      ...prev,
-      manualRepairs: value,
-      rehabTierOverride: value > 0 ? undefined : prev.rehabTierOverride,
-    }));
+    setInputs((prev) => ({ ...prev, manualRepairs: value }));
   };
 
   // Comp ARV is loaded/refreshed via useCompReport (saved snapshot, no auto-fetch on edit).
 
   // All calculations centralized via computeDealMetrics
   const calculations = useMemo(() => {
-    const { zip, price, beds, sqft, currentRent, avgRent, isAvgRentManual, rehabTierOverride, manualRepairs, manualArv } = inputs;
+    const { zip, price, beds, sqft, currentRent, avgRent, isAvgRentManual, manualRepairs, manualArv } = inputs;
 
     const compLikely = compResult?.arv?.likely;
     const arv_system = compLikely && compLikely > 0
@@ -301,10 +281,9 @@ const DealAnalyzer = () => {
       arv_system,
       rent_override: isAvgRentManual ? avgRent : undefined,
       arv_override: manualArv > 0 ? manualArv : undefined,
-      rehab_tier_override: rehabTierOverride,
-      rehab_est_override: manualRepairs > 0
-        ? manualRepairs
-        : (repairTotal != null ? repairTotal : undefined),
+      rehab_est_override: manualRepairs > 0 ? manualRepairs : undefined,
+      rehab_est_from_analysis: repairTotal,
+      repair_analysis_status: repairStateFromRow(repairRow),
       mls_status: "Active",
     };
 
@@ -315,12 +294,12 @@ const DealAnalyzer = () => {
     const rentComp = getRentComp(zip, beds);
     const arvQuick = calculateArvQuick(zip, sqft);
     const currentRtp = price > 0 ? currentRent / price : 0;
-    const offer75 = metrics.arv_effective > 0 ? metrics.arv_effective * 0.75 - metrics.rehab_est_effective : 0;
-    const fmrRoi = (price + metrics.rehab_est_effective) > 0 && fmr ? fmr / (price + metrics.rehab_est_effective) : 0;
+    const offer75 = metrics.arv_effective > 0 && !metrics.analysis_pending ? metrics.arv_effective * 0.75 - metrics.rehab_est_effective : 0;
+    const fmrRoi = !metrics.analysis_pending && (price + metrics.rehab_est_effective) > 0 && fmr ? fmr / (price + metrics.rehab_est_effective) : 0;
     const arvSource: "comps" | "heuristic" = compLikely && compLikely > 0 ? "comps" : "heuristic";
 
     return { ...metrics, fmr, rentComp, arvQuick, currentRtp, offer75, fmrRoi, arvSource };
-  }, [inputs, compResult]);
+  }, [inputs, compResult, repairTotal, repairRow]);
 
   // Determine RTP color coding
   const getRtpColor = (rtp: number): string => {
@@ -336,13 +315,13 @@ const DealAnalyzer = () => {
     return "text-red-600";
   };
 
-  // Derive display label for rehab tier/rate
+  // Repair source label for reference panel
   const rehabRateDisplay = useMemo(() => {
-    if (inputs.manualRepairs > 0) return "Custom";
-    if (inputs.rehabTierOverride) return REHAB_TIER_LABELS[inputs.rehabTierOverride];
-    // Auto tier from screening
-    return `${calculations.rehab_tier_effective} (Auto)`;
-  }, [inputs.manualRepairs, inputs.rehabTierOverride, calculations.rehab_tier_effective]);
+    if (inputs.manualRepairs > 0) return "Manual override";
+    if (repairTotal != null) return "AI repair analysis";
+    return "Pending analysis";
+  }, [inputs.manualRepairs, repairTotal]);
+
 
   return (
     <div className="space-y-6">
@@ -523,52 +502,28 @@ const DealAnalyzer = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="rehabTier">
-                  Rehab Tier
-                  <InfoTooltip content="Auto = determined by price/ARV ratio. Select to override, or enter manual dollars." />
-                </Label>
-                <Select
-                  value={inputs.manualRepairs > 0 ? "" : (inputs.rehabTierOverride || "auto")}
-                  onValueChange={handleRehabTierChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={inputs.manualRepairs > 0 ? "Custom $" : "Auto"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="auto">Auto (from ARV %)</SelectItem>
-                    {(Object.keys(REHAB_TIER_LABELS) as RehabTier[]).map((tier) => (
-                      <SelectItem key={tier} value={tier}>
-                        {REHAB_TIER_LABELS[tier]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="space-y-2">
+              <Label htmlFor="manualRepairs">
+                Manual Repair Override
+                <InfoTooltip content="Leave blank to use the AI repair analysis. Enter a dollar amount to override it." />
+              </Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                <Input
+                  id="manualRepairs"
+                  type="number"
+                  min="0"
+                  className="pl-7"
+                  placeholder={repairTotal != null ? `AI: ${screeningFormatCurrency(repairTotal)}` : "Pending analysis"}
+                  value={inputs.manualRepairs || ""}
+                  onChange={(e) => handleManualRepairsChange(Number(e.target.value))}
+                />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="manualRepairs">
-                  Manual Repairs
-                  <InfoTooltip content="Enter a dollar amount to override tier-based calculation" />
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    $
-                  </span>
-                  <Input
-                    id="manualRepairs"
-                    type="number"
-                    min="0"
-                    className="pl-7"
-                    placeholder="Auto"
-                    value={inputs.manualRepairs || ""}
-                    onChange={(e) =>
-                      handleManualRepairsChange(Number(e.target.value))
-                    }
-                  />
-                </div>
-              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Repair estimates come from the evidence-based AI analysis. Manual entry overrides it.
+              </p>
             </div>
+
           </CardContent>
         </Card>
       </div>
@@ -611,6 +566,15 @@ const DealAnalyzer = () => {
           <CardTitle className="text-lg">Analysis Results</CardTitle>
         </CardHeader>
         <CardContent>
+          {calculations.analysis_pending && (
+            <Alert className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-sm">
+                Repair analysis pending — MAO, RTP, and strategy badges are hidden until the
+                evidence-based repair estimate is available. Enter a Manual Repair Override to unblock.
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="grid md:grid-cols-3 gap-6">
             {/* Cost Analysis */}
             <div className="space-y-1">
@@ -619,22 +583,23 @@ const DealAnalyzer = () => {
               </h4>
               <ResultRow
                 label="Repair Estimate"
-                value={formatCurrency(calculations.rehab_est_effective)}
-                tooltip="Based on rehab tier or manual entry"
+                value={calculations.analysis_pending ? "—" : formatCurrency(calculations.rehab_est_effective)}
+                tooltip="From AI repair analysis or manual override"
               />
               <ResultRow
                 label="All-In Cost"
-                value={formatCurrency(inputs.price + calculations.rehab_est_effective)}
+                value={calculations.analysis_pending ? "—" : formatCurrency(inputs.price + calculations.rehab_est_effective)}
                 tooltip="Purchase price + repairs"
                 highlight
               />
               <ResultRow
-                label="75% ARV Offer"
-                value={formatCurrency(calculations.offer75)}
-                tooltip="BRRR formula: (ARV × 75%) - Repairs"
+                label="75% ARV Offer (MAO)"
+                value={calculations.analysis_pending ? "—" : formatCurrency(calculations.offer75)}
+                tooltip="MAO = (ARV × 75%) − Repairs"
                 highlight
               />
             </div>
+
 
             {/* Value Analysis */}
             <div className="space-y-1">

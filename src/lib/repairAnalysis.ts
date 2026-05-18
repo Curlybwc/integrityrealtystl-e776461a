@@ -37,6 +37,13 @@ export function isAnalysisComplete(row: RepairAnalysisRow | null | undefined): b
   return row?.analysis_status === "complete" && row.total_repair_estimate != null;
 }
 
+export type RepairState = "complete" | "pending" | "analyzing" | "failed" | "quota_blocked" | "missing";
+
+export function repairStateFromRow(row: RepairAnalysisRow | null | undefined): RepairState {
+  if (!row) return "missing";
+  return row.analysis_status as RepairState;
+}
+
 export async function fetchActiveAnalysis(mlsListingId: string): Promise<RepairAnalysisRow | null> {
   const { data, error } = await supabase
     .from("repair_analyses")

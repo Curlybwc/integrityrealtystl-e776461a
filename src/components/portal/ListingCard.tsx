@@ -1,11 +1,12 @@
 
-import { Camera, ExternalLink } from "lucide-react";
+import { Camera, ExternalLink, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { formatCurrency, formatPercent } from "@/lib/screening";
 import { cn } from "@/lib/utils";
+import type { RepairState } from "@/lib/repairAnalysis";
 
 interface ListingCardProps {
   listing: {
@@ -28,11 +29,15 @@ interface ListingCardProps {
     passes_flip: boolean;
   };
   onPhotoClick?: () => void;
+  analysisPending?: boolean;
+  repairState?: RepairState;
+  repairTotal?: number | null;
 }
 
-const ListingCard = ({ listing: l }: ListingCardProps) => {
-  const passes = l.passes_turnkey || l.passes_brrrr || l.passes_flip;
+const ListingCard = ({ listing: l, analysisPending = false, repairState = "missing", repairTotal = null }: ListingCardProps) => {
+  const passes = !analysisPending && (l.passes_turnkey || l.passes_brrrr || l.passes_flip);
   const hasPhotos = l.photo_urls && l.photo_urls.length > 0;
+
 
   return (
     <Card className={cn("overflow-hidden transition-opacity", !passes && "opacity-50")}>
@@ -51,10 +56,34 @@ const ListingCard = ({ listing: l }: ListingCardProps) => {
           )}
         </AspectRatio>
         {/* Strategy badge overlay */}
-        <div className="absolute top-2 left-2 flex gap-1">
-          {l.passes_flip && <Badge variant="outline" className="text-xs">Flip</Badge>}
-          {l.passes_brrrr && <Badge variant="secondary" className="text-xs">BRRRR</Badge>}
-          {l.passes_turnkey && <Badge variant="default" className="text-xs">Turnkey</Badge>}
+        <div className="absolute top-2 left-2 flex gap-1 flex-wrap">
+          {analysisPending ? (
+            <>
+              {(repairState === "pending" || repairState === "analyzing" || repairState === "missing") && (
+                <Badge variant="outline" className="text-[10px] bg-background/80 gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Analyzing repairs
+                </Badge>
+              )}
+              {repairState === "quota_blocked" && (
+                <Badge variant="outline" className="text-[10px] bg-background/80 border-amber-500 text-amber-600">
+                  Quota reached
+                </Badge>
+              )}
+              {repairState === "failed" && (
+                <Badge variant="outline" className="text-[10px] bg-background/80 border-destructive text-destructive gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  Analysis failed
+                </Badge>
+              )}
+            </>
+          ) : (
+            <>
+              {l.passes_flip && <Badge variant="outline" className="text-xs">Flip</Badge>}
+              {l.passes_brrrr && <Badge variant="secondary" className="text-xs">BRRRR</Badge>}
+              {l.passes_turnkey && <Badge variant="default" className="text-xs">Turnkey</Badge>}
+            </>
+          )}
         </div>
         {hasPhotos && (
           <span className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
@@ -86,28 +115,37 @@ const ListingCard = ({ listing: l }: ListingCardProps) => {
             <span className="font-medium">{formatCurrency(l.rent_effective)}</span>
           </div>
           <div className="flex justify-between">
+            <span className="text-muted-foreground">Repairs</span>
+            <span className="font-medium">
+              {repairState === "complete" && repairTotal != null ? formatCurrency(repairTotal) : "—"}
+            </span>
+          </div>
+          <div className="flex justify-between">
             <span className="text-muted-foreground">ARV</span>
             <span className="font-medium">{formatCurrency(l.arv_effective)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">RTP Ratio</span>
+            <span className="text-muted-foreground">RTP</span>
             <span className={cn(
               "font-medium",
-              l.rent_to_price_pct >= 0.013 ? "text-green-600" : l.rent_to_price_pct >= 0.01 ? "text-orange-500" : "text-destructive"
+              analysisPending && "text-muted-foreground",
+              !analysisPending && (l.rent_to_price_pct >= 0.013 ? "text-green-600" : l.rent_to_price_pct >= 0.01 ? "text-orange-500" : "text-destructive")
             )}>
-              {formatPercent(l.rent_to_price_pct)}
+              {analysisPending ? "—" : formatPercent(l.rent_to_price_pct)}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">All-In%</span>
             <span className={cn(
               "font-medium",
-              l.all_in_pct_of_arv <= 0.75 ? "text-green-600" : l.all_in_pct_of_arv <= 0.80 ? "text-orange-500" : "text-destructive"
+              analysisPending && "text-muted-foreground",
+              !analysisPending && (l.all_in_pct_of_arv <= 0.75 ? "text-green-600" : l.all_in_pct_of_arv <= 0.80 ? "text-orange-500" : "text-destructive")
             )}>
-              {formatPercent(l.all_in_pct_of_arv)}
+              {analysisPending ? "—" : formatPercent(l.all_in_pct_of_arv)}
             </span>
           </div>
         </div>
+
 
         {/* Analyze link */}
         <Button asChild variant="outline" size="sm" className="w-full h-7 text-xs">
