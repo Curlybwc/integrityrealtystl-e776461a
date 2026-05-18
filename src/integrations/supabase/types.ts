@@ -14,6 +14,140 @@ export type Database = {
   }
   public: {
     Tables: {
+      comp_report_overrides: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          overrides: Json
+          report_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          overrides?: Json
+          report_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          overrides?: Json
+          report_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comp_report_overrides_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "comp_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comp_reports: {
+        Row: {
+          address: string | null
+          arv_aggressive: number | null
+          arv_conservative: number | null
+          arv_likely: number | null
+          confidence: number | null
+          confidence_band: string | null
+          created_at: string
+          created_by: string
+          driver_tier: string | null
+          engine_version: string | null
+          excluded_comp_count: number
+          fallback_comp_count: number
+          fallback_used: boolean
+          good_comp_count: number
+          id: string
+          included_comp_count: number
+          is_active: boolean
+          last_refreshed_by: string
+          mls_listing_id: string | null
+          property_key: string
+          refreshed_at: string
+          result: Json
+          scoring_version: string | null
+          search_criteria: Json | null
+          status: string
+          strong_comp_count: number
+          subject: Json
+          updated_at: string
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          arv_aggressive?: number | null
+          arv_conservative?: number | null
+          arv_likely?: number | null
+          confidence?: number | null
+          confidence_band?: string | null
+          created_at?: string
+          created_by: string
+          driver_tier?: string | null
+          engine_version?: string | null
+          excluded_comp_count?: number
+          fallback_comp_count?: number
+          fallback_used?: boolean
+          good_comp_count?: number
+          id?: string
+          included_comp_count?: number
+          is_active?: boolean
+          last_refreshed_by: string
+          mls_listing_id?: string | null
+          property_key: string
+          refreshed_at?: string
+          result: Json
+          scoring_version?: string | null
+          search_criteria?: Json | null
+          status?: string
+          strong_comp_count?: number
+          subject: Json
+          updated_at?: string
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          arv_aggressive?: number | null
+          arv_conservative?: number | null
+          arv_likely?: number | null
+          confidence?: number | null
+          confidence_band?: string | null
+          created_at?: string
+          created_by?: string
+          driver_tier?: string | null
+          engine_version?: string | null
+          excluded_comp_count?: number
+          fallback_comp_count?: number
+          fallback_used?: boolean
+          good_comp_count?: number
+          id?: string
+          included_comp_count?: number
+          is_active?: boolean
+          last_refreshed_by?: string
+          mls_listing_id?: string | null
+          property_key?: string
+          refreshed_at?: string
+          result?: Json
+          scoring_version?: string | null
+          search_criteria?: Json | null
+          status?: string
+          strong_comp_count?: number
+          subject?: Json
+          updated_at?: string
+          zip?: string | null
+        }
+        Relationships: []
+      }
       portal_access_requests: {
         Row: {
           created_at: string

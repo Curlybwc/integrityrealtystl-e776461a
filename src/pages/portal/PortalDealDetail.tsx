@@ -311,7 +311,7 @@ const PortalDealDetail = () => {
         </p>
         <div className="grid sm:grid-cols-2 gap-4">
           <Link
-            to={`/portal/investor/analyzer?address=${encodeURIComponent(deal.address)}&city=${encodeURIComponent(deal.city)}&zip=${deal.zip}&beds=${deal.beds}&baths=${deal.baths}&sqft=${deal.sqft}&price=${deal.list_price}&rent=${deal.rent_effective}&arv=${deal.arv_effective}`}
+            to={`/portal/investor/analyzer?${deal.mls_listing_id ? `mlsId=${encodeURIComponent(deal.mls_listing_id)}&` : ""}address=${encodeURIComponent(deal.address)}&city=${encodeURIComponent(deal.city)}&zip=${deal.zip}&beds=${deal.beds}&baths=${deal.baths}&sqft=${deal.sqft}&price=${deal.list_price}&rent=${deal.rent_effective}&arv=${deal.arv_effective}`}
           >
             <Button variant="secondary" className="w-full" size="lg">
               <Calculator className="w-4 h-4 mr-2" />

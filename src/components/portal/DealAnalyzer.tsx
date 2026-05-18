@@ -32,8 +32,11 @@ import {
   getRehabRate,
   DEFAULT_SCREENING_CONFIG,
 } from "@/lib/screening";
-import { useCompArv } from "@/hooks/useCompArv";
+import { useCompReport } from "@/hooks/useCompReport";
+import { derivePropertyKey } from "@/lib/compReports";
+import type { Subject } from "@/types/compArv";
 import CompArvPanel from "./CompArvPanel";
+import CompReportStatus from "./CompReportStatus";
 
 const REHAB_TIER_LABELS: Record<RehabTier, string> = {
   Turnkey: "Turnkey ($5/sf)",
@@ -133,8 +136,47 @@ const DealAnalyzer = () => {
   const [searchParams] = useSearchParams();
   const [inputs, setInputs] = useState<DealInputs>(initialInputs);
   const [showComps, setShowComps] = useState(false);
+  const [propertyKey, setPropertyKey] = useState<string | null>(null);
   const supportedZips = getSupportedZips();
-  const { result: compResult, isLoading: compLoading, run: runComps, recompute: recomputeComps } = useCompArv();
+
+  const mlsIdParam = searchParams.get("mlsId");
+
+  // Derive property key from mlsId (preferred) or normalized address+zip
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const key = await derivePropertyKey({
+        mlsId: mlsIdParam,
+        address: inputs.address,
+        zip: inputs.zip,
+      });
+      if (!cancelled) setPropertyKey(key);
+    })();
+    return () => { cancelled = true; };
+  }, [mlsIdParam, inputs.address, inputs.zip]);
+
+  // Build live Subject for the comp engine
+  const subject = useMemo<Subject | null>(() => {
+    if (!inputs.zip || !inputs.sqft || inputs.sqft <= 0) return null;
+    return {
+      address: inputs.address,
+      zip: inputs.zip,
+      beds: inputs.beds,
+      baths: inputs.baths,
+      sqft: inputs.sqft,
+    };
+  }, [inputs.zip, inputs.beds, inputs.baths, inputs.sqft, inputs.address]);
+
+  const {
+    report, result: compResult, isLoading: compLoading, isRefreshing,
+    status, drift, refresh, setOverrides, overrides,
+  } = useCompReport({
+    propertyKey,
+    mlsId: mlsIdParam,
+    address: inputs.address,
+    zip: inputs.zip,
+    subject,
+  });
 
   // Auto-populate from URL params
   useEffect(() => {
@@ -228,13 +270,7 @@ const DealAnalyzer = () => {
     }));
   };
 
-  // Trigger comp ARV fetch when subject inputs are valid
-  useEffect(() => {
-    const { zip, beds, baths, sqft } = inputs;
-    if (zip && sqft > 0 && beds >= 0) {
-      runComps({ zip, beds, baths, sqft });
-    }
-  }, [inputs.zip, inputs.beds, inputs.baths, inputs.sqft, runComps]);
+  // Comp ARV is loaded/refreshed via useCompReport (saved snapshot, no auto-fetch on edit).
 
   // All calculations centralized via computeDealMetrics
   const calculations = useMemo(() => {
@@ -524,55 +560,29 @@ const DealAnalyzer = () => {
         </Card>
       </div>
 
-      {/* Comp ARV strip */}
-      {(compLoading || compResult) && (
-        <Card>
-          <CardContent className="py-3 flex flex-wrap items-center gap-3 text-sm">
-            {compLoading && (
-              <span className="flex items-center gap-2 text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin" /> Pulling sold comps…
-              </span>
-            )}
-            {compResult && (
-              <>
-                <span>
-                  <span className="text-muted-foreground">System ARV:</span>{" "}
-                  <span className="font-mono font-semibold text-primary">
-                    {compResult.arv ? formatCurrency(compResult.arv.likely) : "—"}
-                  </span>
-                </span>
-                <Badge variant="outline">
-                  Confidence {compResult.confidence} · {compResult.confidenceBand}
-                </Badge>
-                <Badge variant="secondary">
-                  Source: {calculations.arvSource === "comps" ? "Comps" : "Heuristic"}
-                </Badge>
-                {inputs.manualArv > 0 && (
-                  <Badge className="bg-amber-500 text-white">User ARV driving screening</Badge>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="ml-auto h-7 text-xs"
-                  onClick={() => setShowComps((v) => !v)}
-                >
-                  {showComps ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
-                  {showComps ? "Hide" : "Show"} comps
-                </Button>
-              </>
-            )}
-          </CardContent>
-        </Card>
+      {/* Comp ARV status strip + drift banner */}
+      {(compLoading || isRefreshing || compResult) && (
+        <CompReportStatus
+          result={compResult}
+          refreshedAt={report?.refreshed_at ?? null}
+          engineVersion={report?.engine_version ?? null}
+          status={status}
+          isLoading={compLoading}
+          isRefreshing={isRefreshing}
+          drift={drift}
+          manualArvOverride={inputs.manualArv > 0}
+          showComps={showComps}
+          onToggleComps={() => setShowComps((v) => !v)}
+          onRefresh={() => { void refresh(); }}
+        />
       )}
       {showComps && compResult && (
         <CompArvPanel
           result={compResult}
           onToggleComp={(id, include) => {
-            const includeIds: Record<string, boolean> = {};
-            [...compResult.comps, ...compResult.excluded].forEach((c) => {
-              includeIds[c.comp.id] = c.comp.id === id ? include : c.included;
-            });
-            recomputeComps({ includeIds });
+            const includeIds: Record<string, boolean> = { ...(overrides.includeIds ?? {}) };
+            includeIds[id] = include;
+            setOverrides({ ...overrides, includeIds });
           }}
         />
       )}
