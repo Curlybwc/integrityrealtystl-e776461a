@@ -125,6 +125,7 @@ function normalizeListing(listing: any) {
   const photos = listing.images || listing.photos || [];
   const raw = listing.raw || {};
   const aboveGradeSqft = raw.AboveGradeFinishedAreaSrchSqFt;
+  const map = listing.map || {};
 
   return {
     mls_listing_id: listing.mlsNumber || listing.listingId || listing.id,
@@ -133,13 +134,27 @@ function normalizeListing(listing: any) {
     state: address.state || "MO",
     zip: address.zip || address.postalCode || "",
     beds: parseInt(details.numBedrooms || details.bedrooms || "0", 10),
-    baths: parseInt(details.numBathrooms || details.bathrooms || "0", 10),
+    baths: parseFloat(details.numBathrooms || details.bathrooms || "0"),
     sqft: parseInt(aboveGradeSqft || details.sqft || details.squareFeet || details.area || "0", 10),
     below_grade_sqft: parseInt(raw.BelowGradeFinishedAreaSrchSqFt || "0", 10),
     year_built: details.yearBuilt ? parseInt(details.yearBuilt, 10) : undefined,
     property_type: details.propertyType || listing.type || "Single Family",
     list_price: parseFloat(listing.listPrice || "0"),
     mls_status: mapStatus(listing.status),
+    lat: map.latitude ? parseFloat(map.latitude) : undefined,
+    long: map.longitude ? parseFloat(map.longitude) : undefined,
+    sold_price: listing.soldPrice ? parseFloat(listing.soldPrice) : undefined,
+    sold_date: listing.soldDate || raw.CloseDate || undefined,
+    list_date: listing.listDate || raw.ListingContractDate || undefined,
+    days_on_market: raw.DaysOnMarket ? parseInt(raw.DaysOnMarket, 10) : undefined,
+    last_status: listing.lastStatus || raw.MlsStatus || undefined,
+    style: details.style || raw.ArchitecturalStyle || undefined,
+    stories: details.numStories ? parseInt(details.numStories, 10) : (raw.Stories ? parseInt(raw.Stories, 10) : undefined),
+    subdivision: address.neighborhood || raw.SubdivisionName || undefined,
+    school_district: raw.HighSchoolDistrict || raw.ElementarySchoolDistrict || undefined,
+    garage_bays: raw.GarageSpaces ? parseInt(raw.GarageSpaces, 10) : undefined,
+    basement_finished_sqft: raw.BelowGradeFinishedAreaSrchSqFt ? parseInt(raw.BelowGradeFinishedAreaSrchSqFt, 10) : 0,
+    remarks: listing.publicRemarks || raw.PublicRemarks || undefined,
     photo_urls: Array.isArray(photos)
       ? photos.slice(0, 10).map((p: any) => {
           const path = typeof p === "string" ? p : p.url || p.photoUrl || "";
