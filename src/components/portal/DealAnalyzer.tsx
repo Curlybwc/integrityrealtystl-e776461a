@@ -1,9 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Calculator, Info } from "lucide-react";
+import { Calculator, Info, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -30,6 +32,8 @@ import {
   getRehabRate,
   DEFAULT_SCREENING_CONFIG,
 } from "@/lib/screening";
+import { useCompArv } from "@/hooks/useCompArv";
+import CompArvPanel from "./CompArvPanel";
 
 const REHAB_TIER_LABELS: Record<RehabTier, string> = {
   Turnkey: "Turnkey ($5/sf)",
@@ -128,7 +132,9 @@ const ResultRow = ({
 const DealAnalyzer = () => {
   const [searchParams] = useSearchParams();
   const [inputs, setInputs] = useState<DealInputs>(initialInputs);
+  const [showComps, setShowComps] = useState(false);
   const supportedZips = getSupportedZips();
+  const { result: compResult, isLoading: compLoading, run: runComps, recompute: recomputeComps } = useCompArv();
 
   // Auto-populate from URL params
   useEffect(() => {
@@ -222,9 +228,22 @@ const DealAnalyzer = () => {
     }));
   };
 
+  // Trigger comp ARV fetch when subject inputs are valid
+  useEffect(() => {
+    const { zip, beds, baths, sqft } = inputs;
+    if (zip && sqft > 0 && beds >= 0) {
+      runComps({ zip, beds, baths, sqft });
+    }
+  }, [inputs.zip, inputs.beds, inputs.baths, inputs.sqft, runComps]);
+
   // All calculations centralized via computeDealMetrics
   const calculations = useMemo(() => {
     const { zip, price, beds, sqft, currentRent, avgRent, isAvgRentManual, rehabTierOverride, manualRepairs, manualArv } = inputs;
+
+    const compLikely = compResult?.arv?.likely;
+    const arv_system = compLikely && compLikely > 0
+      ? compLikely
+      : (calculateArvQuick(zip, sqft) || 0);
 
     const partialDeal: Partial<Deal> = {
       list_price: price,
@@ -232,7 +251,7 @@ const DealAnalyzer = () => {
       zip,
       beds,
       rent_system: getRentComp(zip, beds) || 0,
-      arv_system: calculateArvQuick(zip, sqft) || 0,
+      arv_system,
       rent_override: isAvgRentManual ? avgRent : undefined,
       arv_override: manualArv > 0 ? manualArv : undefined,
       rehab_tier_override: rehabTierOverride,
@@ -249,9 +268,10 @@ const DealAnalyzer = () => {
     const currentRtp = price > 0 ? currentRent / price : 0;
     const offer75 = metrics.arv_effective > 0 ? metrics.arv_effective * 0.75 - metrics.rehab_est_effective : 0;
     const fmrRoi = (price + metrics.rehab_est_effective) > 0 && fmr ? fmr / (price + metrics.rehab_est_effective) : 0;
+    const arvSource: "comps" | "heuristic" = compLikely && compLikely > 0 ? "comps" : "heuristic";
 
-    return { ...metrics, fmr, rentComp, arvQuick, currentRtp, offer75, fmrRoi };
-  }, [inputs]);
+    return { ...metrics, fmr, rentComp, arvQuick, currentRtp, offer75, fmrRoi, arvSource };
+  }, [inputs, compResult]);
 
   // Determine RTP color coding
   const getRtpColor = (rtp: number): string => {
@@ -503,6 +523,59 @@ const DealAnalyzer = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Comp ARV strip */}
+      {(compLoading || compResult) && (
+        <Card>
+          <CardContent className="py-3 flex flex-wrap items-center gap-3 text-sm">
+            {compLoading && (
+              <span className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" /> Pulling sold comps…
+              </span>
+            )}
+            {compResult && (
+              <>
+                <span>
+                  <span className="text-muted-foreground">System ARV:</span>{" "}
+                  <span className="font-mono font-semibold text-primary">
+                    {compResult.arv ? formatCurrency(compResult.arv.likely) : "—"}
+                  </span>
+                </span>
+                <Badge variant="outline">
+                  Confidence {compResult.confidence} · {compResult.confidenceBand}
+                </Badge>
+                <Badge variant="secondary">
+                  Source: {calculations.arvSource === "comps" ? "Comps" : "Heuristic"}
+                </Badge>
+                {inputs.manualArv > 0 && (
+                  <Badge className="bg-amber-500 text-white">User ARV driving screening</Badge>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto h-7 text-xs"
+                  onClick={() => setShowComps((v) => !v)}
+                >
+                  {showComps ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
+                  {showComps ? "Hide" : "Show"} comps
+                </Button>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+      {showComps && compResult && (
+        <CompArvPanel
+          result={compResult}
+          onToggleComp={(id, include) => {
+            const includeIds: Record<string, boolean> = {};
+            [...compResult.comps, ...compResult.excluded].forEach((c) => {
+              includeIds[c.comp.id] = c.comp.id === id ? include : c.included;
+            });
+            recomputeComps({ includeIds });
+          }}
+        />
+      )}
 
       {/* Results Section */}
       <Card>
