@@ -228,9 +228,22 @@ const DealAnalyzer = () => {
     }));
   };
 
+  // Trigger comp ARV fetch when subject inputs are valid
+  useEffect(() => {
+    const { zip, beds, baths, sqft } = inputs;
+    if (zip && sqft > 0 && beds >= 0) {
+      runComps({ zip, beds, baths, sqft });
+    }
+  }, [inputs.zip, inputs.beds, inputs.baths, inputs.sqft, runComps]);
+
   // All calculations centralized via computeDealMetrics
   const calculations = useMemo(() => {
     const { zip, price, beds, sqft, currentRent, avgRent, isAvgRentManual, rehabTierOverride, manualRepairs, manualArv } = inputs;
+
+    const compLikely = compResult?.arv?.likely;
+    const arv_system = compLikely && compLikely > 0
+      ? compLikely
+      : (calculateArvQuick(zip, sqft) || 0);
 
     const partialDeal: Partial<Deal> = {
       list_price: price,
@@ -238,7 +251,7 @@ const DealAnalyzer = () => {
       zip,
       beds,
       rent_system: getRentComp(zip, beds) || 0,
-      arv_system: calculateArvQuick(zip, sqft) || 0,
+      arv_system,
       rent_override: isAvgRentManual ? avgRent : undefined,
       arv_override: manualArv > 0 ? manualArv : undefined,
       rehab_tier_override: rehabTierOverride,
@@ -255,9 +268,10 @@ const DealAnalyzer = () => {
     const currentRtp = price > 0 ? currentRent / price : 0;
     const offer75 = metrics.arv_effective > 0 ? metrics.arv_effective * 0.75 - metrics.rehab_est_effective : 0;
     const fmrRoi = (price + metrics.rehab_est_effective) > 0 && fmr ? fmr / (price + metrics.rehab_est_effective) : 0;
+    const arvSource: "comps" | "heuristic" = compLikely && compLikely > 0 ? "comps" : "heuristic";
 
-    return { ...metrics, fmr, rentComp, arvQuick, currentRtp, offer75, fmrRoi };
-  }, [inputs]);
+    return { ...metrics, fmr, rentComp, arvQuick, currentRtp, offer75, fmrRoi, arvSource };
+  }, [inputs, compResult]);
 
   // Determine RTP color coding
   const getRtpColor = (rtp: number): string => {
