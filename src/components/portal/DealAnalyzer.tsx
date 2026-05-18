@@ -502,52 +502,28 @@ const DealAnalyzer = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="rehabTier">
-                  Rehab Tier
-                  <InfoTooltip content="Auto = determined by price/ARV ratio. Select to override, or enter manual dollars." />
-                </Label>
-                <Select
-                  value={inputs.manualRepairs > 0 ? "" : (inputs.rehabTierOverride || "auto")}
-                  onValueChange={handleRehabTierChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={inputs.manualRepairs > 0 ? "Custom $" : "Auto"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="auto">Auto (from ARV %)</SelectItem>
-                    {(Object.keys(REHAB_TIER_LABELS) as RehabTier[]).map((tier) => (
-                      <SelectItem key={tier} value={tier}>
-                        {REHAB_TIER_LABELS[tier]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="space-y-2">
+              <Label htmlFor="manualRepairs">
+                Manual Repair Override
+                <InfoTooltip content="Leave blank to use the AI repair analysis. Enter a dollar amount to override it." />
+              </Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                <Input
+                  id="manualRepairs"
+                  type="number"
+                  min="0"
+                  className="pl-7"
+                  placeholder={repairTotal != null ? `AI: ${screeningFormatCurrency(repairTotal)}` : "Pending analysis"}
+                  value={inputs.manualRepairs || ""}
+                  onChange={(e) => handleManualRepairsChange(Number(e.target.value))}
+                />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="manualRepairs">
-                  Manual Repairs
-                  <InfoTooltip content="Enter a dollar amount to override tier-based calculation" />
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    $
-                  </span>
-                  <Input
-                    id="manualRepairs"
-                    type="number"
-                    min="0"
-                    className="pl-7"
-                    placeholder="Auto"
-                    value={inputs.manualRepairs || ""}
-                    onChange={(e) =>
-                      handleManualRepairsChange(Number(e.target.value))
-                    }
-                  />
-                </div>
-              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Repair estimates come from the evidence-based AI analysis. Manual entry overrides it.
+              </p>
             </div>
+
           </CardContent>
         </Card>
       </div>
