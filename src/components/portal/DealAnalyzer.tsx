@@ -132,7 +132,9 @@ const ResultRow = ({
 const DealAnalyzer = () => {
   const [searchParams] = useSearchParams();
   const [inputs, setInputs] = useState<DealInputs>(initialInputs);
+  const [showComps, setShowComps] = useState(false);
   const supportedZips = getSupportedZips();
+  const { result: compResult, isLoading: compLoading, run: runComps, recompute: recomputeComps } = useCompArv();
 
   // Auto-populate from URL params
   useEffect(() => {
