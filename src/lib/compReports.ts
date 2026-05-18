@@ -252,16 +252,15 @@ export async function upsertOverrides(args: {
 }): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
+  const row = {
+    report_id: args.reportId,
+    user_id: user.id,
+    overrides: args.overrides as unknown as Record<string, unknown>,
+    notes: args.notes ?? null,
+  };
   const { error } = await supabase
     .from("comp_report_overrides")
-    .upsert(
-      {
-        report_id: args.reportId,
-        user_id: user.id,
-        overrides: args.overrides as unknown as Record<string, unknown>,
-        notes: args.notes ?? null,
-      },
-      { onConflict: "report_id,user_id" },
-    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .upsert(row as any, { onConflict: "report_id,user_id" });
   if (error) console.warn("upsertOverrides failed:", error.message);
 }
