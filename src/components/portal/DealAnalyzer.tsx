@@ -53,7 +53,6 @@ interface DealInputs {
   currentRent: number;
   avgRent: number;
   isAvgRentManual: boolean;
-  rehabTierOverride?: RehabTier;
   manualRepairs: number;
   manualArv: number;
 }
@@ -69,10 +68,10 @@ const initialInputs: DealInputs = {
   currentRent: 0,
   avgRent: 0,
   isAvgRentManual: false,
-  rehabTierOverride: undefined,
   manualRepairs: 0,
   manualArv: 0,
 };
+
 
 const formatCurrency = (value: number): string => {
   return new Intl.NumberFormat("en-US", {
