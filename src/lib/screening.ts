@@ -48,35 +48,40 @@ export interface Deal {
   arv_override?: number;
   rehab_tier_override?: RehabTier;
   rehab_est_override?: number;
-  
+
+  // Evidence-based repair analysis (from repair_analyses cache)
+  rehab_est_from_analysis?: number | null;
+  repair_analysis_status?: "complete" | "pending" | "analyzing" | "failed" | "quota_blocked" | "missing" | null;
+
   // Computed/Effective Values
   rent_effective: number;
   arv_effective: number;
   rehab_tier_effective: RehabTier;
   rehab_est_effective: number;
-  
+  analysis_pending: boolean;
+
   // Metrics
   rent_to_price_pct: number;
   all_in_pct_of_arv: number;
-  
+
   // Screening Results
   passes_turnkey: boolean;
   passes_brrrr: boolean;
   passes_flip: boolean;
   strategy: Strategy;
   buyer_visible: boolean;
-  
+
   // Admin Workflow
   reviewed: boolean;
   reviewed_at?: string;
   notes?: string;
   removed_reason?: string;
   flagged_for_alert?: boolean;
-  
+
   // Wholesaler Fields
   wholesaler_owner_id?: string;
   wholesaler_status?: WholesalerStatus;
-  
+
   // Timestamps
   created_at: string;
   updated_at: string;
