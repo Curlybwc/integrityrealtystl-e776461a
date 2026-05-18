@@ -113,6 +113,7 @@ const ListingCard = ({ listing: l }: ListingCardProps) => {
         <Button asChild variant="outline" size="sm" className="w-full h-7 text-xs">
           <a
             href={`/portal/investor/analyzer?${new URLSearchParams({
+              mlsId: l.mls_listing_id ?? "",
               address: l.address ?? "",
               zip: l.zip ?? "",
               beds: String(l.beds ?? ""),
