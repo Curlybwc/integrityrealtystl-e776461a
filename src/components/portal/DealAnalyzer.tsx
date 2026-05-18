@@ -566,6 +566,15 @@ const DealAnalyzer = () => {
           <CardTitle className="text-lg">Analysis Results</CardTitle>
         </CardHeader>
         <CardContent>
+          {calculations.analysis_pending && (
+            <Alert className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-sm">
+                Repair analysis pending — MAO, RTP, and strategy badges are hidden until the
+                evidence-based repair estimate is available. Enter a Manual Repair Override to unblock.
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="grid md:grid-cols-3 gap-6">
             {/* Cost Analysis */}
             <div className="space-y-1">
@@ -574,22 +583,23 @@ const DealAnalyzer = () => {
               </h4>
               <ResultRow
                 label="Repair Estimate"
-                value={formatCurrency(calculations.rehab_est_effective)}
-                tooltip="Based on rehab tier or manual entry"
+                value={calculations.analysis_pending ? "—" : formatCurrency(calculations.rehab_est_effective)}
+                tooltip="From AI repair analysis or manual override"
               />
               <ResultRow
                 label="All-In Cost"
-                value={formatCurrency(inputs.price + calculations.rehab_est_effective)}
+                value={calculations.analysis_pending ? "—" : formatCurrency(inputs.price + calculations.rehab_est_effective)}
                 tooltip="Purchase price + repairs"
                 highlight
               />
               <ResultRow
-                label="75% ARV Offer"
-                value={formatCurrency(calculations.offer75)}
-                tooltip="BRRR formula: (ARV × 75%) - Repairs"
+                label="75% ARV Offer (MAO)"
+                value={calculations.analysis_pending ? "—" : formatCurrency(calculations.offer75)}
+                tooltip="MAO = (ARV × 75%) − Repairs"
                 highlight
               />
             </div>
+
 
             {/* Value Analysis */}
             <div className="space-y-1">
