@@ -1,162 +1,166 @@
-## Goal
-Replace the ZIP-heuristic `arv_system` in screening with a comp-based ARV computed from Repliers sold comps. Keep the existing screening workflow, formulas, repair logic, and UI shells intact — only swap the source of system ARV and add a collapsible "Show comps" panel. Comp selection is a **strict two-stage process** (strong-pool first, controlled fallback) and ARV is built **tier-first**, not by flat numeric rank.
 
-## Files to change
-1. `supabase/functions/fetch-mls-listings/index.ts` — add a `mode: "comps"` branch (sold-only Repliers search around subject lat/long with bracketed beds/baths/sqft/recency). Returns normalized comps with: soldPrice, soldDate, listDate, DOM, lat/long, address, beds, baths, sqft (above grade), yearBuilt, style/stories, subdivision, schoolDistrict, basement/garage/lot, `lastStatus`, remarks. Existing search behavior untouched.
-2. **New** `supabase/functions/fetch-comp-arv/index.ts` — single endpoint called by the client. Takes subject; calls Repliers; runs eligibility → strong-pool scoring → tier-first selection → adjustments → ARV bands → confidence; returns `{ arv:{conservative,likely,aggressive}, confidence, tierCounts, comps[], excluded[], fallbackUsed[], reasons }`. Server-side keeps the key off the client.
-3. **New** `src/lib/compArv.ts` — pure TS module duplicating the engine for local re-runs on user edits (include/exclude, adjustment tweaks). Hook calls server once, then this module re-scores locally.
-4. **New** `src/types/compArv.ts` — `Comp`, `CompScore`, `CompTier`, `CompArvResult`, `Adjustments`, `ConfidenceBreakdown`.
-5. **New** `src/hooks/useCompArv.tsx` — `{ result, isLoading, error, run(subject), recompute(localOverrides) }`.
-6. `src/lib/screening.ts` —
-   - Keep `estimateSystemArv` as **heuristic fallback only** (internal rename `estimateSystemArvHeuristic`, thin export retained).
-   - Extend `Deal` with optional `arv_comp?`, `arv_confidence?` (0–100), `arv_source?: "comps" | "heuristic"`.
-   - `createDeal` uses `arv_comp` when present → `arv_system = arv_comp`, `arv_source = "comps"`; else heuristic. Downstream math (`arv_effective`, `passes_flip/brrrr/turnkey`, `strategy`, `buyer_visible`) is **unchanged**.
-7. `src/components/portal/DealAnalyzer.tsx` — fire `useCompArv.run()` once subject is valid, feed `arv_comp + arv_confidence` into the existing screening call. Compact strip: `System ARV $X · Confidence 78 (Reasonable) · Source: Comps · [Show comps ▾]`. If `arv_override` set, badge `User ARV driving screening`.
-8. **New** `src/components/portal/CompArvPanel.tsx` — collapsible. Sections: *Tier summary* (Strong/Good/Fallback counts), *Included comps* (address, dist, beds/baths, style, sqft, sold $, $/sf, adjusted $, tier badge, score, include/exclude), expandable row showing score breakdown + adjustments, *Excluded comps* (with reason chip), *Confidence drivers*, *ARV bands*. Edits → `useCompArv.recompute()`.
-9. `src/components/portal/BatchAnalysisTable.tsx` — fire `fetch-comp-arv` per row with concurrency cap 4. Show ARV/Conf cell. No inline comp panel.
-10. `src/pages/portal/PortalSearchAnalyzer.tsx` — pass comp ARV through to existing DealAnalyzer / batch view. No top-level UI change.
-11. `src/hooks/useMlsSearch.tsx` — unchanged.
-12. `supabase/migrations/*` — none in phase 1. Local state + sessionStorage.
+# Phase 1: Evidence-Based Repair Estimation (Revised)
 
-## Data flow
-```text
-Subject inputs (analyzer)
-        │
-        ▼
-useCompArv.run(subject)
-        │
-        ▼
-supabase.functions.invoke("fetch-comp-arv")
-        │  ├─► fetch-mls-listings (mode:"comps") ─► Repliers /listings (sold)
-        │  └─► lib/compArv: eligibility → strong pool → tier-first → adjust → bands → confidence
-        ▼
-{ arv, confidence, tierCounts, comps, excluded, fallbackUsed }
-        │
-        ├─► DealAnalyzer → createDeal({arv_comp, arv_confidence}) → unchanged screening math
-        └─► CompArvPanel (collapsed) → user edits → useCompArv.recompute() (local)
+Replaces price/ARV/discount-driven `estimateRehabTier` with photo+remarks evidence from MLS, analyzed by OpenAI Vision in an edge function, priced deterministically by an admin-editable pricing library, cached globally per listing version, and surfaced as a single repair number that feeds MAO.
+
+## 1. Schema
+
+### `repair_pricing_rules` (admin-editable, versioned)
+- `id`, `version` int, `is_active` bool, `created_by`, `created_at`
+- `rules` jsonb — keyed library (cost per cabinet, kitchen fallback, kitchen light, full_bath_replace, half_bath_replace, bath_refresh, roof_per_square, flooring_per_sqft, paint_drywall_per_sqft, hvac, water_heater, appliances{stove,fridge,microwave,dishwasher}, dumpster, plumbing_stack, foundation_reserve, basement_water_reserve, landscaping, misc_reserve, gut_per_sqft_low/high, gut thresholds)
+- RLS: read = any authenticated; write = admin only.
+
+### `repair_analyses` (shared cache; one active per listing version)
+- `id`, `mls_listing_id` text, `evidence_hash` text, `is_active` bool
+- `analysis_status`: `pending | analyzing | complete | failed | quota_blocked`
+- `observations` jsonb (raw AI output)
+- `line_items` jsonb (priced breakdown)
+- `total_repair_estimate` numeric
+- `gut_rehab_mode` bool
+- `pricing_version` int
+- `engine_version` text, `model` text
+- `photo_count_analyzed` int, `evidence_snapshot` jsonb
+- `requested_by` uuid (audit), `priority` int (1=admin/system, 2=user), `failure_reason` text
+- **Override fields (in-place, no separate table):** `overridden_by` uuid null, `overridden_at` timestamptz null
+- `created_at`, `updated_at`, `analyzed_at`
+- Indexes: partial unique `(mls_listing_id) where is_active`, `(analysis_status, priority, created_at desc)` for worker queue.
+- RLS: read = any authenticated; insert/update = service role + admin override path.
+
+### `ai_analysis_quota`
+- `user_id`, `month_key` (`YYYY-MM`), `count` int, `monthly_limit` int default 200, `updated_at`
+- Unique `(user_id, month_key)`. Read own / admin all.
+
+## 2. Edge functions
+
+### `analyze-repairs` (POST, JWT-verified)
+Input: `{ mlsListingId, source: 'user'|'admin'|'system_core' }`.
+1. Load listing snapshot.
+2. Compute `evidence_hash`. If active row with same hash and status `complete|pending|analyzing` → return it (idempotent — no new row, no requeue).
+3. If status `failed` with same hash and older than retry window → allow re-enqueue.
+4. **Quota for `source='user'`:** check `ai_analysis_quota` for current month.
+   - If exceeded: **look up existing active `quota_blocked` row for this mls_listing_id from this user in current month**. If found → return it. Otherwise insert one `quota_blocked` row (no quota increment, no enqueue) and return.
+5. Otherwise insert active row `status='pending'`, set priority (1 admin/system, 2 user), increment quota when `source='user'`, fire-and-forget invoke `process-repair-queue`, return pending row.
+
+### `process-repair-queue` (service-role internal)
+Worker pulls up to N pending rows ordered by `priority asc, created_at desc`:
+1. Mark `analyzing`.
+2. Fetch listing photos. **Cap at 12 max** — prefer kitchen/bath/exterior/basement/main living by title heuristics; else first 12. **Pass existing MLS image URLs directly to OpenAI** (`image_url`). No server-side resizing in Phase 1.
+3. Single OpenAI Vision call (`gpt-4o-mini` default, configurable) with `response_format: json_schema` enforcing the observations schema. Includes remarks, sqft, beds, baths, basement, year_built in the user prompt.
+4. Validate with Zod. On failure → `status='failed'`, `failure_reason`.
+5. Run deterministic `priceRepairs(observations, sqft, mlsBaths, rules)` → line items + total. Apply remarks suppressors (new roof/hvac/furnace/water heater zero those lines unless contradicted by photos). Cap bath scope count by MLS baths. Gut-rehab branch when `gut_rehab_severity='high'`: ignore line items, use `gut_per_sqft * sqft` plus foundation/basement reserves if flagged.
+6. Persist line_items, total, `gut_rehab_mode`, `pricing_version`, `analyzed_at`, `status='complete'`.
+
+### `admin-update-repair-pricing` (admin only)
+Insert new pricing version with `is_active=true`, flip prior active false. Existing analyses untouched.
+
+### `admin-override-repair-analysis` (admin only)
+**In-place update of the active analysis row.** Updates `line_items`, `total_repair_estimate`, sets `overridden_by`, `overridden_at`. No separate history table in Phase 1.
+
+## 3. Material change / re-analysis
+
+Re-analysis happens **only when `evidence_hash` differs**:
+- sorted photo URL list (or count + first/last filename)
+- normalized remarks (lowercased, whitespace-collapsed, first 2000 chars)
+- sqft, beds, baths, basement flag
+
+Price/DOM/status changes never alter the hash. **No manual refresh UI in DealAnalyzer.** Re-analysis is automatic when the next `analyze-repairs` call detects a hash mismatch (it then archives the old row `is_active=false` and inserts a new pending row).
+
+## 4. Frontend changes
+
+### `src/lib/screening.ts`
+- Remove price-derived tier from screening gates.
+- `rehab_est_effective` = `rehab_est_override ?? repair_analysis.total_repair_estimate ?? null`.
+- When null: return `analysis_pending: true`; do **not** compute MAO, all_in_pct_of_arv, passes_flip/brrrr/turnkey, or buyer_visible.
+- `rehab_tier_effective` becomes informational, not a gate.
+
+### New `src/lib/repairAnalysis.ts` + `src/hooks/useRepairAnalysis.tsx`
+- Query active `repair_analyses` row by `mls_listing_id`. If missing, call `analyze-repairs`.
+- Realtime subscription on `repair_analyses` row → flip pending → complete in UI.
+- Helpers: `formatRepairBreakdown`, `isAnalysisPending`, `quotaState`.
+
+### `src/pages/portal/PortalSearchAnalyzer.tsx` + `BatchAnalysisTable.tsx`
+- Hydrate each row from cache.
+- Complete → repair total, breakdown popover, MAO, screening badges.
+- Pending/analyzing/failed/quota_blocked → "Repair Analysis Pending" (or quota message), hide MAO and strategy badges.
+- On render of uncached rows, batch-enqueue via `analyze-repairs` (`source='user'`). Server enforces quota and dedupes blocked rows.
+- Quota chip (`X / 200 this month`).
+
+### `src/components/portal/DealAnalyzer.tsx`
+- Replace Light/Medium/Heavy tier selector with read-only `RepairBreakdownPanel` driven by `useRepairAnalysis`.
+- Keep manual dollar override (`rehab_est_override`) as-is.
+- **No "Refresh analysis" button.**
+
+### `src/pages/admin-portal/AdminSettings.tsx`
+- New "Repair Pricing Library" section bound to active `repair_pricing_rules`. Save → new version.
+
+### `src/pages/admin-portal/AdminDealPot.tsx`
+- Inline line-item editor → `admin-override-repair-analysis` (updates active row in place).
+
+## 5. Priority queue / ingestion
+
+- Daily 5am Repliers harvest calls `analyze-repairs` with `source='system_core'` (priority=1) for newly ingested core-zip listings.
+- `process-repair-queue` runs via 2-minute cron (priority 1 first) plus fire-and-forget kick from `analyze-repairs`.
+
+## 6. OpenAI observations schema (Zod, strict JSON)
+
 ```
+{
+  kitchen: { condition: 'good'|'dated_oak'|'damaged'|'missing', cabinet_count_estimate?: number, scope: 'keep'|'light'|'replace' },
+  bathrooms: [{ type: 'full'|'half', scope: 'keep'|'refresh'|'partial'|'replace' }],
+  flooring: { pct_replace: 0..1, type_hint?: string },
+  paint_drywall: { pct_paint: 0..1, drywall_damage: 'none'|'patching'|'widespread' },
+  roof: { needs_replacement: bool, contradicted_by_photos: bool },
+  hvac: { needs_replacement: bool, contradicted_by_photos: bool },
+  water_heater: { needs_replacement: bool, contradicted_by_photos: bool },
+  appliances_missing: ('stove'|'fridge'|'microwave'|'dishwasher')[],
+  plumbing_stack: { failure_evidence: bool },
+  foundation: { concern: 'none'|'monitor'|'major' },
+  basement: { water_intrusion: 'none'|'minor'|'major', packed_with_contents: bool },
+  cleanout: { dumpsters_estimate: number },
+  landscaping: { scope: 'none'|'light'|'heavy' },
+  windows: { obvious_failure_count: number },
+  gut_rehab_severity: 'none'|'partial'|'high',
+  remarks_signals: { new_roof: bool, new_hvac: bool, new_furnace: bool, new_water_heater: bool, cash_only: bool, full_rehab: bool, no_utilities: bool, sewer_problem: bool }
+}
+```
+**No free-text `notes` field.**
 
-## Two-stage comp selection (revised, stricter)
+## 7. Secrets
 
-### Stage 1 — Strong-pool eligibility (run first, no fallback yet)
-A comp enters the **strong pool** only if **all** of the following hold:
-- Sold, class=residential, same broad property type
-- Distance ≤ **0.5 mi**
-- Sold within last **6 months**
-- **Exact bedroom match**
-- **Exact bathroom match**
-- **Same style / story count** (ranch=ranch, 2-story=2-story, split=split)
-- Same school district (when subject school district is known)
-- Same subdivision/neighborhood when subject's is known
-- Sqft within tighter of **±200 sqft or ±15%**
-- Not flagged as confirmed non-arms-length (see "Soft exclusions" below — only **hard** flags exclude here)
+Requires `OPENAI_API_KEY` (will request via `add_secret` if missing at implementation time).
 
-Hard exclusions (Stage 1 and Stage 2): `lastStatus` in `{REO, Foreclosure, Short Sale, Auction}` from Repliers, or sale-type/financing fields that confirm distress. Family/inter-investor transfers when explicitly flagged.
+## 8. Acceptance verification
 
-### Stage 2 — Controlled fallback (only when strong pool has < 3 comps)
-Expand in this fixed order, stopping as soon as we reach 3+ Good-or-better comps. Each expansion is recorded in `fallbackUsed[]` and reduces confidence.
-1. Widen distance 0.5 → 0.75 mi
-2. Widen distance 0.75 → 1.0 mi (**never auto-expand past 1.0 mi**)
-3. Allow same subdivision unknown / loosen neighborhood match
-4. Allow ±1 bathroom mismatch
-5. Allow ±1 bedroom mismatch
-6. Allow sqft up to ±25% (still capped well below current heuristic)
-7. Extend recency 6 → 9 months
-8. Extend recency 9 → 12 months
-9. Allow cross-style as last resort
+- Underpriced light-cosmetic property → low repair total, MAO independent of price.
+- Trashed same-price property → high repair total, MAO drops, flip fails.
+- "New roof" in remarks → roof line = $0.
+- Hoarder photos → cleanout dumpsters scale with packed rooms.
+- Price drop alone → MAO recalcs, no new AI call (verify `analyzed_at` unchanged).
+- New photos → `evidence_hash` flips, new active row, old archived.
+- User hits 200 cap, repeatedly searches same uncached listing → **one** `quota_blocked` row reused, not duplicated.
+- Admin pricing update → only future analyses use new version.
 
-Hard caps that never relax automatically: > 1.0 mi, > 12 mo, > ±1 bed, > ±1 bath, cross property-type, hard distress flags.
+## 9. Files
 
-## Tier-first ARV selection (replaces "top N by score")
+**New:**
+- `supabase/migrations/<ts>_repair_estimation_phase1.sql`
+- `supabase/functions/analyze-repairs/index.ts`
+- `supabase/functions/process-repair-queue/index.ts`
+- `supabase/functions/admin-update-repair-pricing/index.ts`
+- `supabase/functions/admin-override-repair-analysis/index.ts`
+- `src/lib/repairAnalysis.ts`
+- `src/lib/repairPricing.ts` (shape mirrored in edge function — engine source-of-truth lives server-side)
+- `src/hooks/useRepairAnalysis.tsx`
+- `src/components/portal/RepairBreakdownPanel.tsx`
+- `src/components/admin-portal/RepairPricingEditor.tsx`
 
-Each surviving comp gets a **tier label** based on which stage it qualified in plus its score:
-- **Strong** — passed Stage 1 and score ≥ 80
-- **Good** — passed Stage 1 with score 65–79, OR passed Stage 2 with score ≥ 80 *and* at most one fallback step used
-- **Fallback** — passed Stage 2 with score 55–79, or required 2+ fallback steps
-- **Weak Support** — score 40–54
-- **Excluded** — < 40 or hard-exclusion flag
+**Modified:**
+- `src/lib/screening.ts`
+- `src/components/portal/DealAnalyzer.tsx`
+- `src/components/portal/BatchAnalysisTable.tsx`
+- `src/pages/portal/PortalSearchAnalyzer.tsx`
+- `src/pages/admin-portal/AdminSettings.tsx`
+- `src/pages/admin-portal/AdminDealPot.tsx`
+- `src/hooks/useDeals.tsx`
 
-**ARV is built tier-first, not score-first:**
-- If **≥ 3 Strong** comps → use Strong only (target 3–5). Good/Fallback comps are shown for transparency but do not influence ARV.
-- Else if Strong + Good combined ≥ 3 → use Strong + Good (Strong weighted ~2× Good).
-- Else if Strong + Good + Fallback ≥ 3 → use those, with Fallback weighted ~0.5× Good.
-- Else → return no comp ARV; DealAnalyzer falls back to heuristic and badges low confidence.
-
-Within the chosen tier set: weighted mean of adjusted values (weights = score × tier multiplier) = **Likely ARV**. **Conservative** = 25th percentile, **Aggressive** = 75th percentile of adjusted values. Likely ARV drives screening.
-
-## Weighted score (0–100) — used for ranking within a tier, not for tier assignment
-Rebalanced to give style/stories real weight and to demote ZIP relative to neighborhood/school:
-
-- Distance: **18**
-- School district match: **14**
-- Subdivision / neighborhood match: **14**  *(beats ZIP — same-neighborhood-bordering-ZIP can outrank farther-same-ZIP)*
-- Bedrooms (exact vs ±1): **10**
-- Bathrooms (exact vs ±1): **10**
-- Square footage: **9**
-- **Style / story count: 9** *(broken out; no longer bundled with year built)*
-- Sale recency: **8**
-- Condition / finish similarity: **5**  *(reduced — finish certainty is often weak)*
-- Basement / garage / lot utility: **3**
-
-ZIP match is a tiebreaker only — it does not get its own weight. Subdivision/neighborhood always outranks bare ZIP.
-
-## Penalties (subtract from score AND from confidence)
-- Different school district: **−15**
-- Cross-style / different story count: **−12**
-- Bath mismatch (allowed only in fallback): **−10**
-- Bed mismatch (allowed only in fallback): **−10**
-- Sqft delta > 20%: **−8**
-- Confirmed non-arms-length (hard flag): excluded entirely
-- Soft remarks signal (`as-is`, `estate sale`, `investor`, `TLC`, `cash only`, `handyman`): **−5 review-flag**, *not auto-exclude*. UI shows a "Review: distress language" chip. Only excludes if combined with another distress signal (e.g. `lastStatus=Foreclosure`, sale price < 70% of neighborhood median).
-- Each fallback step that brought this comp in: **−5**
-- Missing key field (school district, style, sqft): **−5 each**
-
-## Condition / finish handling (cautious)
-- Subject inputs (editable in CompArvPanel): current condition, **intended after-repair condition**, rehab quality tier (rental-grade / standard retail / premium retail).
-- Comp condition is **inferred** from list price vs neighborhood median $/sf, sold-vs-list ratio, DOM, and remarks keywords. This is explicitly labeled "inferred" in the UI and is **editable per comp**.
-- Adjustment: Rental −10%, Standard 0%, Premium +8% applied to comp's adjusted value.
-- **Confidence rule:** if condition was inferred (not user-confirmed) for ≥ half of included comps, subtract **−10 from confidence** and tag drivers list with "Finish certainty weak".
-
-## Adjustments (applied to comp sold price → adjusted comp value)
-- Sqft delta × adjusted $/sf — capped at **50% of comp's $/sf** to avoid runaway.
-- Bed delta × $5k (configurable).
-- Bath delta × $4k per half-bath (configurable).
-- Garage delta × $6k per bay.
-- Basement finish delta × $25/sf finished.
-- Time adjustment: 0.3%/mo since sale, capped 6%.
-- Condition/finish: per tier above, editable.
-- Location/stigma: editable −/+%.
-
-## Confidence (0–100)
-Start at 100, subtract:
-- Fewer than 5 included comps: −5 per missing (down to 3)
-- Avg score < 70: −15; avg score < 55: −30 (instead, not additive)
-- Top comps span > 1 school district: −10
-- Spread of adjusted values > 20%: −10
-- Each fallback expansion used: −5
-- No fully arms-length sales among top 3: −15
-- Subject school district unknown: −5
-- Finish certainty weak (see Condition rule): −10
-- Tier-driven floor: if ARV is built from Fallback-tier-only, **cap confidence at 55**. If from Good tier only, cap at 80. Strong tier has no cap.
-
-Bands: ≥85 Strong, 70–84 Reasonable, 50–69 Use Caution, <50 Weak Support.
-
-If confidence < 50 OR < 3 usable comps → DealAnalyzer uses `estimateSystemArvHeuristic` and badges "Heuristic ARV — low comp support".
-
-## API / schema impact
-- New edge function `fetch-comp-arv` (default `verify_jwt = false`, same pattern as `fetch-mls-listings`).
-- `fetch-mls-listings` gains a `mode=comps` branch; existing behavior unchanged.
-- No DB migrations in phase 1. `src/integrations/supabase/types.ts` untouched.
-- Phase 2 (deferred): `comp_reports` table for persistent comp selections, overrides, notes.
-
-## Implementation order
-1. Types + pure logic (`src/types/compArv.ts`, `src/lib/compArv.ts`) + unit tests in `src/test/compArv.test.ts` covering: strong-pool selection, fallback ordering, tier-first ARV, penalty math, confidence caps.
-2. Extend `fetch-mls-listings` with sold-comp search; add `fetch-comp-arv`.
-3. `useCompArv` hook.
-4. Wire `DealAnalyzer`: feed `arv_comp` into existing screening, add ARV/confidence strip + Show comps trigger.
-5. Build `CompArvPanel` (read-only first; then include/exclude + adjustment + condition edits via `recompute`).
-6. `BatchAnalysisTable` per-row ARV with concurrency cap.
-7. Extend `Deal` fields; keep heuristic as fallback in `screening.ts`.
-
-## Out of scope (phase 2)
-Persistent comp reports, admin overrides table, server-side comp cache beyond short in-memory LRU, photo-vision condition inference, external school-district lookups when Repliers lacks them.
+**Untouched:** comp ARV engine, RTP/ARV% thresholds, MLS fetch logic core.

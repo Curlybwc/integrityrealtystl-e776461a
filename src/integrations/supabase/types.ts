@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_analysis_quota: {
+        Row: {
+          count: number
+          id: string
+          month_key: string
+          monthly_limit: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          id?: string
+          month_key: string
+          monthly_limit?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          id?: string
+          month_key?: string
+          monthly_limit?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       comp_report_overrides: {
         Row: {
           created_at: string
@@ -205,6 +232,108 @@ export type Database = {
           id?: string
           phone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      repair_analyses: {
+        Row: {
+          analysis_status: string
+          analyzed_at: string | null
+          created_at: string
+          engine_version: string | null
+          evidence_hash: string
+          evidence_snapshot: Json | null
+          failure_reason: string | null
+          gut_rehab_mode: boolean
+          id: string
+          is_active: boolean
+          line_items: Json | null
+          mls_listing_id: string
+          model: string | null
+          observations: Json | null
+          overridden_at: string | null
+          overridden_by: string | null
+          photo_count_analyzed: number | null
+          pricing_version: number | null
+          priority: number
+          requested_by: string | null
+          total_repair_estimate: number | null
+          updated_at: string
+        }
+        Insert: {
+          analysis_status?: string
+          analyzed_at?: string | null
+          created_at?: string
+          engine_version?: string | null
+          evidence_hash: string
+          evidence_snapshot?: Json | null
+          failure_reason?: string | null
+          gut_rehab_mode?: boolean
+          id?: string
+          is_active?: boolean
+          line_items?: Json | null
+          mls_listing_id: string
+          model?: string | null
+          observations?: Json | null
+          overridden_at?: string | null
+          overridden_by?: string | null
+          photo_count_analyzed?: number | null
+          pricing_version?: number | null
+          priority?: number
+          requested_by?: string | null
+          total_repair_estimate?: number | null
+          updated_at?: string
+        }
+        Update: {
+          analysis_status?: string
+          analyzed_at?: string | null
+          created_at?: string
+          engine_version?: string | null
+          evidence_hash?: string
+          evidence_snapshot?: Json | null
+          failure_reason?: string | null
+          gut_rehab_mode?: boolean
+          id?: string
+          is_active?: boolean
+          line_items?: Json | null
+          mls_listing_id?: string
+          model?: string | null
+          observations?: Json | null
+          overridden_at?: string | null
+          overridden_by?: string | null
+          photo_count_analyzed?: number | null
+          pricing_version?: number | null
+          priority?: number
+          requested_by?: string | null
+          total_repair_estimate?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      repair_pricing_rules: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          rules: Json
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          rules: Json
+          version: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          rules?: Json
+          version?: number
         }
         Relationships: []
       }
