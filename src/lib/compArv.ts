@@ -367,7 +367,6 @@ export function buildCompArv(
     const sb = scoreComp(subject, c, distanceMi, elig);
     const tier = assignTier(elig.stage, sb.total, elig.fallbackStepsUsed.length, false);
     const userInclude = overrides.includeIds?.[c.id];
-    const included = userInclude ?? tier !== "Excluded" && tier !== "WeakSupport" ? true : userInclude ?? false;
 
     scored.push({
       comp: c,
