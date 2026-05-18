@@ -86,6 +86,7 @@ const InvestorListingPage = () => {
   });
 
   const analyzeUrl = `/portal/investor/analyzer?${new URLSearchParams({
+    mlsId: listing.mls_listing_id ?? "",
     address: listing.address ?? "",
     zip: listing.zip ?? "",
     beds: String(listing.beds ?? ""),
