@@ -524,6 +524,59 @@ const DealAnalyzer = () => {
         </Card>
       </div>
 
+      {/* Comp ARV strip */}
+      {(compLoading || compResult) && (
+        <Card>
+          <CardContent className="py-3 flex flex-wrap items-center gap-3 text-sm">
+            {compLoading && (
+              <span className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" /> Pulling sold comps…
+              </span>
+            )}
+            {compResult && (
+              <>
+                <span>
+                  <span className="text-muted-foreground">System ARV:</span>{" "}
+                  <span className="font-mono font-semibold text-primary">
+                    {compResult.arv ? formatCurrency(compResult.arv.likely) : "—"}
+                  </span>
+                </span>
+                <Badge variant="outline">
+                  Confidence {compResult.confidence} · {compResult.confidenceBand}
+                </Badge>
+                <Badge variant="secondary">
+                  Source: {calculations.arvSource === "comps" ? "Comps" : "Heuristic"}
+                </Badge>
+                {inputs.manualArv > 0 && (
+                  <Badge className="bg-amber-500 text-white">User ARV driving screening</Badge>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto h-7 text-xs"
+                  onClick={() => setShowComps((v) => !v)}
+                >
+                  {showComps ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
+                  {showComps ? "Hide" : "Show"} comps
+                </Button>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+      {showComps && compResult && (
+        <CompArvPanel
+          result={compResult}
+          onToggleComp={(id, include) => {
+            const includeIds: Record<string, boolean> = {};
+            [...compResult.comps, ...compResult.excluded].forEach((c) => {
+              includeIds[c.comp.id] = c.comp.id === id ? include : c.included;
+            });
+            recomputeComps({ includeIds });
+          }}
+        />
+      )}
+
       {/* Results Section */}
       <Card>
         <CardHeader className="pb-4">
