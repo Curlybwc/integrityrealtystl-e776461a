@@ -310,7 +310,7 @@ export function createDeal(
   const heuristicArv = estimateSystemArv(input.zip, input.sqft);
   const arv_system = input.arv_comp && input.arv_comp > 0 ? input.arv_comp : heuristicArv;
   const arv_source: "comps" | "heuristic" = input.arv_comp && input.arv_comp > 0 ? "comps" : "heuristic";
-  const rehab_tier_system = estimateRehabTier(input.list_price, arv_system);
+  const rehab_tier_system: RehabTier = "Medium"; // legacy field; no longer derived from price/ARV
   
   const baseDeal: Partial<Deal> = {
     id: input.id ?? crypto.randomUUID(),
