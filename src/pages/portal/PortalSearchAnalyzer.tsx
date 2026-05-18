@@ -20,6 +20,7 @@ import {
 import { useMlsSearch, type MlsSearchParams } from "@/hooks/useMlsSearch";
 import { DEFAULT_SCREENING_CONFIG, type ScreeningConfig } from "@/lib/screening";
 import BatchAnalysisTable from "@/components/portal/BatchAnalysisTable";
+import RepairQuotaChip from "@/components/portal/RepairQuotaChip";
 
 const PortalSearchAnalyzer = () => {
   const { results, isLoading, search } = useMlsSearch();
