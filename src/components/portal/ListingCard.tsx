@@ -1,11 +1,12 @@
 
-import { Camera, ExternalLink } from "lucide-react";
+import { Camera, ExternalLink, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { formatCurrency, formatPercent } from "@/lib/screening";
 import { cn } from "@/lib/utils";
+import type { RepairState } from "@/lib/repairAnalysis";
 
 interface ListingCardProps {
   listing: {
@@ -28,11 +29,15 @@ interface ListingCardProps {
     passes_flip: boolean;
   };
   onPhotoClick?: () => void;
+  analysisPending?: boolean;
+  repairState?: RepairState;
+  repairTotal?: number | null;
 }
 
-const ListingCard = ({ listing: l }: ListingCardProps) => {
-  const passes = l.passes_turnkey || l.passes_brrrr || l.passes_flip;
+const ListingCard = ({ listing: l, analysisPending = false, repairState = "missing", repairTotal = null }: ListingCardProps) => {
+  const passes = !analysisPending && (l.passes_turnkey || l.passes_brrrr || l.passes_flip);
   const hasPhotos = l.photo_urls && l.photo_urls.length > 0;
+
 
   return (
     <Card className={cn("overflow-hidden transition-opacity", !passes && "opacity-50")}>
