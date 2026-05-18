@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
-import { Building2, Store, Bell, ArrowRight } from "lucide-react";
+import { Building2, Store, Bell, ArrowRight, Heart } from "lucide-react";
 import { useDeals } from "@/hooks/useDeals";
+import { useSavedDeals } from "@/hooks/useSavedDeals";
 
 const PortalDealsHub = () => {
   const { deals } = useDeals();
+  const { list: savedList } = useSavedDeals();
   
   const mlsDeals = deals.filter(d => d.source_type === "MLS" && d.buyer_visible);
   const wholesaleDeals = deals.filter(d => d.source_type === "WHOLESALER" && d.buyer_visible);
@@ -34,6 +36,14 @@ const PortalDealsHub = () => {
       count: alertDeals.length,
       color: "bg-accent text-accent-foreground",
     },
+    {
+      title: "My Saved Deals",
+      description: "Your private underwriting snapshots. Saved values survive MLS, photo, and pricing changes.",
+      icon: Heart,
+      to: "/portal/investor/deals/saved",
+      count: savedList.length,
+      color: "bg-red-50 text-red-600",
+    },
   ];
 
   return (
@@ -47,7 +57,7 @@ const PortalDealsHub = () => {
       </div>
 
       {/* Hub Cards */}
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         {hubCards.map((card) => {
           const Icon = card.icon;
           return (

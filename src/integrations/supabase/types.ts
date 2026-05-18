@@ -337,6 +337,84 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_deals: {
+        Row: {
+          address: string
+          baths: number | null
+          beds: number | null
+          city: string
+          evidence_hash_at_save: string | null
+          id: string
+          list_price_at_save: number | null
+          mls_listing_id: string | null
+          notes: string | null
+          photo_urls: string[]
+          property_key: string
+          property_type: string | null
+          remarks_snapshot: string | null
+          saved_at: string
+          source_tags: string[]
+          source_type: string
+          sqft: number | null
+          state: string
+          underwriting: Json
+          updated_at: string
+          user_id: string
+          year_built: number | null
+          zip: string
+        }
+        Insert: {
+          address: string
+          baths?: number | null
+          beds?: number | null
+          city: string
+          evidence_hash_at_save?: string | null
+          id?: string
+          list_price_at_save?: number | null
+          mls_listing_id?: string | null
+          notes?: string | null
+          photo_urls?: string[]
+          property_key: string
+          property_type?: string | null
+          remarks_snapshot?: string | null
+          saved_at?: string
+          source_tags?: string[]
+          source_type: string
+          sqft?: number | null
+          state?: string
+          underwriting?: Json
+          updated_at?: string
+          user_id: string
+          year_built?: number | null
+          zip: string
+        }
+        Update: {
+          address?: string
+          baths?: number | null
+          beds?: number | null
+          city?: string
+          evidence_hash_at_save?: string | null
+          id?: string
+          list_price_at_save?: number | null
+          mls_listing_id?: string | null
+          notes?: string | null
+          photo_urls?: string[]
+          property_key?: string
+          property_type?: string | null
+          remarks_snapshot?: string | null
+          saved_at?: string
+          source_tags?: string[]
+          source_type?: string
+          sqft?: number | null
+          state?: string
+          underwriting?: Json
+          updated_at?: string
+          user_id?: string
+          year_built?: number | null
+          zip?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

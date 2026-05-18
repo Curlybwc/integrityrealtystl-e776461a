@@ -21,6 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useDeals } from "@/hooks/useDeals";
 import { formatCurrency, formatPercent, getStatusDisplayLabel } from "@/lib/screening";
+import SaveDealButton from "@/components/portal/SaveDealButton";
 
 const statusColors = {
   Active: "bg-green-100 text-green-800",
@@ -181,10 +182,11 @@ const PortalMlsDeals = () => {
                     {deal.passes_turnkey && <Badge variant="default" className="text-xs">Turnkey</Badge>}
                   </div>
                   {/* Status badge */}
-                  <div className="absolute top-3 right-3">
+                  <div className="absolute top-3 right-3 flex items-center gap-2">
                     <Badge className={statusColor}>
                       {displayStatus}
                     </Badge>
+                    <SaveDealButton deal={deal} />
                   </div>
                   {/* Alert indicator */}
                   {deal.flagged_for_alert && (

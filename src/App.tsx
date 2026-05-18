@@ -51,6 +51,7 @@ import PortalDocuments from "./pages/portal/PortalDocuments";
 import PortalAccount from "./pages/portal/PortalAccount";
 import PortalSearchAnalyzer from "./pages/portal/PortalSearchAnalyzer";
 import InvestorListingPage from "./pages/portal/InvestorListingPage";
+import PortalSavedDeals from "./pages/portal/PortalSavedDeals";
 
 // Wholesaler Portal pages
 import WholesalerPortalLayout from "./components/wholesaler-portal/WholesalerPortalLayout";
@@ -115,6 +116,8 @@ const App = () => (
             <Route path="deals/mls" element={<PortalMlsDeals />} />
             <Route path="deals/wholesale" element={<PortalWholesaleDeals />} />
             <Route path="deals/alerts" element={<PortalDealAlerts />} />
+            <Route path="deals/saved" element={<PortalSavedDeals />} />
+            <Route path="deals/saved/:savedId" element={<PortalDealDetail />} />
             <Route path="deals/:dealId" element={<PortalDealDetail />} />
             <Route path="deals/:dealId/offer" element={<PortalSubmitOffer />} />
             <Route path="deals/:dealId/walkthrough" element={<PortalRequestWalkthrough />} />

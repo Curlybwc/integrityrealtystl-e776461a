@@ -23,6 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useDeals } from "@/hooks/useDeals";
 import { formatCurrency, formatPercent, getStatusDisplayLabel, getScoringStatus } from "@/lib/screening";
+import SaveDealButton from "@/components/portal/SaveDealButton";
 
 const statusColors = {
   Available: "bg-green-100 text-green-800",
@@ -217,10 +218,11 @@ const PortalWholesaleDeals = () => {
                     )}
                   </div>
                   {/* Status badge */}
-                  <div className="absolute top-3 right-3">
+                  <div className="absolute top-3 right-3 flex items-center gap-2">
                     <Badge className={statusColor}>
                       {displayStatus}
                     </Badge>
+                    <SaveDealButton deal={deal} />
                   </div>
                   {/* Wholesaler indicator */}
                   <div className="absolute bottom-3 left-3 flex gap-2">
