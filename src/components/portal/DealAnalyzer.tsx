@@ -136,6 +136,10 @@ const DealAnalyzer = () => {
   const supportedZips = getSupportedZips();
 
   const mlsIdParam = searchParams.get("mlsId");
+  const sourceTagsParam = (searchParams.get("sourceTags") ?? "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
 
   // Derive property key from mlsId (preferred) or normalized address+zip
   useEffect(() => {
@@ -334,6 +338,23 @@ const DealAnalyzer = () => {
               <Calculator className="w-5 h-5 text-primary" />
               Property Details
             </CardTitle>
+            {(mlsIdParam || sourceTagsParam.length > 0) && (
+              <div className="flex flex-wrap items-center gap-2 pt-2">
+                {mlsIdParam && (
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                    MLS {mlsIdParam}
+                  </span>
+                )}
+                {sourceTagsParam.map((t) => (
+                  <span
+                    key={t}
+                    className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
