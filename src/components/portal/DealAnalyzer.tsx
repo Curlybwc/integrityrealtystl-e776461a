@@ -257,28 +257,15 @@ const DealAnalyzer = () => {
     });
   };
 
-  // Mutual exclusion: tier dropdown clears manual dollars, manual dollars clears tier
-  const handleRehabTierChange = (tier: string) => {
-    if (tier === "auto") {
-      setInputs((prev) => ({ ...prev, rehabTierOverride: undefined, manualRepairs: 0 }));
-    } else {
-      setInputs((prev) => ({ ...prev, rehabTierOverride: tier as RehabTier, manualRepairs: 0 }));
-    }
-  };
-
   const handleManualRepairsChange = (value: number) => {
-    setInputs((prev) => ({
-      ...prev,
-      manualRepairs: value,
-      rehabTierOverride: value > 0 ? undefined : prev.rehabTierOverride,
-    }));
+    setInputs((prev) => ({ ...prev, manualRepairs: value }));
   };
 
   // Comp ARV is loaded/refreshed via useCompReport (saved snapshot, no auto-fetch on edit).
 
   // All calculations centralized via computeDealMetrics
   const calculations = useMemo(() => {
-    const { zip, price, beds, sqft, currentRent, avgRent, isAvgRentManual, rehabTierOverride, manualRepairs, manualArv } = inputs;
+    const { zip, price, beds, sqft, currentRent, avgRent, isAvgRentManual, manualRepairs, manualArv } = inputs;
 
     const compLikely = compResult?.arv?.likely;
     const arv_system = compLikely && compLikely > 0
@@ -294,10 +281,9 @@ const DealAnalyzer = () => {
       arv_system,
       rent_override: isAvgRentManual ? avgRent : undefined,
       arv_override: manualArv > 0 ? manualArv : undefined,
-      rehab_tier_override: rehabTierOverride,
-      rehab_est_override: manualRepairs > 0
-        ? manualRepairs
-        : (repairTotal != null ? repairTotal : undefined),
+      rehab_est_override: manualRepairs > 0 ? manualRepairs : undefined,
+      rehab_est_from_analysis: repairTotal,
+      repair_analysis_status: repairStateFromRow(repairRow),
       mls_status: "Active",
     };
 
@@ -308,12 +294,12 @@ const DealAnalyzer = () => {
     const rentComp = getRentComp(zip, beds);
     const arvQuick = calculateArvQuick(zip, sqft);
     const currentRtp = price > 0 ? currentRent / price : 0;
-    const offer75 = metrics.arv_effective > 0 ? metrics.arv_effective * 0.75 - metrics.rehab_est_effective : 0;
-    const fmrRoi = (price + metrics.rehab_est_effective) > 0 && fmr ? fmr / (price + metrics.rehab_est_effective) : 0;
+    const offer75 = metrics.arv_effective > 0 && !metrics.analysis_pending ? metrics.arv_effective * 0.75 - metrics.rehab_est_effective : 0;
+    const fmrRoi = !metrics.analysis_pending && (price + metrics.rehab_est_effective) > 0 && fmr ? fmr / (price + metrics.rehab_est_effective) : 0;
     const arvSource: "comps" | "heuristic" = compLikely && compLikely > 0 ? "comps" : "heuristic";
 
     return { ...metrics, fmr, rentComp, arvQuick, currentRtp, offer75, fmrRoi, arvSource };
-  }, [inputs, compResult]);
+  }, [inputs, compResult, repairTotal, repairRow]);
 
   // Determine RTP color coding
   const getRtpColor = (rtp: number): string => {
@@ -329,13 +315,13 @@ const DealAnalyzer = () => {
     return "text-red-600";
   };
 
-  // Derive display label for rehab tier/rate
+  // Repair source label for reference panel
   const rehabRateDisplay = useMemo(() => {
-    if (inputs.manualRepairs > 0) return "Custom";
-    if (inputs.rehabTierOverride) return REHAB_TIER_LABELS[inputs.rehabTierOverride];
-    // Auto tier from screening
-    return `${calculations.rehab_tier_effective} (Auto)`;
-  }, [inputs.manualRepairs, inputs.rehabTierOverride, calculations.rehab_tier_effective]);
+    if (inputs.manualRepairs > 0) return "Manual override";
+    if (repairTotal != null) return "AI repair analysis";
+    return "Pending analysis";
+  }, [inputs.manualRepairs, repairTotal]);
+
 
   return (
     <div className="space-y-6">
