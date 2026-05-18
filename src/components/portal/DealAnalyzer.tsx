@@ -136,8 +136,47 @@ const DealAnalyzer = () => {
   const [searchParams] = useSearchParams();
   const [inputs, setInputs] = useState<DealInputs>(initialInputs);
   const [showComps, setShowComps] = useState(false);
+  const [propertyKey, setPropertyKey] = useState<string | null>(null);
   const supportedZips = getSupportedZips();
-  const { result: compResult, isLoading: compLoading, run: runComps, recompute: recomputeComps } = useCompArv();
+
+  const mlsIdParam = searchParams.get("mlsId");
+
+  // Derive property key from mlsId (preferred) or normalized address+zip
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const key = await derivePropertyKey({
+        mlsId: mlsIdParam,
+        address: inputs.address,
+        zip: inputs.zip,
+      });
+      if (!cancelled) setPropertyKey(key);
+    })();
+    return () => { cancelled = true; };
+  }, [mlsIdParam, inputs.address, inputs.zip]);
+
+  // Build live Subject for the comp engine
+  const subject = useMemo<Subject | null>(() => {
+    if (!inputs.zip || !inputs.sqft || inputs.sqft <= 0) return null;
+    return {
+      address: inputs.address,
+      zip: inputs.zip,
+      beds: inputs.beds,
+      baths: inputs.baths,
+      sqft: inputs.sqft,
+    };
+  }, [inputs.zip, inputs.beds, inputs.baths, inputs.sqft, inputs.address]);
+
+  const {
+    report, result: compResult, isLoading: compLoading, isRefreshing,
+    status, drift, refresh, setOverrides, overrides,
+  } = useCompReport({
+    propertyKey,
+    mlsId: mlsIdParam,
+    address: inputs.address,
+    zip: inputs.zip,
+    subject,
+  });
 
   // Auto-populate from URL params
   useEffect(() => {
