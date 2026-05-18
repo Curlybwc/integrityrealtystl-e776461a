@@ -73,7 +73,7 @@ async function fetchListing(mlsId: string): Promise<ListingSnapshot | null> {
     sqft: parseInt(aboveGradeSqft ?? details.sqft ?? details.squareFeet ?? "0", 10),
     year_built: details.yearBuilt ? parseInt(details.yearBuilt, 10) : undefined,
     basement_finished_sqft: raw.BelowGradeFinishedAreaSrchSqFt ? parseInt(raw.BelowGradeFinishedAreaSrchSqFt, 10) : 0,
-    remarks: listing.publicRemarks ?? raw.PublicRemarks ?? undefined,
+    remarks: details.description ?? listing.publicRemarks ?? raw.PublicRemarks ?? undefined,
     photo_urls: Array.isArray(photos)
       ? photos.slice(0, 24).map((p: any) => {
           const path = typeof p === "string" ? p : (p.url ?? p.photoUrl ?? "");
