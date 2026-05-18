@@ -32,8 +32,11 @@ import {
   getRehabRate,
   DEFAULT_SCREENING_CONFIG,
 } from "@/lib/screening";
-import { useCompArv } from "@/hooks/useCompArv";
+import { useCompReport } from "@/hooks/useCompReport";
+import { derivePropertyKey } from "@/lib/compReports";
+import type { Subject } from "@/types/compArv";
 import CompArvPanel from "./CompArvPanel";
+import CompReportStatus from "./CompReportStatus";
 
 const REHAB_TIER_LABELS: Record<RehabTier, string> = {
   Turnkey: "Turnkey ($5/sf)",
