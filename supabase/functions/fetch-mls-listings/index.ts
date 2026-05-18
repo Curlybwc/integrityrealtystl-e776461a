@@ -239,6 +239,50 @@ serve(async (req) => {
       searchParams.forEach((value, key) => { params[key] = value; });
     }
 
+    // Comps mode: sold-only search around a subject
+    if (params.mode === "comps") {
+      const subject = params.subject || {};
+      const url = new URL("https://api.repliers.io/listings");
+      url.searchParams.set("class", "residential");
+      url.searchParams.set("status", "U");
+      url.searchParams.set("lastStatus", "Sld");
+      url.searchParams.set("resultsPerPage", "100");
+      if (subject.zip) url.searchParams.set("zip", subject.zip);
+      if (subject.beds != null) {
+        url.searchParams.set("minBedrooms", String(Math.max(0, subject.beds - 1)));
+        url.searchParams.set("maxBedrooms", String(subject.beds + 1));
+      }
+      if (subject.baths != null) {
+        url.searchParams.set("minBaths", String(Math.max(0, Math.floor(subject.baths - 1))));
+      }
+      if (subject.sqft) {
+        url.searchParams.set("minSqft", String(Math.floor(subject.sqft * 0.7)));
+        url.searchParams.set("maxSqft", String(Math.ceil(subject.sqft * 1.3)));
+      }
+      // Sold within last 12 months
+      const since = new Date();
+      since.setDate(since.getDate() - 365);
+      url.searchParams.set("minSoldDate", since.toISOString().slice(0, 10));
+
+      console.log(`Comps fetch: ${url.toString()}`);
+      const resp = await fetch(url.toString(), {
+        headers: { "REPLIERS-API-KEY": apiKey, "Content-Type": "application/json" },
+      });
+      if (!resp.ok) {
+        const errText = await resp.text();
+        console.error(`Comps fetch error: ${resp.status} ${errText}`);
+        return new Response(JSON.stringify({ error: errText }), {
+          status: resp.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const data = await resp.json();
+      const comps = (data.listings || []).map(normalizeListing);
+      return new Response(JSON.stringify({ count: comps.length, listings: comps }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Single-listing lookup by MLS number
     if (params.mlsNumber) {
       const mlsUrl = `https://api.repliers.io/listings/${params.mlsNumber}`;
