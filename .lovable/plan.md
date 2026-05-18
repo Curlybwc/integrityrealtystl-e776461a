@@ -1,102 +1,149 @@
 
-# Phase 1 Repair Estimation — Remaining Checklist
+# Phase 2 — My Saved Deals
 
-Scope is strictly the 6 priorities in the request. No investor workspaces, CRM, billing, or price/ARV-derived rehab tiers.
+Persistent investor-owned underwriting workspaces built on top of the existing deal detail page. Snapshot-copy model, explicit Save / Update. No CRM scope.
 
-## 1. Search/list integration
+## 1. Data model (Supabase)
 
-**`src/lib/repairAnalysis.ts`** — add `getRepairAnalysesForListings(mlsIds: string[])` that batch-fetches active rows from `repair_analyses` keyed by `mls_listing_id`. Returns `Map<mlsId, RepairAnalysisRow>`.
+New table `saved_deals` (one row per investor + property):
 
-**`src/components/portal/BatchAnalysisTable.tsx`**
-- On rows load: hydrate cache map via the batch fetch above.
-- For each row, derive `repairState`:
-  - `complete` → use `total_repair_estimate` for MAO
-  - `pending` / `queued` → show "Analyzing repairs…" chip, hide MAO + strategy badges
-  - `quota_blocked` → "Quota reached" chip, hide MAO + strategy badges
-  - `failed` → "Repair analysis failed" chip (tooltip with failure_reason), hide MAO + strategy badges
-  - `missing` → auto-enqueue via `analyze-repairs` (debounced batch call, max N parallel, respect quota response)
-- Replace existing rehab tier column display with "Repairs" column showing `$total` or status chip.
-- Realtime: subscribe once to `repair_analyses` filtered by the page's visible mls_listing_ids; update map on change.
+- `user_id` (uuid) — owner
+- `property_key` (text) — `mls:<mls_id>` for MLS/Alerts, `wholesale:<deal_id>` for wholesaler deals. Unique with `user_id`.
+- `source_type` (text), `source_tags` (text[]) — e.g. `["MLS","Deal Alert"]`
+- `mls_listing_id` (text, nullable)
+- `address`, `city`, `state`, `zip`
+- `beds`, `baths`, `sqft`, `year_built`, `property_type`
+- `list_price_at_save` (numeric)
+- `remarks_snapshot` (text)
+- `photo_urls` (text[]) — snapshot at save time
+- `underwriting` (jsonb): `{ arv, expected_rent, total_repairs, repair_breakdown: LineItems, rehab_tier, mao, rent_to_price_pct, all_in_pct_of_arv, passes_turnkey, passes_brrrr, passes_flip }`
+- `notes` (text)
+- `evidence_hash_at_save` (text, nullable) — links to the repair_analyses row that seeded the breakdown
+- `saved_at`, `updated_at`
 
-**`src/pages/portal/PortalSearchAnalyzer.tsx`** (or wherever the analyzer header lives)
-- Add a quota chip: "AI repair analysis: X / 200 this month" sourced from `ai_analysis_quota` for current user. Turns warning color at ≥80%, destructive at 100%.
+RLS: investor reads/writes only own rows. Admins read all. Unique index `(user_id, property_key)`.
 
-## 2. Explicit screening state
+No new tables for scenarios, pipelines, tasks, reminders, or activity.
 
-**`src/lib/screening.ts`**
-- Add `analysis_pending: boolean` to the screening result type.
-- Compute `analysis_pending = repair_analysis_status !== 'complete' && rehab_est_override == null`.
-- When `analysis_pending` is true: skip MAO, RTP, ARV%, deal-tier badges; return them as `null` (not zero, not estimated).
-- Remove any remaining code paths that infer rehab from price, ARV, or discount.
-- `rehab_est_effective = rehab_est_override ?? repair_analysis.total_repair_estimate ?? null`.
+## 2. Persistence helpers
 
-Callers (`BatchAnalysisTable`, `DealAnalyzer`, `ListingCard`) read `analysis_pending` to decide whether to render MAO/strategy UI.
+New `src/lib/savedDeals.ts`:
 
-## 3. Admin pricing visibility
+- `buildSnapshotFromDeal(deal, underwriting)` — pure function
+- `diffUnderwriting(current, saved)` — returns boolean + changed-field list
+- `recomputeMetrics(price, arv, rent, repairs)` — central math (reuses formulas from `screening.ts`; no duplicated thresholds)
 
-**`src/components/admin-portal/AdminSettings.tsx`** — mount the existing `RepairPricingEditor` under a "Repair Pricing Library" section (admin-gated already by route). No new logic.
+New hook `src/hooks/useSavedDeals.tsx`:
 
-## 4. Remove legacy rehab tier UI
+- `savedByPropertyKey: Map<string, SavedDeal>`
+- `isSaved(propertyKey)`, `getSaved(propertyKey)`
+- `saveDeal(snapshot)`, `updateSaved(id, snapshot)`, `unsaveDeal(id)`
+- React Query backed; invalidates after mutations.
 
-**`src/components/portal/DealAnalyzer.tsx`**
-- Remove the Light/Medium/Heavy rehab tier `<Select>` and any handlers writing to a tier field.
-- Keep the manual dollar override input (`rehab_est_override`).
-- Repair section renders: `RepairBreakdownPanel` (AI) + dollar override input. That's it.
-- Remove dead imports / tier constants.
+## 3. Detail page enhancements
 
-Search for and remove any remaining `rehab_tier` references in UI only (do not touch unrelated history/persistence fields if they exist for legacy data).
+`src/pages/portal/PortalDealDetail.tsx` becomes the primary underwriting workspace. Extract underwriting UI into a new component `src/components/portal/DealUnderwritingPanel.tsx` to keep the file tidy.
 
-## 5. Admin global override
+Underwriting panel contents (drop-in, replaces the read-only Financial Snapshot card):
 
-**New edge function `supabase/functions/admin-override-repair-analysis/index.ts`**
-- Auth: verify caller has admin role via `has_role`.
-- Input (Zod): `{ mls_listing_id, line_items: Record<string, number>, gut_rehab_mode?: boolean, notes?: string }`.
-- Recompute `total_repair_estimate = sum(line_items)`.
-- Update the active `repair_analyses` row in place; set `overridden_by = caller`, `overridden_at = now()`, `analysis_status = 'complete'`.
-- Return updated row.
+- Editable inputs: ARV, Expected Rent, Total Repairs
+- Collapsible "View/Edit Repair Breakdown" (uses existing `RepairBreakdownPanel` in edit mode; line items: kitchen, baths, flooring, paint_drywall, roof, hvac, water_heater, plumbing_stack, appliances, dumpsters, foundation, basement, landscaping, windows, misc_reserve, gut)
+- Editing a line recalculates `total_repairs`; editing any field recalculates MAO / Rent-to-Price / All-In % live
+- Notes textarea
+- Save bar (sticky bottom of panel):
+  - If not saved: **Save Deal** (heart icon)
+  - If saved + no diff: **Saved ✓** (disabled-looking) + **Unsave**
+  - If saved + diff: **Update Saved Deal** (primary) + "You have unsaved underwriting changes" hint + **Discard changes**
+- Confirm dialog on Update when there are diffs; confirm dialog on Unsave if notes or non-default underwriting exist
 
-**`src/components/admin-portal/AdminDealPot.tsx`** — inline editor on a deal row:
-- Expand row → show current line items as editable number inputs + gut-rehab toggle.
-- Save → invoke `admin-override-repair-analysis`.
-- Show "Overridden by {admin} on {date}" badge when `overridden_at` present.
+In-session edits live in local component state. They are not persisted unless Save / Update is clicked. Leaving the page discards them — acceptable.
 
-## 6. Background automation
+## 4. Discovery grid changes (minimal)
 
-**Cron** (via `supabase--insert` SQL, not migration — contains URL/anon key):
-- Enable `pg_cron`, `pg_net` if needed.
-- Schedule `process-repair-queue` every 2 minutes.
+`PortalMlsDeals.tsx`, `PortalWholesaleDeals.tsx`, `PortalDealAlerts.tsx`:
 
-**Ingestion hook** — in the existing daily Repliers harvest edge function, after inserting/updating a listing, call `analyze-repairs` with `requested_by = null` and a `source: 'system_core'` flag so it bypasses user quota and populates the shared cache. Add a `system_core` branch in `analyze-repairs` that skips `ai_analysis_quota` writes.
+- Add a small heart button overlay on each card (top-right of image, next to status badge)
+- Filled heart + "Saved" tooltip if `isSaved(propertyKey)`
+- Click toggles: if not saved, saves with the deal's current effective underwriting; if saved, navigates to the saved deal detail (no destructive toggle from the grid — unsave is detail-page only to avoid accidents)
 
-## Files
+No other grid redesign.
 
-**New**
-- `supabase/functions/admin-override-repair-analysis/index.ts`
+## 5. New Saved Deals destination
 
-**Edit**
-- `src/lib/repairAnalysis.ts` (batch fetch)
-- `src/lib/screening.ts` (analysis_pending)
-- `src/components/portal/BatchAnalysisTable.tsx`
-- `src/components/portal/DealAnalyzer.tsx` (drop tier dropdown)
-- `src/pages/portal/PortalSearchAnalyzer.tsx` (quota chip)
-- `src/components/admin-portal/AdminSettings.tsx` (mount editor)
-- `src/components/admin-portal/AdminDealPot.tsx` (override editor)
-- `supabase/functions/analyze-repairs/index.ts` (system_core branch)
-- Daily harvest edge function (enqueue hook)
+Route: `/portal/investor/deals/saved` → new page `PortalSavedDeals.tsx`.
 
-**SQL (via insert tool, not migration)**
-- pg_cron schedule for `process-repair-queue`
+- Added to `PortalDealsHub` as a 4th hub card ("My Saved Deals", count = saved rows)
+- Same trading-card layout as MLS Deals (reuses the card markup — extract `DealCard` from `PortalMlsDeals` into `src/components/portal/DealCard.tsx` so MLS / Wholesale / Alerts / Saved all share it)
+- Card shows: primary saved photo, address, beds/baths/sqft, key metrics from the saved underwriting snapshot, saved date, source tags
+- Click → opens detail page in "saved view" mode (loads from `saved_deals` instead of live deal source)
+- Lightweight controls: search (address/city/zip), sort (saved date, price, address), filter by source tag + zip
 
-## Order of execution
+Detail page routing: extend `PortalDealDetail` to accept either a live deal id or a saved-deal id. Use route `deals/saved/:savedId` so saved view is unambiguous and survives the source listing disappearing.
 
-1. `screening.ts` analysis_pending (foundation for #1)
-2. `repairAnalysis.ts` batch fetch + `BatchAnalysisTable` hydration/states
-3. Quota chip in PortalSearchAnalyzer
-4. Mount RepairPricingEditor
-5. Remove legacy tier dropdown in DealAnalyzer
-6. admin-override edge function + AdminDealPot editor
-7. Cron + ingestion hook last
+## 6. Deal Analyzer pass-through
 
-## AI interface isolation
+`src/components/portal/DealAnalyzer.tsx` + `PortalAnalyzer.tsx`:
 
-`process-repair-queue` already wraps Gemini behind a single `callVisionModel()` function. Keep that boundary; do not leak provider specifics into pricing or screening code.
+- Add `mlsId` and `sourceTags` to the property details form/state
+- "Open in Deal Analyzer" links from detail page pass current (possibly edited) underwriting + `mlsId` + tags via query string
+
+No major Analyzer expansion. Analyzer remains the secondary manual tool.
+
+## 7. Check MLS Updates
+
+On saved-deal detail page only:
+
+- Button "Check MLS Updates" → calls existing single-listing Repliers fetch (already used in search)
+- Renders a small diff card: status, list price, DOM, photo count, remarks-change indicator
+- Does NOT mutate saved underwriting, does NOT re-run AI, does NOT change photos
+- Investor can manually copy values into editable fields if desired, then Update Saved Deal
+
+## 8. Out of scope (explicitly excluded)
+
+Pipelines, kanban, reminders, messaging, tasks, activity feed, follow-up automation, multiple scenarios per property, branching versions, autosave, subscription/billing, reference-plus-overrides syncing, full Analyzer rebuild.
+
+## Technical notes
+
+```text
+saved_deals (user_id, property_key UNIQUE) ──┐
+                                             │
+PortalDealDetail ──┬── live mode  (deal from useDeals)
+                   └── saved mode (row from useSavedDeals)
+                                             │
+DealUnderwritingPanel ── local edit state ───┤
+                                             ├── Save / Update / Unsave
+DealCard (shared) ─── heart toggle ──────────┘
+```
+
+Reused: existing screening math, `RepairBreakdownPanel`, action buttons, status badges, photo gallery, formatters.
+
+New files:
+- `supabase/migrations/<ts>_saved_deals.sql`
+- `src/lib/savedDeals.ts`
+- `src/hooks/useSavedDeals.tsx`
+- `src/components/portal/DealCard.tsx` (extracted)
+- `src/components/portal/DealUnderwritingPanel.tsx`
+- `src/components/portal/SaveDealBar.tsx`
+- `src/pages/portal/PortalSavedDeals.tsx`
+
+Edited:
+- `PortalDealDetail.tsx` (live + saved modes, integrate underwriting panel)
+- `PortalDealsHub.tsx` (4th card)
+- `PortalMlsDeals.tsx`, `PortalWholesaleDeals.tsx`, `PortalDealAlerts.tsx` (use shared DealCard + heart)
+- `App.tsx` (new routes: `deals/saved`, `deals/saved/:savedId`)
+- `InvestorPortalLayout.tsx` — no change required; Deals hub already in nav
+- `DealAnalyzer.tsx` + `PortalAnalyzer.tsx` (mlsId + sourceTags pass-through)
+
+## Acceptance check
+- Save from each of MLS / Wholesale / Alerts grids ✓
+- My Saved Deals hub destination + grid ✓
+- Snapshot persistence (survives MLS change) ✓
+- One copy per investor/property (unique constraint) ✓
+- Detail-page underwriting editing + collapsible repair breakdown ✓
+- Auto-recalc of totals & metrics ✓
+- Explicit Save / Update Saved Deal with unsaved-changes prompt ✓
+- Action buttons + Analyzer/Section 8 links preserved ✓
+- Check MLS Updates without overwriting underwriting ✓
+- Search/sort/filter on Saved Deals ✓
+- Deal Analyzer remains manual/secondary; gains mlsId + tags ✓
+- No CRM scope introduced ✓
