@@ -37,6 +37,9 @@ import { derivePropertyKey } from "@/lib/compReports";
 import type { Subject } from "@/types/compArv";
 import CompArvPanel from "./CompArvPanel";
 import CompReportStatus from "./CompReportStatus";
+import RepairBreakdownPanel from "./RepairBreakdownPanel";
+import { useRepairAnalysis } from "@/hooks/useRepairAnalysis";
+import { isAnalysisComplete } from "@/lib/repairAnalysis";
 
 const REHAB_TIER_LABELS: Record<RehabTier, string> = {
   Turnkey: "Turnkey ($5/sf)",
@@ -178,6 +181,14 @@ const DealAnalyzer = () => {
     subject,
   });
 
+  // Evidence-based repair analysis
+  const { row: repairRow, isLoading: repairLoading } = useRepairAnalysis({
+    mlsListingId: mlsIdParam,
+    autoEnqueue: !!mlsIdParam,
+    source: "user",
+  });
+  const repairTotal = isAnalysisComplete(repairRow) ? repairRow!.total_repair_estimate! : null;
+
   // Auto-populate from URL params
   useEffect(() => {
     const address = searchParams.get("address");
@@ -291,7 +302,9 @@ const DealAnalyzer = () => {
       rent_override: isAvgRentManual ? avgRent : undefined,
       arv_override: manualArv > 0 ? manualArv : undefined,
       rehab_tier_override: rehabTierOverride,
-      rehab_est_override: manualRepairs > 0 ? manualRepairs : undefined,
+      rehab_est_override: manualRepairs > 0
+        ? manualRepairs
+        : (repairTotal != null ? repairTotal : undefined),
       mls_status: "Active",
     };
 
@@ -575,6 +588,11 @@ const DealAnalyzer = () => {
           onToggleComps={() => setShowComps((v) => !v)}
           onRefresh={() => { void refresh(); }}
         />
+      )}
+
+      {/* Evidence-based repair analysis */}
+      {mlsIdParam && (
+        <RepairBreakdownPanel row={repairRow} isLoading={repairLoading} />
       )}
       {showComps && compResult && (
         <CompArvPanel
