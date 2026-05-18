@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DEFAULT_SCREENING_CONFIG } from "@/lib/screening";
+import RepairPricingEditor from "@/components/admin-portal/RepairPricingEditor";
 
 const AdminSettings = () => {
   const config = DEFAULT_SCREENING_CONFIG;
