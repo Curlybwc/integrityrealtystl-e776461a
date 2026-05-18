@@ -247,18 +247,42 @@ serve(async (req) => {
       url.searchParams.set("status", "U");
       url.searchParams.set("lastStatus", "Sld");
       url.searchParams.set("resultsPerPage", "100");
-      if (subject.zip) url.searchParams.set("zip", subject.zip);
-      if (subject.beds != null) {
-        url.searchParams.set("minBedrooms", String(Math.max(0, subject.beds - 1)));
-        url.searchParams.set("maxBedrooms", String(subject.beds + 1));
+
+      // Coerce to a finite positive number, else null. Rejects NaN, "", null, undefined, negatives.
+      const num = (v: unknown): number | null => {
+        if (v === null || v === undefined || v === "") return null;
+        const n = typeof v === "number" ? v : parseFloat(String(v));
+        return Number.isFinite(n) && n > 0 ? n : null;
+      };
+
+      if (subject.zip && typeof subject.zip === "string") {
+        url.searchParams.set("zip", subject.zip);
       }
-      if (subject.baths != null) {
-        url.searchParams.set("minBaths", String(Math.max(0, Math.floor(subject.baths - 1))));
+
+      const beds = num(subject.beds);
+      if (beds !== null) {
+        url.searchParams.set("minBedrooms", String(Math.max(0, Math.floor(beds) - 1)));
+        url.searchParams.set("maxBedrooms", String(Math.ceil(beds) + 1));
       }
-      if (subject.sqft) {
-        url.searchParams.set("minSqft", String(Math.floor(subject.sqft * 0.7)));
-        url.searchParams.set("maxSqft", String(Math.ceil(subject.sqft * 1.3)));
+
+      const baths = num(subject.baths);
+      if (baths !== null) {
+        url.searchParams.set("minBaths", String(Math.max(0, Math.floor(baths) - 1)));
+        url.searchParams.set("maxBaths", String(Math.ceil(baths) + 1));
       }
+
+      const sqft = num(subject.sqft);
+      if (sqft !== null) {
+        url.searchParams.set("minSqft", String(Math.max(1, Math.floor(sqft * 0.7))));
+        url.searchParams.set("maxSqft", String(Math.ceil(sqft * 1.3)));
+      }
+
+      const yb = num(subject.yearBuilt);
+      if (yb !== null && yb >= 1800 && yb <= 2100) {
+        url.searchParams.set("minYearBuilt", String(Math.floor(yb) - 15));
+        url.searchParams.set("maxYearBuilt", String(Math.ceil(yb) + 15));
+      }
+
       // Sold within last 12 months
       const since = new Date();
       since.setDate(since.getDate() - 365);
