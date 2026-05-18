@@ -215,7 +215,8 @@ export async function saveNewSnapshot(args: {
 
   const { data, error } = await supabase
     .from("comp_reports")
-    .insert([insertRow])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .insert(insertRow as any)
     .select("*")
     .single();
 
