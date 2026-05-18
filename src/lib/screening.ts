@@ -39,6 +39,9 @@ export interface Deal {
   rent_system: number;
   arv_system: number;
   rehab_tier_system: RehabTier;
+  arv_comp?: number;
+  arv_confidence?: number;
+  arv_source?: "comps" | "heuristic";
   
   // Admin Overrides (never overwritten by sync)
   rent_override?: number;
@@ -261,9 +264,11 @@ export function createDeal(
 ): Deal {
   const now = new Date().toISOString();
   
-  // Compute system estimates
+  // Compute system estimates — prefer comp-based ARV when supplied
   const rent_system = estimateSystemRent(input.zip, input.beds);
-  const arv_system = estimateSystemArv(input.zip, input.sqft);
+  const heuristicArv = estimateSystemArv(input.zip, input.sqft);
+  const arv_system = input.arv_comp && input.arv_comp > 0 ? input.arv_comp : heuristicArv;
+  const arv_source: "comps" | "heuristic" = input.arv_comp && input.arv_comp > 0 ? "comps" : "heuristic";
   const rehab_tier_system = estimateRehabTier(input.list_price, arv_system);
   
   const baseDeal: Partial<Deal> = {
