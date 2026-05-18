@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
-import { Building2, Store, Bell, ArrowRight } from "lucide-react";
+import { Building2, Store, Bell, ArrowRight, Heart } from "lucide-react";
 import { useDeals } from "@/hooks/useDeals";
+import { useSavedDeals } from "@/hooks/useSavedDeals";
 
 const PortalDealsHub = () => {
   const { deals } = useDeals();
+  const { list: savedList } = useSavedDeals();
   
   const mlsDeals = deals.filter(d => d.source_type === "MLS" && d.buyer_visible);
   const wholesaleDeals = deals.filter(d => d.source_type === "WHOLESALER" && d.buyer_visible);
