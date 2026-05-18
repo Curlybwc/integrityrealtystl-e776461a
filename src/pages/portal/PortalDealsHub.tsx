@@ -36,6 +36,14 @@ const PortalDealsHub = () => {
       count: alertDeals.length,
       color: "bg-accent text-accent-foreground",
     },
+    {
+      title: "My Saved Deals",
+      description: "Your private underwriting snapshots. Saved values survive MLS, photo, and pricing changes.",
+      icon: Heart,
+      to: "/portal/investor/deals/saved",
+      count: savedList.length,
+      color: "bg-red-50 text-red-600",
+    },
   ];
 
   return (
