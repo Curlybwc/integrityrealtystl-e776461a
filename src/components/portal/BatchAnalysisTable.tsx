@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 
-import { ArrowUpDown, ExternalLink, Camera, LayoutGrid, List } from "lucide-react";
+import { ArrowUpDown, ExternalLink, Camera, LayoutGrid, List, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -12,18 +12,26 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { MlsListing } from "@/hooks/useMlsSearch";
 import {
   computeDealMetrics,
   estimateSystemRent,
   estimateSystemArv,
-  estimateRehabTier,
   formatCurrency,
   formatPercent,
   type Strategy,
   type ScreeningConfig,
   DEFAULT_SCREENING_CONFIG,
 } from "@/lib/screening";
+import {
+  fetchActiveAnalysesBulk,
+  requestRepairAnalysis,
+  repairStateFromRow,
+  type RepairAnalysisRow,
+  type RepairState,
+} from "@/lib/repairAnalysis";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import ListingCard from "./ListingCard";
 
@@ -36,11 +44,16 @@ interface AnalyzedListing extends MlsListing {
   passes_turnkey: boolean;
   passes_brrrr: boolean;
   passes_flip: boolean;
+  rehab_est_effective: number;
+  analysis_pending: boolean;
+  repair_state: RepairState;
+  repair_total: number | null;
+  repair_failure_reason: string | null;
 }
 
 type SortField = "list_price" | "rent_to_price_pct" | "all_in_pct_of_arv" | "strategy";
 type ViewMode = "table" | "grid";
-type StrategyFilter = "all" | "pass_any" | "Turnkey" | "BRRRR" | "Flip" | "None";
+type StrategyFilter = "all" | "pass_any" | "Turnkey" | "BRRRR" | "Flip" | "None" | "Pending";
 
 interface BatchAnalysisTableProps {
   listings: MlsListing[];
@@ -54,19 +67,93 @@ const strategyOrder: Record<Strategy, number> = {
   None: 3,
 };
 
+const ENQUEUE_CONCURRENCY = 3;
+
 const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTableProps) => {
   const [sortField, setSortField] = useState<SortField>("strategy");
   const [sortAsc, setSortAsc] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [strategyFilter, setStrategyFilter] = useState<StrategyFilter>("all");
+  const [analyses, setAnalyses] = useState<Record<string, RepairAnalysisRow>>({});
+  const enqueuedRef = useRef<Set<string>>(new Set());
 
   const config = screeningConfig ?? DEFAULT_SCREENING_CONFIG;
+
+  const mlsIds = useMemo(
+    () => listings.map((l) => l.mls_listing_id).filter(Boolean) as string[],
+    [listings]
+  );
+
+  // Hydrate cache for the current listing set
+  useEffect(() => {
+    if (mlsIds.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const map = await fetchActiveAnalysesBulk(mlsIds);
+      if (!cancelled) setAnalyses((prev) => ({ ...prev, ...map }));
+    })();
+    return () => { cancelled = true; };
+  }, [mlsIds]);
+
+  // Realtime: listen for updates to any visible mlsId
+  useEffect(() => {
+    if (mlsIds.length === 0) return;
+    const idSet = new Set(mlsIds);
+    const channel = supabase
+      .channel(`batch-repair-${mlsIds.length}-${mlsIds[0] ?? ""}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "repair_analyses" },
+        (payload) => {
+          const row = payload.new as RepairAnalysisRow | undefined;
+          if (!row || !row.is_active) return;
+          if (!idSet.has(row.mls_listing_id)) return;
+          setAnalyses((prev) => ({ ...prev, [row.mls_listing_id]: row }));
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [mlsIds]);
+
+  // Auto-enqueue missing analyses with bounded concurrency
+  useEffect(() => {
+    if (mlsIds.length === 0) return;
+    const missing = mlsIds.filter((id) => !analyses[id] && !enqueuedRef.current.has(id));
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      let i = 0;
+      const workers = Array.from({ length: ENQUEUE_CONCURRENCY }, async () => {
+        while (!cancelled && i < missing.length) {
+          const id = missing[i++];
+          enqueuedRef.current.add(id);
+          try {
+            const row = await requestRepairAnalysis(id, "user");
+            if (!cancelled && row) {
+              setAnalyses((prev) => ({ ...prev, [id]: row }));
+              // If quota blocked, stop further enqueues this pass
+              if (row.analysis_status === "quota_blocked") {
+                i = missing.length;
+              }
+            }
+          } catch (e) {
+            console.error("auto-enqueue failed", id, e);
+          }
+        }
+      });
+      await Promise.all(workers);
+    })();
+    return () => { cancelled = true; };
+  }, [mlsIds, analyses]);
 
   const analyzed: AnalyzedListing[] = useMemo(() => {
     return listings.map((l) => {
       const rent_system = estimateSystemRent(l.zip, l.beds);
       const arv_system = estimateSystemArv(l.zip, l.sqft);
-      const rehab_tier_system = estimateRehabTier(l.list_price, arv_system);
+      const row = l.mls_listing_id ? analyses[l.mls_listing_id] : undefined;
+      const repair_state = repairStateFromRow(row);
+      const repair_total = row?.total_repair_estimate ?? null;
 
       const metrics = computeDealMetrics({
         source_type: "MLS",
@@ -77,29 +164,38 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
         mls_status: l.mls_status as any,
         rent_system,
         arv_system,
-        rehab_tier_system,
+        rehab_est_from_analysis: repair_total,
+        repair_analysis_status: repair_state,
       }, config);
 
-      return { ...l, ...metrics };
+      return {
+        ...l,
+        ...metrics,
+        repair_state,
+        repair_total,
+        repair_failure_reason: row?.failure_reason ?? null,
+      };
     });
-  }, [listings, config]);
+  }, [listings, analyses, config]);
 
   const stats = useMemo(() => {
-    const passAny = analyzed.filter((l) => l.passes_turnkey || l.passes_brrrr || l.passes_flip).length;
+    const pending = analyzed.filter((l) => l.analysis_pending).length;
+    const passAny = analyzed.filter((l) => !l.analysis_pending && (l.passes_turnkey || l.passes_brrrr || l.passes_flip)).length;
     const turnkey = analyzed.filter((l) => l.passes_turnkey).length;
     const brrrr = analyzed.filter((l) => l.passes_brrrr).length;
     const flip = analyzed.filter((l) => l.passes_flip).length;
-    const none = analyzed.filter((l) => !l.passes_turnkey && !l.passes_brrrr && !l.passes_flip).length;
-    return { total: analyzed.length, passAny, turnkey, brrrr, flip, none };
+    const none = analyzed.filter((l) => !l.analysis_pending && !l.passes_turnkey && !l.passes_brrrr && !l.passes_flip).length;
+    return { total: analyzed.length, passAny, turnkey, brrrr, flip, none, pending };
   }, [analyzed]);
 
   const filtered = useMemo(() => {
     if (strategyFilter === "all") return analyzed;
-    if (strategyFilter === "pass_any") return analyzed.filter((l) => l.passes_turnkey || l.passes_brrrr || l.passes_flip);
+    if (strategyFilter === "Pending") return analyzed.filter((l) => l.analysis_pending);
+    if (strategyFilter === "pass_any") return analyzed.filter((l) => !l.analysis_pending && (l.passes_turnkey || l.passes_brrrr || l.passes_flip));
     if (strategyFilter === "Turnkey") return analyzed.filter((l) => l.passes_turnkey);
     if (strategyFilter === "BRRRR") return analyzed.filter((l) => l.passes_brrrr);
     if (strategyFilter === "Flip") return analyzed.filter((l) => l.passes_flip);
-    if (strategyFilter === "None") return analyzed.filter((l) => !l.passes_turnkey && !l.passes_brrrr && !l.passes_flip);
+    if (strategyFilter === "None") return analyzed.filter((l) => !l.analysis_pending && !l.passes_turnkey && !l.passes_brrrr && !l.passes_flip);
     return analyzed;
   }, [analyzed, strategyFilter]);
 
@@ -124,9 +220,6 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
     }
   };
 
-
-
-
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <Button
       variant="ghost"
@@ -139,6 +232,37 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
     </Button>
   );
 
+  const renderRepairCell = (l: AnalyzedListing) => {
+    switch (l.repair_state) {
+      case "complete":
+        return <span className="text-xs font-medium">{formatCurrency(l.repair_total ?? 0)}</span>;
+      case "pending":
+      case "analyzing":
+        return (
+          <Badge variant="outline" className="text-[10px] gap-1">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Analyzing
+          </Badge>
+        );
+      case "quota_blocked":
+        return <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-600">Quota reached</Badge>;
+      case "failed":
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="outline" className="text-[10px] border-destructive text-destructive gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                Failed
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs"><p className="text-xs">{l.repair_failure_reason ?? "Analysis failed"}</p></TooltipContent>
+          </Tooltip>
+        );
+      default:
+        return <span className="text-xs text-muted-foreground">—</span>;
+    }
+  };
+
   return (
     <div className="space-y-3">
       {/* Summary stats */}
@@ -150,6 +274,7 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
           ["BRRRR", `BRRRR (${stats.brrrr})`],
           ["Turnkey", `Turnkey (${stats.turnkey})`],
           ["None", `None (${stats.none})`],
+          ["Pending", `Pending (${stats.pending})`],
         ] as [StrategyFilter, string][]).map(([key, label]) => (
           <Button
             key={key}
@@ -190,6 +315,9 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
             <ListingCard
               key={l.mls_listing_id}
               listing={l}
+              analysisPending={l.analysis_pending}
+              repairState={l.repair_state}
+              repairTotal={l.repair_total}
             />
           ))}
           {sorted.length === 0 && (
@@ -212,22 +340,23 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
                 <TableHead>ZIP</TableHead>
                 <TableHead><SortButton field="list_price">Price</SortButton></TableHead>
                 <TableHead>Bd/Ba/Sf</TableHead>
+                <TableHead>Repairs</TableHead>
                 <TableHead><SortButton field="strategy">Strategy</SortButton></TableHead>
                 <TableHead>Est. Rent</TableHead>
                 <TableHead>ARV</TableHead>
-                <TableHead><SortButton field="rent_to_price_pct">RTP Ratio</SortButton></TableHead>
+                <TableHead><SortButton field="rent_to_price_pct">RTP</SortButton></TableHead>
                 <TableHead><SortButton field="all_in_pct_of_arv">All-In%</SortButton></TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sorted.map((l) => {
-                const passes = l.passes_turnkey || l.passes_brrrr || l.passes_flip;
+                const passes = !l.analysis_pending && (l.passes_turnkey || l.passes_brrrr || l.passes_flip);
                 const photoCount = l.photo_urls?.length ?? 0;
                 return (
                   <TableRow
                     key={l.mls_listing_id}
-                    className={cn(!passes && "opacity-50")}
+                    className={cn(!passes && !l.analysis_pending && "opacity-50")}
                   >
                     <TableCell className="pr-0">
                       {photoCount > 0 ? (
@@ -250,27 +379,34 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
                     <TableCell className="text-xs whitespace-nowrap">
                       {l.beds}/{l.baths}/{l.sqft ? `${l.sqft.toLocaleString()}${(l as any).sqft_source === 'public_record' ? ' (PR)' : ''}` : 'N/A'}
                     </TableCell>
+                    <TableCell>{renderRepairCell(l)}</TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
-                        {l.passes_flip && <Badge variant="outline" className="text-xs">Flip</Badge>}
-                        {l.passes_brrrr && <Badge variant="secondary" className="text-xs">BRRRR</Badge>}
-                        {l.passes_turnkey && <Badge variant="default" className="text-xs">Turnkey</Badge>}
-                        {!l.passes_flip && !l.passes_brrrr && !l.passes_turnkey && <Badge variant="destructive" className="text-xs">None</Badge>}
-                      </div>
+                      {l.analysis_pending ? (
+                        <span className="text-[10px] text-muted-foreground italic">—</span>
+                      ) : (
+                        <div className="flex gap-1">
+                          {l.passes_flip && <Badge variant="outline" className="text-xs">Flip</Badge>}
+                          {l.passes_brrrr && <Badge variant="secondary" className="text-xs">BRRRR</Badge>}
+                          {l.passes_turnkey && <Badge variant="default" className="text-xs">Turnkey</Badge>}
+                          {!l.passes_flip && !l.passes_brrrr && !l.passes_turnkey && <Badge variant="destructive" className="text-xs">None</Badge>}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="text-xs">{formatCurrency(l.rent_effective)}</TableCell>
                     <TableCell className="text-xs">{formatCurrency(l.arv_effective)}</TableCell>
                     <TableCell className={cn(
                       "text-xs font-medium",
-                      l.rent_to_price_pct >= 0.013 ? "text-green-600" : l.rent_to_price_pct >= 0.01 ? "text-orange-500" : "text-destructive"
+                      l.analysis_pending && "text-muted-foreground",
+                      !l.analysis_pending && (l.rent_to_price_pct >= 0.013 ? "text-green-600" : l.rent_to_price_pct >= 0.01 ? "text-orange-500" : "text-destructive")
                     )}>
-                      {formatPercent(l.rent_to_price_pct)}
+                      {l.analysis_pending ? "—" : formatPercent(l.rent_to_price_pct)}
                     </TableCell>
                     <TableCell className={cn(
                       "text-xs font-medium",
-                      l.all_in_pct_of_arv <= 0.75 ? "text-green-600" : l.all_in_pct_of_arv <= 0.80 ? "text-orange-500" : "text-destructive"
+                      l.analysis_pending && "text-muted-foreground",
+                      !l.analysis_pending && (l.all_in_pct_of_arv <= 0.75 ? "text-green-600" : l.all_in_pct_of_arv <= 0.80 ? "text-orange-500" : "text-destructive")
                     )}>
-                      {formatPercent(l.all_in_pct_of_arv)}
+                      {l.analysis_pending ? "—" : formatPercent(l.all_in_pct_of_arv)}
                     </TableCell>
                     <TableCell>
                       <Button asChild variant="ghost" size="sm" className="h-7 px-2">
@@ -297,7 +433,7 @@ const BatchAnalysisTable = ({ listings, screeningConfig }: BatchAnalysisTablePro
               })}
               {sorted.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={13} className="text-center text-muted-foreground py-8">
                     No listings to display
                   </TableCell>
                 </TableRow>
