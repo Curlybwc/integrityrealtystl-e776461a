@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Eye, EyeOff } from "lucide-react";
 
 const DEMO_EMAIL = "demo@platform.com";
 const DEMO_PASSWORD = "demo123";
