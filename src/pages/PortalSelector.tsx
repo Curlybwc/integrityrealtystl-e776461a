@@ -34,7 +34,11 @@ const PortalSelector = () => {
             </p>
           </div>
 
-          {portals.length === 0 ? (
+          {loading && !isDemoMode ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
+            </div>
+          ) : portals.length === 0 ? (
             <p className="text-center text-muted-foreground">No portals available for your account.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
