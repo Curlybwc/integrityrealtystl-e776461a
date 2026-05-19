@@ -81,8 +81,8 @@ const RepairPricingEditor = () => {
     })();
   }, []);
 
-  const setField = (key: keyof PricingRules, value: number) => {
-    setRules((prev) => prev ? { ...prev, [key]: value } as PricingRules : prev);
+  const setField = (key: NumericKey, value: number) => {
+    setRules((prev) => (prev ? ({ ...prev, [key]: value } as PricingRules) : prev));
   };
   const setAppliance = (k: typeof APPLIANCE_KEYS[number], value: number) => {
     setRules((prev) => prev ? { ...prev, appliances: { ...prev.appliances, [k]: value } } : prev);
