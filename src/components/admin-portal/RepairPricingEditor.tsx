@@ -8,32 +8,51 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { PricingRules } from "@/lib/repairPricing";
 
-const FIELDS: Array<{ key: keyof PricingRules; label: string; group: string }> = [
-  { key: "cost_per_cabinet", label: "Cost per cabinet", group: "Kitchen" },
-  { key: "kitchen_fallback_replace", label: "Kitchen replace fallback", group: "Kitchen" },
-  { key: "kitchen_light_rehab", label: "Kitchen light rehab", group: "Kitchen" },
-  { key: "countertop_per_cabinet", label: "Countertop per cabinet", group: "Kitchen" },
-  { key: "full_bath_replace", label: "Full bath replace", group: "Baths" },
-  { key: "half_bath_replace", label: "Half bath replace", group: "Baths" },
-  { key: "bath_partial", label: "Bath partial", group: "Baths" },
-  { key: "bath_refresh", label: "Bath refresh", group: "Baths" },
+type NumericKey = Exclude<keyof PricingRules, "appliances">;
+
+const FIELDS: Array<{ key: NumericKey; label: string; group: string }> = [
+  // Kitchen
+  { key: "cabinet_paint_each", label: "Cabinet paint (each)", group: "Kitchen" },
+  { key: "cabinet_replace_each", label: "Cabinet replace (each)", group: "Kitchen" },
+  { key: "countertop_replace_kitchen", label: "Countertop replacement (kitchen)", group: "Kitchen" },
+  { key: "kitchen_light_fixtures", label: "Kitchen light rehab fixtures", group: "Kitchen" },
+  { key: "kitchen_fallback_replace", label: "Kitchen fallback (unknown cabs)", group: "Kitchen" },
+  // Baths
+  { key: "bath_tub_glaze", label: "Tub/surround glaze", group: "Baths" },
+  { key: "bath_tub_replace", label: "Tub/surround replace", group: "Baths" },
+  { key: "bath_toilet_replace", label: "Toilet replace", group: "Baths" },
+  { key: "bath_vanity_replace", label: "Vanity replace", group: "Baths" },
+  { key: "bath_vanity_light", label: "Vanity light", group: "Baths" },
+  { key: "bath_fan", label: "Bath fan", group: "Baths" },
+  // Whole-house finishes
+  { key: "flooring_per_sqft", label: "Flooring $/sqft", group: "Finishes" },
+  { key: "paint_per_sqft", label: "Interior paint $/sqft", group: "Finishes" },
+  { key: "interior_door_each", label: "Interior door (each)", group: "Finishes" },
+  // Systems
   { key: "roof_per_square", label: "Roof $/square", group: "Systems" },
   { key: "roof_overhead_multiplier", label: "Roof overhead multiplier", group: "Systems" },
   { key: "hvac_replace", label: "HVAC replace", group: "Systems" },
+  { key: "hvac_repair_reserve", label: "HVAC repair reserve", group: "Systems" },
   { key: "water_heater_replace", label: "Water heater replace", group: "Systems" },
+  { key: "electrical_panel_replace", label: "Electrical panel/mast", group: "Systems" },
   { key: "plumbing_stack_replace", label: "Plumbing stack replace", group: "Systems" },
-  { key: "flooring_per_sqft", label: "Flooring $/sqft", group: "Finishes" },
-  { key: "paint_drywall_per_sqft", label: "Paint/drywall $/sqft", group: "Finishes" },
-  { key: "drywall_widespread_per_sqft", label: "Drywall widespread $/sqft", group: "Finishes" },
-  { key: "window_replace_each", label: "Window replace each", group: "Finishes" },
-  { key: "dumpster", label: "Dumpster", group: "Other" },
-  { key: "foundation_reserve_monitor", label: "Foundation reserve (monitor)", group: "Reserves" },
-  { key: "foundation_reserve_major", label: "Foundation reserve (major)", group: "Reserves" },
-  { key: "basement_water_reserve_minor", label: "Basement water (minor)", group: "Reserves" },
-  { key: "basement_water_reserve_major", label: "Basement water (major)", group: "Reserves" },
-  { key: "landscaping_light", label: "Landscaping light", group: "Other" },
-  { key: "landscaping_heavy", label: "Landscaping heavy", group: "Other" },
-  { key: "misc_reserve", label: "Misc reserve", group: "Reserves" },
+  { key: "window_each", label: "Window (each)", group: "Systems" },
+  // Foundation
+  { key: "foundation_vertical_crack_each", label: "Vertical crack (each)", group: "Foundation" },
+  { key: "foundation_lateral_replace", label: "Lateral/horizontal crack", group: "Foundation" },
+  { key: "drain_tile_system", label: "Perimeter drain tile + sump", group: "Foundation" },
+  // Cleanout / exterior
+  { key: "dumpster_each", label: "Dumpster (each)", group: "Cleanout / Exterior" },
+  { key: "landscaping_light", label: "Landscaping light", group: "Cleanout / Exterior" },
+  { key: "landscaping_overgrown", label: "Landscaping overgrown", group: "Cleanout / Exterior" },
+  { key: "landscaping_severe", label: "Landscaping severe", group: "Cleanout / Exterior" },
+  { key: "siding_per_sqft", label: "Vinyl siding $/sqft (house)", group: "Cleanout / Exterior" },
+  { key: "gutters_replace", label: "Gutters replace", group: "Cleanout / Exterior" },
+  { key: "garage_door_replace", label: "Garage door replace", group: "Cleanout / Exterior" },
+  { key: "driveway_overlay", label: "Asphalt driveway overlay", group: "Cleanout / Exterior" },
+  // Reserves
+  { key: "misc_reserve_pct", label: "Misc reserve % (e.g. 0.10)", group: "Reserves" },
+  // Gut
   { key: "gut_per_sqft_partial", label: "Gut $/sqft (partial)", group: "Gut" },
   { key: "gut_per_sqft_high", label: "Gut $/sqft (high)", group: "Gut" },
 ];
@@ -62,8 +81,8 @@ const RepairPricingEditor = () => {
     })();
   }, []);
 
-  const setField = (key: keyof PricingRules, value: number) => {
-    setRules((prev) => prev ? { ...prev, [key]: value } as PricingRules : prev);
+  const setField = (key: NumericKey, value: number) => {
+    setRules((prev) => (prev ? ({ ...prev, [key]: value } as PricingRules) : prev));
   };
   const setAppliance = (k: typeof APPLIANCE_KEYS[number], value: number) => {
     setRules((prev) => prev ? { ...prev, appliances: { ...prev.appliances, [k]: value } } : prev);
