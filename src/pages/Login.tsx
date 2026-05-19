@@ -35,6 +35,8 @@ const Login = () => {
       return;
     }
 
+    sessionStorage.removeItem("demo_mode");
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
