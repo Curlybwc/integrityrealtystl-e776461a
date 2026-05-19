@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import { useHasRole } from "@/hooks/useHasRole";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import Layout from "@/components/Layout";
-import { Shield, TrendingUp, Handshake, Users } from "lucide-react";
+import { Shield, TrendingUp, Handshake, Users, Loader2 } from "lucide-react";
 
 const allPortals = [
   { id: "investor", label: "Investor Portal", href: "/portal/investor", icon: TrendingUp, description: "Access deals, analytics, and your investment dashboard." },
@@ -12,14 +12,14 @@ const allPortals = [
 
 
 const PortalSelector = () => {
-  const { hasRole } = useHasRole();
-  const isAdmin = hasRole("admin");
+  const { roles, loading } = useUserRoles();
   const isDemoMode = sessionStorage.getItem("demo_mode") === "true";
 
-  // Demo users and admins see all portals; others see based on their roles
-  const portals = (isDemoMode || isAdmin)
-    ? allPortals
-    : allPortals.filter((portal) => hasRole(portal.id as any));
+  // Admin Portal is gated strictly by the real admin role — never exposed via demo mode.
+  // Demo users see all non-admin portals. Authenticated users see portals matching their roles.
+  const portals = isDemoMode
+    ? allPortals.filter((p) => p.id !== "admin")
+    : allPortals.filter((portal) => roles.includes(portal.id));
 
   return (
     <Layout>
@@ -34,7 +34,11 @@ const PortalSelector = () => {
             </p>
           </div>
 
-          {portals.length === 0 ? (
+          {loading && !isDemoMode ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
+            </div>
+          ) : portals.length === 0 ? (
             <p className="text-center text-muted-foreground">No portals available for your account.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
