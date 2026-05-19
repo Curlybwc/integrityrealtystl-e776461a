@@ -13,7 +13,8 @@ const allPortals = [
 
 const PortalSelector = () => {
   const { roles, loading } = useUserRoles();
-  const isDemoMode = sessionStorage.getItem("demo_mode") === "true";
+  const hasRealRoles = roles.length > 0;
+  const isDemoMode = sessionStorage.getItem("demo_mode") === "true" && !hasRealRoles;
 
   // Admin Portal is gated strictly by the real admin role — never exposed via demo mode.
   // Demo users see all non-admin portals. Authenticated users see portals matching their roles.
