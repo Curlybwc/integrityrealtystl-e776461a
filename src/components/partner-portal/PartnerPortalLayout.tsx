@@ -4,6 +4,7 @@ import {
   User, 
   Star, 
   LogOut,
+  LayoutGrid,
   Menu,
   X
 } from "lucide-react";
