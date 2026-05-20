@@ -10,6 +10,7 @@ import {
   User,
   Menu,
   LogOut,
+  LayoutGrid,
   Wrench,
   FileSignature,
   ClipboardCheck,
