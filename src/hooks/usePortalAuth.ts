@@ -17,7 +17,16 @@ const MOCK_USERS: Record<PortalType, PortalUser> = {
   admin: { name: "Admin User", email: "admin@integrityrealty.com" },
 };
 
-const mockAuthEnabled = import.meta.env.VITE_ENABLE_MOCK_AUTH !== "false";
+// Mock auth is opt-in. Only enabled when explicitly set to "true".
+const mockAuthEnabled = import.meta.env.VITE_ENABLE_MOCK_AUTH === "true";
+
+// Roles that grant access to each portal. Admin can access every portal.
+const PORTAL_REQUIRED_ROLES: Record<PortalType, string[]> = {
+  investor: ["investor", "admin"],
+  wholesaler: ["wholesaler", "admin"],
+  partner: ["partner", "admin"],
+  admin: ["admin"],
+};
 
 export function usePortalAuth(portal: PortalType) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -30,46 +39,31 @@ export function usePortalAuth(portal: PortalType) {
     const checkAuth = async () => {
       setLoading(true);
 
-      // Check real Supabase auth first
       const { data: authData, error: authError } = await supabase.auth.getUser();
 
       if (!authError && authData.user) {
-        // User is authenticated via Supabase
-        if (portal === "admin") {
-          // Admin requires role check
-          const { data: roleRows, error: roleError } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", authData.user.id)
-            .eq("role", "admin")
-            .maybeSingle();
+        const allowedRoles = PORTAL_REQUIRED_ROLES[portal];
+        const { data: roleRows, error: roleError } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", authData.user.id)
+          .in("role", allowedRoles as any);
 
-          if (isMounted) {
-            const hasAdminRole = !roleError && !!roleRows;
-            setIsAuthenticated(hasAdminRole);
-            setUser({
-              id: authData.user.id,
-              name: authData.user.email ?? "Admin",
-              email: authData.user.email ?? undefined,
-            });
-            setLoading(false);
-          }
-        } else {
-          // Non-admin portals: authenticated user has access
-          if (isMounted) {
-            setIsAuthenticated(true);
-            setUser({
-              id: authData.user.id,
-              name: authData.user.email ?? MOCK_USERS[portal].name,
-              email: authData.user.email ?? undefined,
-            });
-            setLoading(false);
-          }
+        const hasAccess = !roleError && Array.isArray(roleRows) && roleRows.length > 0;
+
+        if (isMounted) {
+          setIsAuthenticated(hasAccess);
+          setUser({
+            id: authData.user.id,
+            name: authData.user.email ?? MOCK_USERS[portal].name,
+            email: authData.user.email ?? undefined,
+          });
+          setLoading(false);
         }
         return;
       }
 
-      // Fallback to mock auth for non-admin portals
+      // Mock auth fallback — opt-in via VITE_ENABLE_MOCK_AUTH=true, never for admin.
       if (portal !== "admin" && mockAuthEnabled) {
         if (isMounted) {
           setIsAuthenticated(true);

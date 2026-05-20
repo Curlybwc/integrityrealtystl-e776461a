@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation, Outlet, Navigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import logo from "@/assets/integrity-logo.png";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { usePortalAuth } from "@/hooks/usePortalAuth";
 
 const navItems = [
   { title: "Dashboard", href: "/portal/admin", icon: LayoutDashboard },
@@ -30,18 +31,10 @@ const navItems = [
 const AdminPortalLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const [session, setSession] = useState<any>(undefined); // undefined = loading
+  const { isAuthenticated, loading, user } = usePortalAuth("admin");
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (session === undefined) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
-  if (!session) return <Navigate to="/login" replace />;
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   const isActive = (path: string) => {
     if (path === "/portal/admin") {
@@ -123,10 +116,10 @@ const AdminPortalLayout = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  {session?.user?.email?.split("@")[0] ?? "Admin"}
+                  {user?.email?.split("@")[0] ?? "Admin"}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {session?.user?.email ?? ""}
+                  {user?.email ?? ""}
                 </p>
               </div>
             </div>
