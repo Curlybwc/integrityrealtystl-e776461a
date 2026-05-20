@@ -125,6 +125,17 @@ const InvestorPortalLayout = () => {
               </div>
             </div>
             <Button
+              variant="ghost"
+              size="sm"
+              className="w-full mb-2"
+              asChild
+            >
+              <Link to="/portals">
+                <LayoutGrid className="w-4 h-4 mr-2" />
+                Switch Portal
+              </Link>
+            </Button>
+            <Button
               variant="outline"
               size="sm"
               className="w-full"
