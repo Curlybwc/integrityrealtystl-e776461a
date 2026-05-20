@@ -44,7 +44,7 @@ const PortalDashboard = () => {
           <div className="bg-card border border-border rounded-lg p-5 shadow-card">
             <div className="flex items-center gap-2 mb-3">
               <Star className="w-4 h-4 text-primary" />
-              <h3 className="font-medium text-foreground">Jen's Picks</h3>
+              <h3 className="font-medium text-foreground">Deal Alerts</h3>
             </div>
             <p className="text-sm text-muted-foreground">
               Curated deals hand-selected by Integrity Realty STL. These are properties 
