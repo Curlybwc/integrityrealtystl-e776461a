@@ -7,6 +7,7 @@ import {
   Search,
   Menu,
   LogOut,
+  LayoutGrid,
   User,
   Users,
   CheckCircle,
