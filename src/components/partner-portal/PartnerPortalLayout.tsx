@@ -61,12 +61,20 @@ const PartnerPortalLayout = () => {
             </Link>
           </div>
 
-          <Button variant="ghost" size="sm" asChild className="gap-2">
-            <Link to="/">
-              <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">Exit Portal</span>
-            </Link>
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" asChild className="gap-2">
+              <Link to="/portals">
+                <LayoutGrid className="w-4 h-4" />
+                <span className="hidden sm:inline">Switch Portal</span>
+              </Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild className="gap-2">
+              <Link to="/">
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Exit Portal</span>
+              </Link>
+            </Button>
+          </div>
         </div>
       </header>
 
