@@ -7,6 +7,7 @@ import {
   User,
   Menu,
   LogOut,
+  LayoutGrid,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
