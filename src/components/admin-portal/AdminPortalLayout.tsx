@@ -116,10 +116,10 @@ const AdminPortalLayout = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  {session?.user?.email?.split("@")[0] ?? "Admin"}
+                  {user?.email?.split("@")[0] ?? "Admin"}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {session?.user?.email ?? ""}
+                  {user?.email ?? ""}
                 </p>
               </div>
             </div>
