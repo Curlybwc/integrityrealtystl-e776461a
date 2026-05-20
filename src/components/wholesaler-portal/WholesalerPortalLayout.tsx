@@ -7,6 +7,7 @@ import {
   User,
   Menu,
   LogOut,
+  LayoutGrid,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -107,6 +108,17 @@ const WholesalerPortalLayout = () => {
                 </p>
               </div>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full mb-2"
+              asChild
+            >
+              <Link to="/portals">
+                <LayoutGrid className="w-4 h-4 mr-2" />
+                Switch Portal
+              </Link>
+            </Button>
             <Button
               variant="outline"
               size="sm"
