@@ -344,11 +344,16 @@ Deno.serve(async (req) => {
       console.error("worker error", row.id, e);
       await svc.from("repair_analyses").update({
         analysis_status: "failed",
-        failure_reason: (e as Error).message.slice(0, 500),
+        failure_reason: "Analysis failed. Please retry or contact support.",
       }).eq("id", row.id);
-      results.push({ id: row.id, status: "failed", error: (e as Error).message });
+      results.push({ id: row.id, status: "failed" });
     }
   }
+
+  return new Response(JSON.stringify({ processed: results.length, results }), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+});
 
   return new Response(JSON.stringify({ processed: results.length, results }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
