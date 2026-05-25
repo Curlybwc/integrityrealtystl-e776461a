@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
 
     if (insertErr) {
       console.error("insert pending failed", insertErr);
-      return new Response(JSON.stringify({ error: insertErr.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Failed to queue analysis" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Fire-and-forget worker kick (don't await)
@@ -238,6 +238,6 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ analysis: pending }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("analyze-repairs error", e);
-    return new Response(JSON.stringify({ error: (e as Error).message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: "Internal server error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

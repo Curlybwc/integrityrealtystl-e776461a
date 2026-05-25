@@ -69,11 +69,14 @@ Deno.serve(async (req) => {
       .select("*")
       .single();
 
-    if (error) return j({ error: error.message }, 500);
+    if (error) {
+      console.error("admin-override update failed:", error);
+      return j({ error: "Update failed" }, 500);
+    }
     return j({ analysis: updated });
   } catch (e) {
     console.error("admin-override-repair-analysis", e);
-    return j({ error: (e as Error).message }, 500);
+    return j({ error: "Internal server error" }, 500);
   }
 });
 
