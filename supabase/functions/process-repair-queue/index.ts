@@ -285,6 +285,15 @@ Analyze the attached MLS photos and produce the observations JSON.`;
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Service-role only: this is an internal worker called by analyze-repairs / cron.
+  const auth = req.headers.get("Authorization") ?? "";
+  if (auth !== `Bearer ${SERVICE_ROLE}`) {
+    return new Response(JSON.stringify({ error: "Forbidden" }), {
+      status: 403,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   const svc = createClient(SUPABASE_URL, SERVICE_ROLE);
 
   const { data: rulesRow } = await svc
