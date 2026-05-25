@@ -22,6 +22,10 @@ const InvestorListingPage = () => {
   const { mlsNumber } = useParams<{ mlsNumber: string }>();
 
   const goBack = () => {
+    if (window.opener && !window.opener.closed) {
+      window.close();
+      return;
+    }
     if (window.history.length > 2) {
       navigate(-1);
     } else {
