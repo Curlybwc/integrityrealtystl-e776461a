@@ -226,7 +226,7 @@ serve(async (req) => {
     const apiKey = Deno.env.get("REPLIERS_API_KEY");
     if (!apiKey) {
       return new Response(
-        JSON.stringify({ error: "REPLIERS_API_KEY not configured" }),
+        JSON.stringify({ error: "Service unavailable" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -238,6 +238,48 @@ serve(async (req) => {
     } else {
       searchParams.forEach((value, key) => { params[key] = value; });
     }
+
+    // Auth gate: only the single-MLS public lookup is allowed without auth
+    // (used by the public listing detail page). All other modes require a
+    // valid signed-in user to prevent Repliers/ArcGIS quota abuse.
+    const isPublicSingleLookup =
+      params.mode !== "comps" &&
+      typeof params.mlsNumber === "string" &&
+      params.mlsNumber.length > 0 &&
+      !params.zip;
+
+    if (!isPublicSingleLookup) {
+      const authHeader = req.headers.get("Authorization") ?? "";
+      if (!authHeader.startsWith("Bearer ")) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      try {
+        const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.45.0");
+        const supabase = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_ANON_KEY")!,
+          { global: { headers: { Authorization: authHeader } } }
+        );
+        const token = authHeader.replace("Bearer ", "");
+        const { data, error } = await supabase.auth.getUser(token);
+        if (error || !data?.user) {
+          return new Response(JSON.stringify({ error: "Unauthorized" }), {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } catch (authErr) {
+        console.error("auth verification failed:", authErr);
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
 
     // Comps mode: sold-only search around a subject
     if (params.mode === "comps") {
