@@ -139,7 +139,9 @@ const InvestorPortalLayout = () => {
               variant="outline"
               size="sm"
               className="w-full"
-              onClick={() => {
+              onClick={async () => {
+                sessionStorage.removeItem("demo_mode");
+                await supabase.auth.signOut();
                 window.location.href = "/invest";
               }}
             >
