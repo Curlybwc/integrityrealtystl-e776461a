@@ -149,6 +149,60 @@ const AdminUsers = () => {
     setCreating(false);
   };
 
+  const handleInviteUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const trimmedEmail = inviteEmail.trim();
+    const trimmedName = inviteName.trim();
+    const selectedRoles = Object.entries(inviteRoles)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
+
+    if (!trimmedEmail) {
+      toast({ title: "Error", description: "Email is required.", variant: "destructive" });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      toast({ title: "Error", description: "Please enter a valid email.", variant: "destructive" });
+      return;
+    }
+    if (selectedRoles.length === 0) {
+      toast({ title: "Error", description: "Select at least one role.", variant: "destructive" });
+      return;
+    }
+
+    setInviting(true);
+
+    const res = await supabase.functions.invoke("admin-invite-user", {
+      body: {
+        email: trimmedEmail,
+        full_name: trimmedName,
+        roles: selectedRoles,
+        redirect_to: `${window.location.origin}/reset-password`,
+      },
+    });
+
+    if (res.error || res.data?.error) {
+      toast({
+        title: "Error sending invite",
+        description: res.data?.error || res.error?.message || "Unknown error",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Invite sent",
+        description: `${trimmedEmail} will receive an email to set their password.`,
+      });
+      setInviteEmail("");
+      setInviteName("");
+      setInviteRoles({ admin: true, investor: false, wholesaler: false, partner: false });
+      setInviteOpen(false);
+      fetchData();
+    }
+
+    setInviting(false);
+  };
+
   const filtered = users.filter(
     (u) =>
       (u.email ?? "").toLowerCase().includes(search.toLowerCase()) ||
