@@ -9,6 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Eye, EyeOff } from "lucide-react";
 
+const DEMO_EMAIL = "demo@platform.com";
+const DEMO_PASSWORD = "demo123";
+
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -16,6 +19,12 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const fillDemoCredentials = () => {
+    setEmail(DEMO_EMAIL);
+    setPassword(DEMO_PASSWORD);
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +109,25 @@ const Login = () => {
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
+
+            <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-dashed border-border">
+              <p className="text-sm text-muted-foreground mb-2 text-center">
+                Demo investor account:
+              </p>
+              <p className="text-xs text-muted-foreground text-center font-mono">
+                {DEMO_EMAIL} / {DEMO_PASSWORD}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full mt-2"
+                onClick={fillDemoCredentials}
+              >
+                Fill Demo Credentials
+              </Button>
+            </div>
+
 
             <p className="mt-4 text-center text-sm">
               <Link to="/forgot-password" className="text-primary hover:underline">
