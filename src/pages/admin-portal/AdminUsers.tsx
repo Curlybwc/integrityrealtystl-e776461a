@@ -195,7 +195,7 @@ const AdminUsers = () => {
       });
       setInviteEmail("");
       setInviteName("");
-      setInviteRoles({ admin: true, investor: false, wholesaler: false, partner: false });
+      setInviteRoles({ admin: true, investor: true, wholesaler: true, partner: true });
       setInviteOpen(false);
       fetchData();
     }
