@@ -9,8 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Eye, EyeOff } from "lucide-react";
 
-const DEMO_EMAIL = "demo@platform.com";
-const DEMO_PASSWORD = "demo123";
 
 const Login = () => {
   const navigate = useNavigate();
