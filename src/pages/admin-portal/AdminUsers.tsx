@@ -45,9 +45,9 @@ const AdminUsers = () => {
   const [inviteName, setInviteName] = useState("");
   const [inviteRoles, setInviteRoles] = useState<Record<string, boolean>>({
     admin: true,
-    investor: false,
-    wholesaler: false,
-    partner: false,
+    investor: true,
+    wholesaler: true,
+    partner: true,
   });
   const [inviting, setInviting] = useState(false);
 
