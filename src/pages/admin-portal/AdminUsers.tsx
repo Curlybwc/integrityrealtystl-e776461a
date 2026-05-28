@@ -219,6 +219,74 @@ const AdminUsers = () => {
           </p>
         </div>
 
+        <div className="flex gap-2">
+        <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline">
+              <Mail className="w-4 h-4 mr-2" />
+              Invite User
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Invite User</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleInviteUser} className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="invite-name">Full Name</Label>
+                <Input
+                  id="invite-name"
+                  placeholder="Sam Smith"
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                  maxLength={100}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invite-email">Email *</Label>
+                <Input
+                  id="invite-email"
+                  type="email"
+                  placeholder="sam@integrityrealtystl.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  required
+                  maxLength={255}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Roles to grant *</Label>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  {PORTAL_ROLES.map((role) => (
+                    <label key={role} className="flex items-center gap-2 text-sm capitalize cursor-pointer">
+                      <Checkbox
+                        checked={!!inviteRoles[role]}
+                        onCheckedChange={(v) =>
+                          setInviteRoles((prev) => ({ ...prev, [role]: !!v }))
+                        }
+                      />
+                      {role}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                They'll receive an email invite to set their password. Selected roles are granted automatically when they accept.
+              </p>
+              <Button type="submit" className="w-full" disabled={inviting}>
+                {inviting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Sending invite...
+                  </>
+                ) : (
+                  "Send Invite"
+                )}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button>
