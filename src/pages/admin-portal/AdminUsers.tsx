@@ -39,6 +39,18 @@ const AdminUsers = () => {
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
 
+  // Invite user dialog state
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteRoles, setInviteRoles] = useState<Record<string, boolean>>({
+    admin: true,
+    investor: false,
+    wholesaler: false,
+    partner: false,
+  });
+  const [inviting, setInviting] = useState(false);
+
   const fetchData = async () => {
     setLoading(true);
     const [usersRes, rolesRes] = await Promise.all([
