@@ -63,8 +63,10 @@ export function usePortalAuth(portal: PortalType) {
         return;
       }
 
-      // Mock auth fallback — opt-in via VITE_ENABLE_MOCK_AUTH=true, never for admin.
-      if (portal !== "admin" && mockAuthEnabled) {
+      // Mock auth fallback — opt-in via VITE_ENABLE_MOCK_AUTH=true or demo_mode session flag.
+      // Never for admin.
+      const demoMode = typeof window !== "undefined" && sessionStorage.getItem("demo_mode") === "true";
+      if (portal !== "admin" && (mockAuthEnabled || demoMode)) {
         if (isMounted) {
           setIsAuthenticated(true);
           setUser(MOCK_USERS[portal]);
