@@ -117,19 +117,19 @@ const Login = () => {
 
             <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-dashed border-border">
               <p className="text-sm text-muted-foreground mb-2 text-center">
-                Demo investor account:
+                Want to look around first?
               </p>
-              <p className="text-xs text-muted-foreground text-center font-mono">
-                {DEMO_EMAIL} / {DEMO_PASSWORD}
+              <p className="text-xs text-muted-foreground text-center">
+                Explore the Investor, Wholesaler, and Partner portals as a demo user — no account needed.
               </p>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 className="w-full mt-2"
-                onClick={fillDemoCredentials}
+                onClick={handleDemoSignIn}
               >
-                Fill Demo Credentials
+                Continue as Demo User
               </Button>
             </div>
 
