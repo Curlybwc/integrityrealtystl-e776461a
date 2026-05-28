@@ -17,17 +17,25 @@ const ResetPassword = () => {
   const [isValid, setIsValid] = useState(false);
 
   useEffect(() => {
-    // Check if we have a recovery session from the URL
+    // Recovery links can arrive in two formats:
+    //  - Legacy hash:   #access_token=...&type=recovery
+    //  - PKCE query:    ?code=... (Supabase exchanges it for a session automatically)
     const hash = window.location.hash;
-    if (hash.includes("type=recovery")) {
+    const query = window.location.search;
+    if (hash.includes("type=recovery") || query.includes("code=")) {
       setIsValid(true);
     }
 
-    // Also listen for auth state change (Supabase processes the token)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
+    // Listen for the PASSWORD_RECOVERY event Supabase fires after processing the link.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
         setIsValid(true);
       }
+    });
+
+    // Fallback: if there's already an active session (e.g. recovery already exchanged), allow reset.
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) setIsValid(true);
     });
 
     return () => subscription.unsubscribe();
