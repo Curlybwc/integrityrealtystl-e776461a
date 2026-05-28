@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import logo from "@/assets/integrity-logo.png";
 import { cn } from "@/lib/utils";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
   { title: "Dashboard", href: "/portal/investor", icon: LayoutDashboard },
@@ -139,7 +140,9 @@ const InvestorPortalLayout = () => {
               variant="outline"
               size="sm"
               className="w-full"
-              onClick={() => {
+              onClick={async () => {
+                sessionStorage.removeItem("demo_mode");
+                await supabase.auth.signOut();
                 window.location.href = "/invest";
               }}
             >
