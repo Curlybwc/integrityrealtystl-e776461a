@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Search, UserPlus, UserMinus, Loader2, Plus } from "lucide-react";
+import { Search, UserPlus, UserMinus, Loader2, Plus, Mail } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -37,6 +38,18 @@ const AdminUsers = () => {
   const [newPassword, setNewPassword] = useState("");
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
+
+  // Invite user dialog state
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteRoles, setInviteRoles] = useState<Record<string, boolean>>({
+    admin: true,
+    investor: false,
+    wholesaler: false,
+    partner: false,
+  });
+  const [inviting, setInviting] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -136,6 +149,60 @@ const AdminUsers = () => {
     setCreating(false);
   };
 
+  const handleInviteUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const trimmedEmail = inviteEmail.trim();
+    const trimmedName = inviteName.trim();
+    const selectedRoles = Object.entries(inviteRoles)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
+
+    if (!trimmedEmail) {
+      toast({ title: "Error", description: "Email is required.", variant: "destructive" });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      toast({ title: "Error", description: "Please enter a valid email.", variant: "destructive" });
+      return;
+    }
+    if (selectedRoles.length === 0) {
+      toast({ title: "Error", description: "Select at least one role.", variant: "destructive" });
+      return;
+    }
+
+    setInviting(true);
+
+    const res = await supabase.functions.invoke("admin-invite-user", {
+      body: {
+        email: trimmedEmail,
+        full_name: trimmedName,
+        roles: selectedRoles,
+        redirect_to: `${window.location.origin}/reset-password`,
+      },
+    });
+
+    if (res.error || res.data?.error) {
+      toast({
+        title: "Error sending invite",
+        description: res.data?.error || res.error?.message || "Unknown error",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Invite sent",
+        description: `${trimmedEmail} will receive an email to set their password.`,
+      });
+      setInviteEmail("");
+      setInviteName("");
+      setInviteRoles({ admin: true, investor: false, wholesaler: false, partner: false });
+      setInviteOpen(false);
+      fetchData();
+    }
+
+    setInviting(false);
+  };
+
   const filtered = users.filter(
     (u) =>
       (u.email ?? "").toLowerCase().includes(search.toLowerCase()) ||
@@ -151,6 +218,74 @@ const AdminUsers = () => {
             Manage portal access for all registered users.
           </p>
         </div>
+
+        <div className="flex gap-2">
+        <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline">
+              <Mail className="w-4 h-4 mr-2" />
+              Invite User
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Invite User</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleInviteUser} className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="invite-name">Full Name</Label>
+                <Input
+                  id="invite-name"
+                  placeholder="Sam Smith"
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                  maxLength={100}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invite-email">Email *</Label>
+                <Input
+                  id="invite-email"
+                  type="email"
+                  placeholder="sam@integrityrealtystl.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  required
+                  maxLength={255}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Roles to grant *</Label>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  {PORTAL_ROLES.map((role) => (
+                    <label key={role} className="flex items-center gap-2 text-sm capitalize cursor-pointer">
+                      <Checkbox
+                        checked={!!inviteRoles[role]}
+                        onCheckedChange={(v) =>
+                          setInviteRoles((prev) => ({ ...prev, [role]: !!v }))
+                        }
+                      />
+                      {role}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                They'll receive an email invite to set their password. Selected roles are granted automatically when they accept.
+              </p>
+              <Button type="submit" className="w-full" disabled={inviting}>
+                {inviting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Sending invite...
+                  </>
+                ) : (
+                  "Send Invite"
+                )}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -215,6 +350,7 @@ const AdminUsers = () => {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="relative max-w-sm">
