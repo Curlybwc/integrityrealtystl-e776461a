@@ -20,10 +20,15 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const fillDemoCredentials = () => {
-    setEmail(DEMO_EMAIL);
-    setPassword(DEMO_PASSWORD);
+  const handleDemoSignIn = () => {
+    sessionStorage.setItem("demo_mode", "true");
+    toast({
+      title: "Demo mode",
+      description: "Exploring the Investor, Wholesaler, and Partner portals as a demo user.",
+    });
+    navigate("/portals");
   };
+
 
 
   const handleSubmit = async (e: React.FormEvent) => {
