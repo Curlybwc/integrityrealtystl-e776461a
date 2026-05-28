@@ -9,6 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Eye, EyeOff } from "lucide-react";
 
+const DEMO_EMAIL = "demo@platform.com";
+const DEMO_PASSWORD = "demo123";
+
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -16,6 +19,12 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const fillDemoCredentials = () => {
+    setEmail(DEMO_EMAIL);
+    setPassword(DEMO_PASSWORD);
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
