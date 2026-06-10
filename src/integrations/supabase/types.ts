@@ -540,9 +540,14 @@ export type Database = {
       admin_list_users: {
         Args: never
         Returns: {
+          baa_signed_at: string
+          baa_status: Database["public"]["Enums"]["baa_status"]
           created_at: string
           email: string
+          email_opt_in: boolean
           full_name: string
+          phone: string
+          sms_opt_in: boolean
           user_id: string
         }[]
       }
