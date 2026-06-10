@@ -21,9 +21,14 @@ import { useMlsSearch, type MlsSearchParams } from "@/hooks/useMlsSearch";
 import { DEFAULT_SCREENING_CONFIG, type ScreeningConfig } from "@/lib/screening";
 import BatchAnalysisTable from "@/components/portal/BatchAnalysisTable";
 import RepairQuotaChip from "@/components/portal/RepairQuotaChip";
+import PreviewQuotaGate, { PreviewQuotaChip } from "@/components/portal/PreviewQuotaGate";
+import { useAnalyzerQuota } from "@/hooks/useAnalyzerQuota";
+import { useToast } from "@/hooks/use-toast";
 
 const PortalSearchAnalyzer = () => {
   const { results, isLoading, search } = useMlsSearch();
+  const { recordRun, isExhausted } = useAnalyzerQuota();
+  const { toast } = useToast();
 
   const [zip, setZip] = useState("");
   const [minPrice, setMinPrice] = useState("");
@@ -55,6 +60,23 @@ const PortalSearchAnalyzer = () => {
   });
 
   const handleSearch = async (page = 1) => {
+    if (isExhausted) {
+      toast({
+        title: "Preview limit reached",
+        description: "Complete your profile to unlock unlimited searches.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const ok = await recordRun("mls_search", { page, zip, maxPrice });
+    if (!ok) {
+      toast({
+        title: "Preview limit reached",
+        description: "Complete your profile to unlock unlimited searches.",
+        variant: "destructive",
+      });
+      return;
+    }
     setCurrentPage(page);
     await search(buildParams(page));
   };
@@ -74,8 +96,13 @@ const PortalSearchAnalyzer = () => {
             Search MLS listings and instantly screen them for Flip, BRRRR, and Turnkey potential.
           </p>
         </div>
-        <RepairQuotaChip />
+        <div className="flex items-center gap-2">
+          <PreviewQuotaChip />
+          <RepairQuotaChip />
+        </div>
       </div>
+
+      <PreviewQuotaGate portal="investor" toolLabel="searches" />
 
 
       {/* Disclaimer */}

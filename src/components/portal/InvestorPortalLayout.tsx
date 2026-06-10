@@ -22,6 +22,7 @@ import logo from "@/assets/integrity-logo.png";
 import { cn } from "@/lib/utils";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 import { supabase } from "@/integrations/supabase/client";
+import AccessTierBanner from "@/components/portal/AccessTierBanner";
 
 const navItems = [
   { title: "Dashboard", href: "/portal/investor", icon: LayoutDashboard },
@@ -171,6 +172,9 @@ const InvestorPortalLayout = () => {
             <div className="w-10" /> {/* Spacer */}
           </div>
         </header>
+
+        {/* Access tier banner (preview/browse only) */}
+        <AccessTierBanner portal="investor" />
 
         {/* Page content */}
         <main className="flex-1 p-6 overflow-y-auto">

@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Search, UserPlus, UserMinus, Loader2, Plus, Mail } from "lucide-react";
+import { Search, UserPlus, UserMinus, Loader2, Plus, Mail, FileSignature, CheckCircle2, XCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +15,11 @@ interface UserProfile {
   user_id: string;
   email: string;
   full_name: string | null;
+  phone: string | null;
+  sms_opt_in: boolean;
+  email_opt_in: boolean;
+  baa_status: "not_required" | "not_sent" | "sent" | "signed" | "verified";
+  baa_signed_at: string | null;
   created_at: string;
 }
 
@@ -384,7 +390,10 @@ const AdminUsers = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>User</TableHead>
-                    <TableHead>Joined</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead className="text-center">SMS</TableHead>
+                    <TableHead className="text-center">Email</TableHead>
+                    <TableHead>BAA</TableHead>
                     {PORTAL_ROLES.map((role) => (
                       <TableHead key={role} className="text-center capitalize">
                         {role}
@@ -403,10 +412,34 @@ const AdminUsers = () => {
                           <p className="text-xs text-muted-foreground">
                             {user.email}
                           </p>
+                          <p className="text-[11px] text-muted-foreground">
+                            Joined {new Date(user.created_at).toLocaleDateString()}
+                          </p>
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {new Date(user.created_at).toLocaleDateString()}
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        {user.phone || <span className="text-muted-foreground/60">—</span>}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {user.sms_opt_in ? (
+                          <CheckCircle2 className="w-4 h-4 text-primary mx-auto" />
+                        ) : (
+                          <XCircle className="w-4 h-4 text-muted-foreground/40 mx-auto" />
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {user.email_opt_in ? (
+                          <CheckCircle2 className="w-4 h-4 text-primary mx-auto" />
+                        ) : (
+                          <XCircle className="w-4 h-4 text-muted-foreground/40 mx-auto" />
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <BaaCell
+                          userId={user.user_id}
+                          status={user.baa_status}
+                          onChanged={fetchData}
+                        />
                       </TableCell>
                       {PORTAL_ROLES.map((role) => {
                         const has = userHasRole(user.user_id, role);
@@ -446,6 +479,80 @@ const AdminUsers = () => {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+};
+
+// Inline BAA cell with status badge + admin actions
+const BaaCell = ({
+  userId,
+  status,
+  onChanged,
+}: {
+  userId: string;
+  status: "not_required" | "not_sent" | "sent" | "signed" | "verified";
+  onChanged: () => void;
+}) => {
+  const { toast } = useToast();
+  const [busy, setBusy] = useState(false);
+
+  const update = async (action: "sent" | "signed" | "verified" | "not_sent") => {
+    setBusy(true);
+    const res = await supabase.functions.invoke("admin-update-baa", {
+      body: { target_user_id: userId, action },
+    });
+    if (res.error || res.data?.error) {
+      toast({
+        title: "Update failed",
+        description: res.data?.error || res.error?.message || "Unknown",
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: `BAA marked ${action.replace("_", " ")}` });
+      onChanged();
+    }
+    setBusy(false);
+  };
+
+  const tone: Record<string, string> = {
+    not_required: "bg-muted text-muted-foreground",
+    not_sent: "bg-amber-100 text-amber-800",
+    sent: "bg-blue-100 text-blue-800",
+    signed: "bg-primary/15 text-primary",
+    verified: "bg-primary text-primary-foreground",
+  };
+  const label: Record<string, string> = {
+    not_required: "N/A",
+    not_sent: "Not sent",
+    sent: "Sent",
+    signed: "Signed",
+    verified: "Verified",
+  };
+
+  if (status === "not_required") {
+    return <Badge className={tone[status]}>{label[status]}</Badge>;
+  }
+
+  return (
+    <div className="flex flex-col items-start gap-1">
+      <Badge className={tone[status]}>{label[status]}</Badge>
+      <div className="flex gap-1">
+        {status === "not_sent" && (
+          <Button size="sm" variant="outline" className="h-6 px-2 text-[11px]" disabled={busy} onClick={() => update("sent")}>
+            <FileSignature className="w-3 h-3 mr-1" /> Mark sent
+          </Button>
+        )}
+        {status === "sent" && (
+          <Button size="sm" variant="outline" className="h-6 px-2 text-[11px]" disabled={busy} onClick={() => update("signed")}>
+            <CheckCircle2 className="w-3 h-3 mr-1" /> Mark signed
+          </Button>
+        )}
+        {status === "signed" && (
+          <Button size="sm" variant="outline" className="h-6 px-2 text-[11px]" disabled={busy} onClick={() => update("verified")}>
+            <CheckCircle2 className="w-3 h-3 mr-1" /> Verify
+          </Button>
+        )}
+      </div>
     </div>
   );
 };

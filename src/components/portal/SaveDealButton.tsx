@@ -1,10 +1,13 @@
-import { Heart } from "lucide-react";
+import { Heart, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSavedDeals } from "@/hooks/useSavedDeals";
 import { useNavigate } from "react-router-dom";
 import { propertyKeyForDeal, buildSnapshotFromDeal, recomputeMetrics, type SavedUnderwriting } from "@/lib/savedDeals";
 import type { Deal } from "@/lib/screening";
 import { toast } from "@/hooks/use-toast";
+import { useAccessTier } from "@/hooks/useAccessTier";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 
 /**
  * Lightweight heart overlay for discovery grid cards.
@@ -14,10 +17,12 @@ import { toast } from "@/hooks/use-toast";
 const SaveDealButton = ({ deal, className }: { deal: Deal; className?: string }) => {
   const { isSaved, getByKey, saveDeal, canSave } = useSavedDeals();
   const navigate = useNavigate();
+  const { tier, isAdmin } = useAccessTier();
 
   const key = propertyKeyForDeal(deal);
   const saved = getByKey(key);
   const isOn = !!saved;
+  const allowed = isAdmin || tier === "full";
 
   const handleClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -49,6 +54,37 @@ const SaveDealButton = ({ deal, className }: { deal: Deal; className?: string })
       toast({ title: "Save failed", description: message, variant: "destructive" });
     }
   };
+
+  if (!allowed && !isOn) {
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            aria-label="Locked — sign your Buyer's Agency Agreement to save deals"
+            className={cn(
+              "h-8 w-8 rounded-full flex items-center justify-center backdrop-blur bg-background/80 hover:bg-background border border-border shadow-sm transition-colors",
+              className,
+            )}
+          >
+            <Lock className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-72" align="end" onClick={(e) => e.stopPropagation()}>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Saving deals requires full access</p>
+            <p className="text-xs text-muted-foreground">
+              Complete your profile and sign your Buyer's Agency Agreement to save deals to your portfolio.
+            </p>
+            <Button size="sm" className="w-full" onClick={() => navigate("/portal/investor/onboarding")}>
+              Complete setup
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
+    );
+  }
 
   return (
     <button

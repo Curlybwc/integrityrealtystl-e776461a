@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import logo from "@/assets/integrity-logo.png";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 import { supabase } from "@/integrations/supabase/client";
+import AccessTierBanner from "@/components/portal/AccessTierBanner";
 
 const navItems = [
   { title: "Dashboard", href: "/portal/wholesaler", icon: LayoutDashboard },
@@ -155,6 +156,8 @@ const WholesalerPortalLayout = () => {
             <div className="w-10" />
           </div>
         </header>
+
+        <AccessTierBanner portal="wholesaler" />
 
         {/* Page content */}
         <main className="flex-1 p-6 overflow-y-auto">

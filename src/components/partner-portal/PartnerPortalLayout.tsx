@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import logo from "@/assets/integrity-logo.png";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
+import AccessTierBanner from "@/components/portal/AccessTierBanner";
 
 const PartnerPortalLayout = () => {
   const location = useLocation();
@@ -121,8 +122,11 @@ const PartnerPortalLayout = () => {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 p-6 lg:p-8 min-h-[calc(100vh-4rem)]">
-          <Outlet />
+        <main className="flex-1 min-h-[calc(100vh-4rem)]">
+          <AccessTierBanner portal="partner" />
+          <div className="p-6 lg:p-8">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

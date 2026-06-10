@@ -52,6 +52,7 @@ import PortalAccount from "./pages/portal/PortalAccount";
 import PortalSearchAnalyzer from "./pages/portal/PortalSearchAnalyzer";
 import InvestorListingPage from "./pages/portal/InvestorListingPage";
 import PortalSavedDeals from "./pages/portal/PortalSavedDeals";
+import PortalOnboarding from "./pages/portal/PortalOnboarding";
 
 // Wholesaler Portal pages
 import WholesalerPortalLayout from "./components/wholesaler-portal/WholesalerPortalLayout";
@@ -136,6 +137,7 @@ const App = () => (
             <Route path="account" element={<PortalAccount />} />
             <Route path="search-analyzer" element={<PortalSearchAnalyzer />} />
             <Route path="listing/:mlsNumber" element={<InvestorListingPage />} />
+            <Route path="onboarding" element={<PortalOnboarding />} />
           </Route>
 
           {/* Wholesaler Portal routes */}
@@ -144,6 +146,7 @@ const App = () => (
             <Route path="deals" element={<WholesalerDeals />} />
             <Route path="add-deal" element={<WholesalerAddDeal />} />
             <Route path="account" element={<WholesalerAccount />} />
+            <Route path="onboarding" element={<PortalOnboarding />} />
           </Route>
 
           {/* Partner Portal routes */}
@@ -151,6 +154,7 @@ const App = () => (
             <Route index element={<PartnerDashboard />} />
             <Route path="profile" element={<PartnerProfile />} />
             <Route path="testimonials" element={<PartnerTestimonials />} />
+            <Route path="onboarding" element={<PortalOnboarding />} />
           </Route>
 
           {/* Admin Portal routes */}

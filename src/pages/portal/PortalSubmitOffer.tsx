@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import TierGuard from "@/components/portal/TierGuard";
 
 const PortalSubmitOffer = () => {
   const { dealId } = useParams();
@@ -59,6 +60,7 @@ const PortalSubmitOffer = () => {
   };
 
   return (
+    <TierGuard requiredTier="full" portal="investor" featureName="Submitting offers">
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Back button */}
       <Link to={`/portal/investor/deals/${dealId}`}>
@@ -234,6 +236,7 @@ const PortalSubmitOffer = () => {
         </Button>
       </form>
     </div>
+    </TierGuard>
   );
 };
 
