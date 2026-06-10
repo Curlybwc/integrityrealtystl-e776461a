@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Authenticated can insert comp_reports" ON public.comp_reports;
