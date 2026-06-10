@@ -14,6 +14,11 @@ interface UserProfile {
   user_id: string;
   email: string;
   full_name: string | null;
+  phone: string | null;
+  sms_opt_in: boolean;
+  email_opt_in: boolean;
+  baa_status: "not_required" | "not_sent" | "sent" | "signed" | "verified";
+  baa_signed_at: string | null;
   created_at: string;
 }
 
