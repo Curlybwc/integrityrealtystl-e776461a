@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import TierGuard from "@/components/portal/TierGuard";
 
 const PortalRequestWalkthrough = () => {
   const { dealId } = useParams();
@@ -48,6 +49,7 @@ const PortalRequestWalkthrough = () => {
   };
 
   return (
+    <TierGuard requiredTier="full" portal="investor" featureName="Requesting walkthroughs">
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Back button */}
       <Link to={`/portal/investor/deals/${dealId}`}>
@@ -224,6 +226,7 @@ const PortalRequestWalkthrough = () => {
         </Button>
       </form>
     </div>
+    </TierGuard>
   );
 };
 

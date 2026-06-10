@@ -15,6 +15,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { networkContractors, type NetworkContractor } from "@/data/networkContractors";
+import TierGuard from "@/components/portal/TierGuard";
 
 const PortalBidRequest = () => {
   const { dealId } = useParams();
@@ -84,6 +85,7 @@ const PortalBidRequest = () => {
   };
 
   return (
+    <TierGuard requiredTier="full" portal="investor" featureName="Requesting contractor bids">
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Back button */}
       <Link to={`/portal/investor/deals/${dealId}`}>
@@ -398,6 +400,7 @@ const PortalBidRequest = () => {
         </Button>
       </form>
     </div>
+    </TierGuard>
   );
 };
 
