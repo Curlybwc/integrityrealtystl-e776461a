@@ -483,4 +483,78 @@ const AdminUsers = () => {
   );
 };
 
+// Inline BAA cell with status badge + admin actions
+const BaaCell = ({
+  userId,
+  status,
+  onChanged,
+}: {
+  userId: string;
+  status: "not_required" | "not_sent" | "sent" | "signed" | "verified";
+  onChanged: () => void;
+}) => {
+  const { toast } = useToast();
+  const [busy, setBusy] = useState(false);
+
+  const update = async (action: "sent" | "signed" | "verified" | "not_sent") => {
+    setBusy(true);
+    const res = await supabase.functions.invoke("admin-update-baa", {
+      body: { target_user_id: userId, action },
+    });
+    if (res.error || res.data?.error) {
+      toast({
+        title: "Update failed",
+        description: res.data?.error || res.error?.message || "Unknown",
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: `BAA marked ${action.replace("_", " ")}` });
+      onChanged();
+    }
+    setBusy(false);
+  };
+
+  const tone: Record<string, string> = {
+    not_required: "bg-muted text-muted-foreground",
+    not_sent: "bg-amber-100 text-amber-800",
+    sent: "bg-blue-100 text-blue-800",
+    signed: "bg-primary/15 text-primary",
+    verified: "bg-primary text-primary-foreground",
+  };
+  const label: Record<string, string> = {
+    not_required: "N/A",
+    not_sent: "Not sent",
+    sent: "Sent",
+    signed: "Signed",
+    verified: "Verified",
+  };
+
+  if (status === "not_required") {
+    return <Badge className={tone[status]}>{label[status]}</Badge>;
+  }
+
+  return (
+    <div className="flex flex-col items-start gap-1">
+      <Badge className={tone[status]}>{label[status]}</Badge>
+      <div className="flex gap-1">
+        {status === "not_sent" && (
+          <Button size="sm" variant="outline" className="h-6 px-2 text-[11px]" disabled={busy} onClick={() => update("sent")}>
+            <FileSignature className="w-3 h-3 mr-1" /> Mark sent
+          </Button>
+        )}
+        {status === "sent" && (
+          <Button size="sm" variant="outline" className="h-6 px-2 text-[11px]" disabled={busy} onClick={() => update("signed")}>
+            <CheckCircle2 className="w-3 h-3 mr-1" /> Mark signed
+          </Button>
+        )}
+        {status === "signed" && (
+          <Button size="sm" variant="outline" className="h-6 px-2 text-[11px]" disabled={busy} onClick={() => update("verified")}>
+            <CheckCircle2 className="w-3 h-3 mr-1" /> Verify
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default AdminUsers;
