@@ -41,6 +41,30 @@ export type Database = {
         }
         Relationships: []
       }
+      analyzer_usage: {
+        Row: {
+          context: Json | null
+          id: string
+          ran_at: string
+          tool: string
+          user_id: string
+        }
+        Insert: {
+          context?: Json | null
+          id?: string
+          ran_at?: string
+          tool: string
+          user_id: string
+        }
+        Update: {
+          context?: Json | null
+          id?: string
+          ran_at?: string
+          tool?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       comp_report_overrides: {
         Row: {
           created_at: string
@@ -175,6 +199,42 @@ export type Database = {
         }
         Relationships: []
       }
+      consent_log: {
+        Row: {
+          consent_text: string
+          consent_type: string
+          consent_version: string
+          created_at: string
+          granted: boolean
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          consent_text: string
+          consent_type: string
+          consent_version?: string
+          created_at?: string
+          granted: boolean
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          consent_text?: string
+          consent_type?: string
+          consent_version?: string
+          created_at?: string
+          granted?: boolean
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       portal_access_requests: {
         Row: {
           created_at: string
@@ -210,27 +270,66 @@ export type Database = {
       }
       profiles: {
         Row: {
+          baa_dotloop_document_id: string | null
+          baa_dotloop_loop_id: string | null
+          baa_sent_at: string | null
+          baa_signed_at: string | null
+          baa_status: Database["public"]["Enums"]["baa_status"]
+          baa_verified_at: string | null
           created_at: string
           email: string | null
+          email_opt_in: boolean
+          email_opt_in_at: string | null
+          email_opt_in_ip: string | null
           full_name: string | null
           id: string
           phone: string | null
+          preview_quota_limit: number
+          sms_opt_in: boolean
+          sms_opt_in_at: string | null
+          sms_opt_in_ip: string | null
           updated_at: string
         }
         Insert: {
+          baa_dotloop_document_id?: string | null
+          baa_dotloop_loop_id?: string | null
+          baa_sent_at?: string | null
+          baa_signed_at?: string | null
+          baa_status?: Database["public"]["Enums"]["baa_status"]
+          baa_verified_at?: string | null
           created_at?: string
           email?: string | null
+          email_opt_in?: boolean
+          email_opt_in_at?: string | null
+          email_opt_in_ip?: string | null
           full_name?: string | null
           id: string
           phone?: string | null
+          preview_quota_limit?: number
+          sms_opt_in?: boolean
+          sms_opt_in_at?: string | null
+          sms_opt_in_ip?: string | null
           updated_at?: string
         }
         Update: {
+          baa_dotloop_document_id?: string | null
+          baa_dotloop_loop_id?: string | null
+          baa_sent_at?: string | null
+          baa_signed_at?: string | null
+          baa_status?: Database["public"]["Enums"]["baa_status"]
+          baa_verified_at?: string | null
           created_at?: string
           email?: string | null
+          email_opt_in?: boolean
+          email_opt_in_at?: string | null
+          email_opt_in_ip?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
+          preview_quota_limit?: number
+          sms_opt_in?: boolean
+          sms_opt_in_at?: string | null
+          sms_opt_in_ip?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -447,6 +546,11 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_access_tier: { Args: { _user_id: string }; Returns: string }
+      get_preview_runs_remaining: {
+        Args: { _user_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -463,6 +567,7 @@ export type Database = {
         | "investor"
         | "wholesaler"
         | "partner"
+      baa_status: "not_required" | "not_sent" | "sent" | "signed" | "verified"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -598,6 +703,7 @@ export const Constants = {
         "wholesaler",
         "partner",
       ],
+      baa_status: ["not_required", "not_sent", "sent", "signed", "verified"],
     },
   },
 } as const
