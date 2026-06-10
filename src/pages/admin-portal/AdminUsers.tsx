@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Search, UserPlus, UserMinus, Loader2, Plus, Mail } from "lucide-react";
+import { Search, UserPlus, UserMinus, Loader2, Plus, Mail, FileSignature, CheckCircle2, XCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -389,7 +390,10 @@ const AdminUsers = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>User</TableHead>
-                    <TableHead>Joined</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead className="text-center">SMS</TableHead>
+                    <TableHead className="text-center">Email</TableHead>
+                    <TableHead>BAA</TableHead>
                     {PORTAL_ROLES.map((role) => (
                       <TableHead key={role} className="text-center capitalize">
                         {role}
@@ -408,10 +412,34 @@ const AdminUsers = () => {
                           <p className="text-xs text-muted-foreground">
                             {user.email}
                           </p>
+                          <p className="text-[11px] text-muted-foreground">
+                            Joined {new Date(user.created_at).toLocaleDateString()}
+                          </p>
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {new Date(user.created_at).toLocaleDateString()}
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        {user.phone || <span className="text-muted-foreground/60">—</span>}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {user.sms_opt_in ? (
+                          <CheckCircle2 className="w-4 h-4 text-primary mx-auto" />
+                        ) : (
+                          <XCircle className="w-4 h-4 text-muted-foreground/40 mx-auto" />
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {user.email_opt_in ? (
+                          <CheckCircle2 className="w-4 h-4 text-primary mx-auto" />
+                        ) : (
+                          <XCircle className="w-4 h-4 text-muted-foreground/40 mx-auto" />
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <BaaCell
+                          userId={user.user_id}
+                          status={user.baa_status}
+                          onChanged={fetchData}
+                        />
                       </TableCell>
                       {PORTAL_ROLES.map((role) => {
                         const has = userHasRole(user.user_id, role);
