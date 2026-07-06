@@ -1,3 +1,8 @@
+// NOTE FOR APP OWNER: This Privacy Policy is a good-faith working draft
+// tailored to Integrity Realty STL's current site and integrations. It should
+// be reviewed by qualified legal counsel before being treated as final,
+// especially the SMS/TCPA, data-sharing, retention, and children's-privacy
+// sections. Placeholders (e.g. mailing address) must be filled in before use.
 import Layout from "@/components/Layout";
 
 const Privacy = () => {
