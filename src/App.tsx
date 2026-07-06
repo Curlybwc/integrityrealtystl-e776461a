@@ -107,7 +107,8 @@ const App = () => (
           <Route path="/network-partner" element={<NetworkPartner />} />
           <Route path="/listing/:mlsNumber" element={<PublicListingPage />} />
           <Route path="/portals" element={<PortalSelector />} />
-          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/privacy-policy" element={<Privacy />} />
+          <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
           <Route path="/terms" element={<Terms />} />
 
           {/* Investor Portal routes */}
