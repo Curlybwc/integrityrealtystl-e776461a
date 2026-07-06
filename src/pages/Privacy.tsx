@@ -145,7 +145,7 @@ const Privacy = () => {
             <div className="bg-muted/50 p-6 rounded-lg mb-6 border border-border">
               <p className="mb-2"><strong>Integrity Realty STL, a DBA of Bahr Family Homes LLC</strong></p>
               <p className="mb-2">Email: jen@integrityrealtystl.com</p>
-              <p className="mb-2">Mailing address: {/* TODO: add business mailing address before publishing */}<em className="text-muted-foreground">[Mailing address to be added]</em></p>
+              <p className="mb-2">Mailing address: 105 Walnut Hill Drive, St. Charles, Missouri 63304</p>
               <p>Website: https://integrityrealtystl.com</p>
             </div>
           </div>
