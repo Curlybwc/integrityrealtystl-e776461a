@@ -226,32 +226,17 @@ const PortalOnboarding = () => {
             <BaaStatusBlock status={baaStatus} />
 
             {baaStatus === "not_sent" && (
+              <SendBaaBlock onSent={refresh} />
+            )}
+
+            {baaStatus === "sent" && (
               <div className="bg-accent/40 border border-border rounded-md p-4 text-sm space-y-2">
-                <p className="font-medium text-foreground">Request your BAA</p>
+                <p className="font-medium text-foreground">Check your email</p>
                 <p className="text-muted-foreground text-xs">
-                  Click below and our team will send the agreement to your email through Dotloop. Once
-                  signed, your account is automatically upgraded to full access.
+                  We've sent your Buyer's Agency Agreement via Dotloop. Sign it from the email and this
+                  page will update once verified. Didn't get it? You can resend below.
                 </p>
-                <Button
-                  size="sm"
-                  onClick={async () => {
-                    const { data: authData } = await supabase.auth.getUser();
-                    const uid = authData?.user?.id;
-                    if (!uid) return;
-                    // For now flag profile so admin sees a queue entry.
-                    await supabase
-                      .from("profiles")
-                      .update({ baa_status: "not_sent" })
-                      .eq("id", uid);
-                    toast({
-                      title: "Request received",
-                      description: "Our team will send your BAA via Dotloop within 1 business day.",
-                    });
-                    await refresh();
-                  }}
-                >
-                  Request BAA via Dotloop
-                </Button>
+                <SendBaaBlock onSent={refresh} resend />
               </div>
             )}
 
@@ -261,6 +246,57 @@ const PortalOnboarding = () => {
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+};
+
+const SendBaaBlock = ({ onSent, resend = false }: { onSent: () => Promise<void>; resend?: boolean }) => {
+  const { toast } = useToast();
+  const [sending, setSending] = useState(false);
+
+  const send = async () => {
+    setSending(true);
+    const res = await supabase.functions.invoke("dotloop-send-baa", { body: {} });
+    const data = res.data as { error?: string; detail?: string; ok?: boolean } | null;
+    if (res.error || data?.error) {
+      toast({
+        title: data?.error || "Could not send BAA",
+        description:
+          data?.detail ||
+          res.error?.message ||
+          "Please try again in a moment or contact our team.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: resend ? "BAA resent" : "BAA sent",
+        description: "Check your email from Dotloop to sign the agreement.",
+      });
+      await onSent();
+    }
+    setSending(false);
+  };
+
+  if (resend) {
+    return (
+      <Button size="sm" variant="outline" disabled={sending} onClick={send}>
+        {sending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+        Resend BAA
+      </Button>
+    );
+  }
+
+  return (
+    <div className="bg-accent/40 border border-border rounded-md p-4 text-sm space-y-2">
+      <p className="font-medium text-foreground">Send your Buyer's Agency Agreement</p>
+      <p className="text-muted-foreground text-xs">
+        We'll email the agreement to you through Dotloop for e-signature. Once signed, your account is
+        upgraded to full access.
+      </p>
+      <Button size="sm" disabled={sending} onClick={send}>
+        {sending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+        Send my BAA via Dotloop
+      </Button>
     </div>
   );
 };
