@@ -56,7 +56,7 @@ const AdminLogin = () => {
       title: "Welcome, Admin!",
       description: "Redirecting to the admin dashboard...",
     });
-    navigate("/admin");
+    navigate("/portal/admin");
     setIsLoading(false);
   };
 

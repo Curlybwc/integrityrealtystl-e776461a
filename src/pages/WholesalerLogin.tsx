@@ -22,23 +22,23 @@ const WholesalerLogin = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
     if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-      toast({
-        title: "Welcome back!",
-        description: "Redirecting to your dashboard...",
-      });
+      sessionStorage.setItem("demo_mode", "true");
+      toast({ title: "Welcome back!", description: "Redirecting to your dashboard..." });
       navigate("/portal/wholesaler");
-    } else {
-      toast({
-        title: "Invalid credentials",
-        description: "Please check your email and password.",
-        variant: "destructive",
-      });
+      setIsLoading(false);
+      return;
     }
 
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      toast({ title: "Invalid credentials", description: error.message, variant: "destructive" });
+      setIsLoading(false);
+      return;
+    }
+    toast({ title: "Welcome back!", description: "Redirecting to your dashboard..." });
+    navigate("/portal/wholesaler");
     setIsLoading(false);
   };
 
