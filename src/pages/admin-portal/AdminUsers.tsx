@@ -514,6 +514,25 @@ const BaaCell = ({
     setBusy(false);
   };
 
+  const sendViaDotloop = async () => {
+    setBusy(true);
+    const res = await supabase.functions.invoke("dotloop-send-baa", {
+      body: { target_user_id: userId },
+    });
+    const data = res.data as { error?: string; detail?: string; ok?: boolean } | null;
+    if (res.error || data?.error) {
+      toast({
+        title: data?.error || "Dotloop send failed",
+        description: data?.detail || res.error?.message || "Use manual fallback if needed.",
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: "BAA sent via Dotloop" });
+      onChanged();
+    }
+    setBusy(false);
+  };
+
   const tone: Record<string, string> = {
     not_required: "bg-muted text-muted-foreground",
     not_sent: "bg-amber-100 text-amber-800",
@@ -536,11 +555,16 @@ const BaaCell = ({
   return (
     <div className="flex flex-col items-start gap-1">
       <Badge className={tone[status]}>{label[status]}</Badge>
-      <div className="flex gap-1">
+      <div className="flex flex-wrap gap-1">
         {status === "not_sent" && (
-          <Button size="sm" variant="outline" className="h-6 px-2 text-[11px]" disabled={busy} onClick={() => update("sent")}>
-            <FileSignature className="w-3 h-3 mr-1" /> Mark sent
-          </Button>
+          <>
+            <Button size="sm" className="h-6 px-2 text-[11px]" disabled={busy} onClick={sendViaDotloop}>
+              <FileSignature className="w-3 h-3 mr-1" /> Send via Dotloop
+            </Button>
+            <Button size="sm" variant="outline" className="h-6 px-2 text-[11px]" disabled={busy} onClick={() => update("sent")}>
+              Mark sent
+            </Button>
+          </>
         )}
         {status === "sent" && (
           <Button size="sm" variant="outline" className="h-6 px-2 text-[11px]" disabled={busy} onClick={() => update("signed")}>
