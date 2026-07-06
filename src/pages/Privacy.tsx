@@ -1,3 +1,8 @@
+// NOTE FOR APP OWNER: This Privacy Policy is a good-faith working draft
+// tailored to Integrity Realty STL's current site and integrations. It should
+// be reviewed by qualified legal counsel before being treated as final,
+// especially the SMS/TCPA, data-sharing, retention, and children's-privacy
+// sections. Placeholders (e.g. mailing address) must be filled in before use.
 import Layout from "@/components/Layout";
 
 const Privacy = () => {
@@ -89,17 +94,28 @@ const Privacy = () => {
               You can usually control cookies through your browser settings, though disabling some cookies may affect site functionality.
             </p>
 
-            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">6. Data Retention</h2>
+            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">6. Email and SMS Communications</h2>
+            <p className="mb-4">
+              When you provide your email address or mobile phone number and opt in through our forms, we may send you transactional messages (such as account, offer, walkthrough, and document-signing notifications) and, where you have opted in, deal alerts and market updates.
+            </p>
+            <p className="mb-4">
+              SMS messages are sent only after you explicitly opt in. Message and data rates may apply. Message frequency varies. You can opt out of text messages at any time by replying <strong>STOP</strong>, or get help by replying <strong>HELP</strong>. You can opt out of marketing emails by using the unsubscribe link in any message or by contacting us. Transactional messages related to an active transaction may continue after you opt out of marketing.
+            </p>
+            <p className="mb-6">
+              We do not share mobile opt-in information or phone numbers with third parties or affiliates for their own marketing purposes.
+            </p>
+
+            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">7. Data Retention</h2>
             <p className="mb-6">
               We retain information for as long as reasonably necessary to provide our services, fulfill transaction-related purposes, comply with legal obligations, resolve disputes, and enforce our agreements.
             </p>
 
-            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">7. Data Security</h2>
+            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">8. Data Security</h2>
             <p className="mb-6">
               We take reasonable administrative, technical, and organizational measures to protect personal information. However, no method of transmission over the internet or electronic storage is completely secure, and we cannot guarantee absolute security.
             </p>
 
-            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">8. Your Choices and Rights</h2>
+            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">9. Your Choices and Rights</h2>
             <p className="mb-4">
               Depending on your location and applicable law, you may have the right to request access to, correction of, or deletion of certain personal information we hold about you.
             </p>
@@ -107,29 +123,30 @@ const Privacy = () => {
               You may also contact us to update account information or ask questions about how your information is used.
             </p>
 
-            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">9. Children's Privacy</h2>
+            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">10. Children's Privacy</h2>
             <p className="mb-6">
               Our website and services are not directed to children under the age of 13, and we do not knowingly collect personal information from children.
             </p>
 
-            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">10. Third-Party Links</h2>
+            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">11. Third-Party Links</h2>
             <p className="mb-6">
               Our website or application may contain links to third-party websites or services. We are not responsible for the privacy practices of those third parties.
             </p>
 
-            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">11. Changes to This Privacy Policy</h2>
+            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">12. Changes to This Privacy Policy</h2>
             <p className="mb-6">
               We may update this Privacy Policy from time to time. When we do, we will post the updated version on this page and revise the Effective Date above. Your continued use of the services after changes are posted constitutes acceptance of the updated policy.
             </p>
 
-            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">12. Contact Us</h2>
+            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">13. Contact Us</h2>
             <p className="mb-4">
               If you have questions about this Privacy Policy or our data practices, you may contact us at:
             </p>
             <div className="bg-muted/50 p-6 rounded-lg mb-6 border border-border">
               <p className="mb-2"><strong>Integrity Realty STL, a DBA of Bahr Family Homes LLC</strong></p>
               <p className="mb-2">Email: jen@integrityrealtystl.com</p>
-              <p>Website: https://integrityrealtystl.lovable.app</p>
+              <p className="mb-2">Mailing address: {/* TODO: add business mailing address before publishing */}<em className="text-muted-foreground">[Mailing address to be added]</em></p>
+              <p>Website: https://integrityrealtystl.com</p>
             </div>
           </div>
         </div>
