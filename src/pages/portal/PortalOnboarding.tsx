@@ -226,32 +226,17 @@ const PortalOnboarding = () => {
             <BaaStatusBlock status={baaStatus} />
 
             {baaStatus === "not_sent" && (
+              <SendBaaBlock onSent={refresh} />
+            )}
+
+            {baaStatus === "sent" && (
               <div className="bg-accent/40 border border-border rounded-md p-4 text-sm space-y-2">
-                <p className="font-medium text-foreground">Request your BAA</p>
+                <p className="font-medium text-foreground">Check your email</p>
                 <p className="text-muted-foreground text-xs">
-                  Click below and our team will send the agreement to your email through Dotloop. Once
-                  signed, your account is automatically upgraded to full access.
+                  We've sent your Buyer's Agency Agreement via Dotloop. Sign it from the email and this
+                  page will update once verified. Didn't get it? You can resend below.
                 </p>
-                <Button
-                  size="sm"
-                  onClick={async () => {
-                    const { data: authData } = await supabase.auth.getUser();
-                    const uid = authData?.user?.id;
-                    if (!uid) return;
-                    // For now flag profile so admin sees a queue entry.
-                    await supabase
-                      .from("profiles")
-                      .update({ baa_status: "not_sent" })
-                      .eq("id", uid);
-                    toast({
-                      title: "Request received",
-                      description: "Our team will send your BAA via Dotloop within 1 business day.",
-                    });
-                    await refresh();
-                  }}
-                >
-                  Request BAA via Dotloop
-                </Button>
+                <SendBaaBlock onSent={refresh} resend />
               </div>
             )}
 
