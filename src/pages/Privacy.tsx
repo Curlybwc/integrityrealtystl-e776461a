@@ -94,7 +94,18 @@ const Privacy = () => {
               You can usually control cookies through your browser settings, though disabling some cookies may affect site functionality.
             </p>
 
-            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">6. Data Retention</h2>
+            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">6. Email and SMS Communications</h2>
+            <p className="mb-4">
+              When you provide your email address or mobile phone number and opt in through our forms, we may send you transactional messages (such as account, offer, walkthrough, and document-signing notifications) and, where you have opted in, deal alerts and market updates.
+            </p>
+            <p className="mb-4">
+              SMS messages are sent only after you explicitly opt in. Message and data rates may apply. Message frequency varies. You can opt out of text messages at any time by replying <strong>STOP</strong>, or get help by replying <strong>HELP</strong>. You can opt out of marketing emails by using the unsubscribe link in any message or by contacting us. Transactional messages related to an active transaction may continue after you opt out of marketing.
+            </p>
+            <p className="mb-6">
+              We do not share mobile opt-in information or phone numbers with third parties or affiliates for their own marketing purposes.
+            </p>
+
+            <h2 className="font-serif text-2xl text-foreground mt-8 mb-4">7. Data Retention</h2>
             <p className="mb-6">
               We retain information for as long as reasonably necessary to provide our services, fulfill transaction-related purposes, comply with legal obligations, resolve disputes, and enforce our agreements.
             </p>
