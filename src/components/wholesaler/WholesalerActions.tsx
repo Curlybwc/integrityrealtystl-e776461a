@@ -10,11 +10,11 @@ const WholesalerActions = () => {
   };
 
   return (
-    <section className="py-12 px-6 bg-background">
+    <section className="py-12 px-5 sm:px-6 bg-background">
       <div className="container mx-auto max-w-3xl">
         <div className="grid md:grid-cols-2 gap-6">
           {/* Apply Card */}
-          <div className="bg-card border-2 border-primary rounded-lg p-8 shadow-card text-center">
+          <div className="bg-card border-2 border-primary rounded-lg p-6 sm:p-8 shadow-card text-center">
             <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center mx-auto mb-4">
               <FileText className="w-6 h-6 text-primary-foreground" />
             </div>
@@ -25,14 +25,14 @@ const WholesalerActions = () => {
               Apply to become an approved wholesaler and gain access to publish 
               deals directly to our investor network.
             </p>
-            <Button onClick={scrollToApplication} className="w-full">
+            <Button onClick={scrollToApplication} className="w-full h-auto py-3 whitespace-normal">
               Apply to Become a Wholesaler
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
 
           {/* Login Card */}
-          <div className="bg-card border border-border rounded-lg p-8 shadow-card text-center">
+          <div className="bg-card border border-border rounded-lg p-6 sm:p-8 shadow-card text-center">
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
               <LogIn className="w-6 h-6 text-muted-foreground" />
             </div>
