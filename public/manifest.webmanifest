@@ -1,0 +1,31 @@
+{
+  "name": "Integrity Realty STL",
+  "short_name": "Integrity",
+  "description": "St. Louis real estate for buyers, sellers, investors, and wholesalers.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf9f6",
+  "theme_color": "#16463f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
