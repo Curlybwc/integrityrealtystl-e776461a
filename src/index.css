@@ -197,3 +197,23 @@
 .animation-delay-500 {
   animation-delay: 500ms;
 }
+
+/* Mobile ergonomics */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Prevent iOS from zooming in when focusing form fields */
+  @media (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+}
