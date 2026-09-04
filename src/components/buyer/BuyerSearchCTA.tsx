@@ -10,9 +10,9 @@ const BuyerSearchCTA = () => {
   };
 
   return (
-    <section className="py-16 px-6 bg-background">
+    <section className="py-12 sm:py-16 px-5 sm:px-6 bg-background">
       <div className="container mx-auto max-w-3xl">
-        <div className="bg-card border border-border rounded-lg p-8 shadow-card text-center">
+        <div className="bg-card border border-border rounded-lg p-6 sm:p-8 shadow-card text-center">
           <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
             <Search className="w-7 h-7 text-primary" />
           </div>
@@ -23,7 +23,7 @@ const BuyerSearchCTA = () => {
             Tell us about what you're looking for and we'll help you find homes 
             that match your needs. No pressure, no obligations—just helpful guidance.
           </p>
-          <Button size="lg" onClick={scrollToForm}>
+          <Button size="lg" onClick={scrollToForm} className="w-full sm:w-auto h-auto py-3 whitespace-normal">
             Get Help Finding Your Next Home
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
