@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { useDeals } from "@/hooks/useDeals";
 import { formatCurrency, formatPercent, getStatusDisplayLabel } from "@/lib/screening";
 import SaveDealButton from "@/components/portal/SaveDealButton";
+import DealAlertSettings from "@/components/portal/DealAlertSettings";
 
 const statusColors = {
   Active: "bg-green-100 text-green-800",
@@ -90,18 +91,7 @@ const PortalDealAlerts = () => {
         </div>
       </div>
 
-      {/* Alert banner */}
-      <div className="bg-primary/10 border border-primary/30 rounded-lg p-4 flex items-center gap-3">
-        <Bell className="w-5 h-5 text-primary flex-shrink-0" />
-        <div>
-          <p className="text-sm font-medium text-foreground">
-            Want instant notifications?
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Contact us to subscribe to SMS deal alerts and get notified the moment new hot deals are added.
-          </p>
-        </div>
-      </div>
+      <DealAlertSettings />
 
       {/* Filters */}
       <div className="bg-card border border-border rounded-lg p-4 shadow-card">

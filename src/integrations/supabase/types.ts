@@ -41,6 +41,51 @@ export type Database = {
         }
         Relationships: []
       }
+      alert_preferences: {
+        Row: {
+          created_at: string
+          email_enabled: boolean
+          max_price: number | null
+          min_beds: number | null
+          min_price: number | null
+          push_enabled: boolean
+          sms_enabled: boolean
+          sources: string[]
+          strategies: string[]
+          updated_at: string
+          user_id: string
+          zip_codes: string[]
+        }
+        Insert: {
+          created_at?: string
+          email_enabled?: boolean
+          max_price?: number | null
+          min_beds?: number | null
+          min_price?: number | null
+          push_enabled?: boolean
+          sms_enabled?: boolean
+          sources?: string[]
+          strategies?: string[]
+          updated_at?: string
+          user_id: string
+          zip_codes?: string[]
+        }
+        Update: {
+          created_at?: string
+          email_enabled?: boolean
+          max_price?: number | null
+          min_beds?: number | null
+          min_price?: number | null
+          push_enabled?: boolean
+          sms_enabled?: boolean
+          sources?: string[]
+          strategies?: string[]
+          updated_at?: string
+          user_id?: string
+          zip_codes?: string[]
+        }
+        Relationships: []
+      }
       analyzer_usage: {
         Row: {
           context: Json | null
@@ -235,6 +280,45 @@ export type Database = {
         }
         Relationships: []
       }
+      deal_alerts_sent: {
+        Row: {
+          created_at: string
+          deal_address: string | null
+          deal_key: string
+          deal_price: number | null
+          deal_zip: string | null
+          id: string
+          push_sent: number
+          recipient_count: number
+          sent_by: string | null
+          sms_sent: number
+        }
+        Insert: {
+          created_at?: string
+          deal_address?: string | null
+          deal_key: string
+          deal_price?: number | null
+          deal_zip?: string | null
+          id?: string
+          push_sent?: number
+          recipient_count?: number
+          sent_by?: string | null
+          sms_sent?: number
+        }
+        Update: {
+          created_at?: string
+          deal_address?: string | null
+          deal_key?: string
+          deal_price?: number | null
+          deal_zip?: string | null
+          id?: string
+          push_sent?: number
+          recipient_count?: number
+          sent_by?: string | null
+          sms_sent?: number
+        }
+        Relationships: []
+      }
       portal_access_requests: {
         Row: {
           created_at: string
@@ -331,6 +415,39 @@ export type Database = {
           sms_opt_in_at?: string | null
           sms_opt_in_ip?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          last_used_at: string | null
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_used_at?: string | null
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          last_used_at?: string | null
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
         }
         Relationships: []
       }

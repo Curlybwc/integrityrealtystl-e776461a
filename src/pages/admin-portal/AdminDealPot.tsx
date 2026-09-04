@@ -7,6 +7,7 @@ import { RefreshCw } from "lucide-react";
 import { DealPotTable } from "@/components/admin-portal/DealPotTable";
 import { useDeals, DealTab } from "@/hooks/useDeals";
 import { useToast } from "@/hooks/use-toast";
+import SendDealAlertPanel from "@/components/admin-portal/SendDealAlertPanel";
 
 const AdminDealPot = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -57,6 +58,8 @@ const AdminDealPot = () => {
           Reset Demo Data
         </Button>
       </div>
+
+      <SendDealAlertPanel />
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
