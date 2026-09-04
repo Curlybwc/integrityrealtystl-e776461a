@@ -45,21 +45,21 @@ function matches(pref: Record<string, unknown>, deal: DealPayload): boolean {
 }
 
 async function sendSms(to: string, body: string): Promise<boolean> {
-  const sid = Deno.env.get("TWILIO_ACCOUNT_SID");
-  const token = Deno.env.get("TWILIO_AUTH_TOKEN");
-  const from = Deno.env.get("TWILIO_PHONE_NUMBER");
-  if (!sid || !token || !from) return false;
+  // SimpleTexting SMS provider. Swap this function when migrating to GoHighLevel.
+  const apiKey = Deno.env.get("SIMPLETEXTING_API_KEY");
+  const from = Deno.env.get("SIMPLETEXTING_FROM_NUMBER");
+  if (!apiKey || !from) return false;
 
-  const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+  const res = await fetch("https://api-app2.simpletexting.com/v2/api/messages", {
     method: "POST",
     headers: {
-      Authorization: "Basic " + btoa(`${sid}:${token}`),
-      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
     },
-    body: new URLSearchParams({ To: to, From: from, Body: body }),
+    body: JSON.stringify({ contactPhone: to, accountPhone: from, text: body }),
   });
   if (!res.ok) {
-    console.error("twilio send failed", res.status);
+    console.error("simpletexting send failed", res.status);
     return false;
   }
   return true;
@@ -197,7 +197,7 @@ Deno.serve(async (req) => {
       recipients: targetIds.length,
       push_sent: pushSent,
       sms_sent: smsSent,
-      sms_configured: !!Deno.env.get("TWILIO_ACCOUNT_SID"),
+      sms_configured: !!Deno.env.get("SIMPLETEXTING_API_KEY"),
     });
   } catch (e) {
     console.error("send-deal-alert error", e);
