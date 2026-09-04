@@ -65,9 +65,7 @@ export async function isPushEnabledOnThisDevice(): Promise<boolean> {
   return !!sub;
 }
 
-export async function enablePushOnThisDevice(): Promise<
-  { ok: true } | { ok: false; reason: string }
-> {
+export async function enablePushOnThisDevice(): Promise<{ ok: boolean; reason?: string }> {
   if (!pushSupported()) {
     return { ok: false, reason: "This device or browser can't show pop-up alerts." };
   }

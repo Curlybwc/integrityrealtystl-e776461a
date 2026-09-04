@@ -109,7 +109,7 @@ export default function DealAlertSettings() {
         setDeviceOn(true);
         toast.success("Pop-up alerts are on for this device.");
       } else {
-        toast.error(result.reason);
+        toast.error(result.reason ?? "Couldn't turn on pop-up alerts.");
       }
     }
     setDeviceBusy(false);
