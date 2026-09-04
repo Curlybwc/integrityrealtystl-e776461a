@@ -197,7 +197,7 @@ Deno.serve(async (req) => {
       recipients: targetIds.length,
       push_sent: pushSent,
       sms_sent: smsSent,
-      sms_configured: !!Deno.env.get("TWILIO_ACCOUNT_SID"),
+      sms_configured: !!Deno.env.get("SIMPLETEXTING_API_KEY"),
     });
   } catch (e) {
     console.error("send-deal-alert error", e);
