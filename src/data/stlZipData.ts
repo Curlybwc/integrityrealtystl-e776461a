@@ -447,3 +447,8 @@ export function calculateArvQuick(zip: string, sqft: number): number | null {
 export function getSupportedZips(): string[] {
   return Object.keys(ARV_PER_SF).sort();
 }
+
+// Section 8 uses the FY2026 ZIP-level rent dataset, not the smaller ARV dataset.
+export function getSection8SupportedZips(): string[] {
+  return Object.keys(FMR_BY_ZIP).sort();
+}
