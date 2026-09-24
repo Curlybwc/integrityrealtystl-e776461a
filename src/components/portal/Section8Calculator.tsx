@@ -361,6 +361,31 @@ const Section8Calculator = () => {
                 </div>
               </div>
 
+              <div className="space-y-3 rounded-lg border p-3">
+                <p className="text-sm font-medium">Tenant-Paid Utilities — HASLC Single Family 2026</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Heating</Label><Select value={heating} onValueChange={(v) => setHeating(v as typeof heating)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="owner">Owner Pays</SelectItem><SelectItem value="naturalGas">Tenant — Natural Gas</SelectItem><SelectItem value="electric">Tenant — Electric</SelectItem></SelectContent></Select></div>
+                  <div><Label>Cooking</Label><Select value={cooking} onValueChange={(v) => setCooking(v as typeof cooking)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="owner">Owner Pays</SelectItem><SelectItem value="naturalGas">Tenant — Natural Gas</SelectItem><SelectItem value="electric">Tenant — Electric</SelectItem></SelectContent></Select></div>
+                  <div><Label>Water Heating</Label><Select value={waterHeating} onValueChange={(v) => setWaterHeating(v as typeof waterHeating)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="owner">Owner Pays</SelectItem><SelectItem value="naturalGas">Tenant — Natural Gas</SelectItem><SelectItem value="electric">Tenant — Electric</SelectItem></SelectContent></Select></div>
+                  <div><Label>Water</Label><Select value={water} onValueChange={(v) => setWater(v as typeof water)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="owner">Owner Pays</SelectItem><SelectItem value="city">Tenant — City</SelectItem><SelectItem value="county">Tenant — County</SelectItem></SelectContent></Select></div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {[
+                    ["Other Electric", tenantOtherElectric, setTenantOtherElectric],
+                    ["Sewer", tenantSewer, setTenantSewer],
+                    ["Trash", tenantTrash, setTenantTrash],
+                    ["Tenant Provides Range", tenantRange, setTenantRange],
+                    ["Tenant Provides Refrigerator", tenantRefrigerator, setTenantRefrigerator],
+                  ].map(([label, checked, setter]) => (
+                    <label key={label as string} className="flex items-center gap-2">
+                      <input type="checkbox" checked={checked as boolean} onChange={(e) => (setter as (v: boolean) => void)(e.target.checked)} />
+                      {label as string}
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">Source: County Housing / HUD Form-52667, Single Family Detached S8, effective 01/01/2026.</p>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="utilityAllowance">
                   Utility Allowance (UA)
@@ -372,9 +397,9 @@ const Section8Calculator = () => {
                     id="utilityAllowance"
                     type="number"
                     min="0"
-                    className="pl-7 bg-primary/5 border-primary/30"
+                    className="pl-7 bg-muted"
                     value={inputs.utilityAllowance || ""}
-                    onChange={(e) => updateInput("utilityAllowance", Number(e.target.value))}
+                    readOnly
                   />
                 </div>
               </div>
