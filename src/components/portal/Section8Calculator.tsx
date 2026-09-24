@@ -19,30 +19,33 @@ import {
 import {
   getFmr,
   getUtilityAllowance,
-  getSupportedZips,
+  getSection8SupportedZips,
 } from "@/data/stlZipData";
 
 interface Section8Inputs {
   // Property info
   address: string;
   zip: string;
-  beds: number;
+  propertyBeds: number;
+  voucherBeds: number;
   // Rent comps (up to 5)
   rentComp1: number;
   rentComp2: number;
   rentComp3: number;
   rentComp4: number;
   rentComp5: number;
-  // Core inputs (can be auto-populated or manual)
+  // Core inputs
   paymentStandard: number;
   utilityAllowance: number;
+  requestedRentToOwner: number;
   tenantMonthlyIncome: number;
 }
 
 const initialInputs: Section8Inputs = {
   address: "",
   zip: "",
-  beds: 3,
+  propertyBeds: 3,
+  voucherBeds: 3,
   rentComp1: 0,
   rentComp2: 0,
   rentComp3: 0,
@@ -50,6 +53,7 @@ const initialInputs: Section8Inputs = {
   rentComp5: 0,
   paymentStandard: 0,
   utilityAllowance: 0,
+  requestedRentToOwner: 0,
   tenantMonthlyIncome: 0,
 };
 
@@ -111,13 +115,14 @@ const ResultRow = ({
 const Section8Calculator = () => {
   const [searchParams] = useSearchParams();
   const [inputs, setInputs] = useState<Section8Inputs>(initialInputs);
-  const supportedZips = getSupportedZips();
+  const supportedZips = getSection8SupportedZips();
+  const effectiveBeds = Math.min(inputs.propertyBeds, inputs.voucherBeds);
 
   // Auto-populate Payment Standard and Utility Allowance when ZIP/beds change
   useEffect(() => {
-    if (inputs.zip && inputs.beds >= 0) {
-      const fmr = getFmr(inputs.zip, inputs.beds);
-      const ua = getUtilityAllowance(inputs.beds);
+    if (inputs.zip && effectiveBeds >= 0) {
+      const fmr = getFmr(inputs.zip, effectiveBeds);
+      const ua = getUtilityAllowance(effectiveBeds);
       if (fmr) {
         setInputs(prev => ({
           ...prev,
@@ -126,7 +131,7 @@ const Section8Calculator = () => {
         }));
       }
     }
-  }, [inputs.zip, inputs.beds]);
+  }, [inputs.zip, effectiveBeds]);
 
   // Auto-populate from URL params
   useEffect(() => {
@@ -140,8 +145,10 @@ const Section8Calculator = () => {
         ...prev,
         address: address || prev.address,
         zip: zip || prev.zip,
-        beds: beds ? Number(beds) : prev.beds,
+        propertyBeds: beds ? Number(beds) : prev.propertyBeds,
+        voucherBeds: beds ? Number(beds) : prev.voucherBeds,
         rentComp1: rent ? Number(rent) : prev.rentComp1,
+        requestedRentToOwner: rent ? Number(rent) : prev.requestedRentToOwner,
       }));
     }
   }, [searchParams]);
@@ -159,15 +166,20 @@ const Section8Calculator = () => {
       paymentStandard, 
       utilityAllowance, 
       tenantMonthlyIncome,
+      requestedRentToOwner,
       rentComp1, rentComp2, rentComp3, rentComp4, rentComp5 
     } = inputs;
 
-    // Highest Rent from comps (auto-populates Requested Rent to Owner)
+    // Rent comps inform the request, but Requested Rent remains independently editable.
     const rentComps = [rentComp1, rentComp2, rentComp3, rentComp4, rentComp5].filter(r => r > 0);
     const highestRent = rentComps.length > 0 ? Math.max(...rentComps) : 0;
-    const requestedRentToOwner = highestRent;
 
-    // === CORE CALCULATIONS FROM EXCEL ===
+    // === CORE CALCULATIONS ===
+    const baseRentToOwner = Math.max(0, paymentStandard - utilityAllowance);
+    const minimumIncomeNeeded = requestedRentToOwner <= baseRentToOwner
+      ? 0
+      : (requestedRentToOwner - baseRentToOwner) / 0.10;
+    const incomeDifference = tenantMonthlyIncome - minimumIncomeNeeded;
     
     // Total Tenant Payment (TTP) including utilities at 30%
     const ttpAt30 = tenantMonthlyIncome * 0.30;
@@ -207,6 +219,9 @@ const Section8Calculator = () => {
       // Comps
       highestRent,
       requestedRentToOwner,
+      baseRentToOwner,
+      minimumIncomeNeeded,
+      incomeDifference,
       // TTP calculations
       ttpAt30,
       ttpAt40,
