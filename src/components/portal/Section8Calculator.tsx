@@ -251,8 +251,8 @@ const Section8Calculator = () => {
         <CardContent className="pt-4">
           <p className="text-sm font-medium text-foreground mb-2">Instructions</p>
           <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-            <li>Enter rent comps from Rentometer.com - Highest Comp will auto-populate</li>
-            <li>Select ZIP code and bedrooms to auto-populate Payment Standard and Utility Allowance (or enter manually)</li>
+            <li>Enter rent comps, then set Requested Rent to Owner independently</li>
+            <li>Select ZIP, property bedrooms, and voucher bedrooms; the lower bedroom count drives PS and UA</li>
             <li>Enter the Tenant's Monthly Income - Verify that this is what is reported to Section 8 Caseworker</li>
           </ol>
         </CardContent>
@@ -302,22 +302,21 @@ const Section8Calculator = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="beds">Bedrooms</Label>
-                <Select
-                  value={String(inputs.beds)}
-                  onValueChange={(value) => updateInput("beds", Number(value))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[0, 1, 2, 3, 4, 5, 6].map((num) => (
-                      <SelectItem key={num} value={String(num)}>
-                        {num === 0 ? "Studio" : `${num} BR`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                <Label>Property Bedrooms</Label>
+                <Select value={String(inputs.propertyBeds)} onValueChange={(value) => updateInput("propertyBeds", Number(value))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{[0,1,2,3,4,5,6].map((num) => <SelectItem key={num} value={String(num)}>{num === 0 ? "Studio" : `${num} BR`}</SelectItem>)}</SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Voucher Bedrooms</Label>
+                <Select value={String(inputs.voucherBeds)} onValueChange={(value) => updateInput("voucherBeds", Number(value))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{[0,1,2,3,4,5,6].map((num) => <SelectItem key={num} value={String(num)}>{num === 0 ? "Studio" : `${num} BR`}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2 text-sm text-muted-foreground">
+                Effective size for Payment Standard and Utility Allowance: <strong className="text-foreground">{effectiveBeds === 0 ? "Studio" : `${effectiveBeds} BR`}</strong>
               </div>
             </div>
 
@@ -384,7 +383,7 @@ const Section8Calculator = () => {
           <CardHeader className="pb-4">
             <CardTitle className="text-lg">Rental Comps</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Enter rent comps from Rentometer - highest will auto-populate as Requested Rent
+              Enter rent comps from Rentometer. Requested Rent remains independently editable.
             </p>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -402,12 +401,19 @@ const Section8Calculator = () => {
               </div>
             ))}
 
-            <div className="pt-4 border-t border-border">
-              <div className="flex justify-between items-center p-3 bg-primary/10 rounded-lg">
-                <span className="text-sm font-medium">Highest Rent (RRO)</span>
-                <span className="font-mono font-semibold text-primary">
-                  {formatCurrency(calculations.highestRent)}
-                </span>
+            <div className="pt-4 border-t border-border space-y-3">
+              <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                <span className="text-sm font-medium">Highest Entered Comp</span>
+                <span className="font-mono font-semibold">{formatCurrency(calculations.highestRent)}</span>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="requestedRentToOwner">Requested Rent to Owner</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input id="requestedRentToOwner" type="number" min="0" className="pl-7 bg-primary/5 border-primary/30"
+                    value={inputs.requestedRentToOwner || ""}
+                    onChange={(e) => updateInput("requestedRentToOwner", Number(e.target.value))} />
+                </div>
               </div>
             </div>
           </CardContent>
@@ -420,6 +426,11 @@ const Section8Calculator = () => {
           <CardTitle className="text-lg">Calculation Results</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="grid md:grid-cols-3 gap-3 mb-6">
+            <ResultRow label="30% Basis Rent to Owner" value={formatCurrency(calculations.baseRentToOwner)} tooltip="Payment Standard minus Utility Allowance" highlight />
+            <ResultRow label="Minimum Monthly Income Needed" value={formatCurrency(calculations.minimumIncomeNeeded)} tooltip="Estimated income needed when Requested Rent exceeds the 30% basis" highlight />
+            <ResultRow label="Income Above / (Below) Minimum" value={formatCurrency(calculations.incomeDifference)} />
+          </div>
           <div className="grid md:grid-cols-2 gap-6">
             {/* Left: TTP and Tenant Portions */}
             <div className="space-y-1">
@@ -469,7 +480,7 @@ const Section8Calculator = () => {
                 value={formatCurrency(calculations.rentToOwnerAt30)}
                 tooltip="Use this if it covers your Requested Rent"
                 highlight
-                variant={calculations.covers30 && calculations.highestRent > 0 ? "success" : "default"}
+                variant={calculations.covers30 && inputs.requestedRentToOwner > 0 ? "success" : "default"}
               />
               <ResultRow
                 label="Total Allowable GR at 40%"
@@ -481,7 +492,7 @@ const Section8Calculator = () => {
                 value={formatCurrency(calculations.maxRentToOwnerAt40)}
                 tooltip="Use ONLY if Rent to Owner at 30% is less than Requested Rent"
                 highlight
-                variant={!calculations.covers30 && calculations.covers40 && calculations.highestRent > 0 ? "warning" : "default"}
+                variant={!calculations.covers30 && calculations.covers40 && inputs.requestedRentToOwner > 0 ? "warning" : "default"}
               />
             </div>
           </div>
@@ -496,7 +507,7 @@ const Section8Calculator = () => {
           </div>
 
           {/* Status Indicator */}
-          {calculations.highestRent > 0 && inputs.tenantMonthlyIncome > 0 && inputs.paymentStandard > 0 && (
+          {inputs.requestedRentToOwner > 0 && inputs.tenantMonthlyIncome > 0 && inputs.paymentStandard > 0 && (
             <div className="mt-6 pt-4 border-t border-border">
               <div
                 className={`flex items-center gap-3 p-4 rounded-lg ${
