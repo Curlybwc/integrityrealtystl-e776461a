@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/tooltip";
 import {
   getFmr,
-  getUtilityAllowance,
   getSection8SupportedZips,
+  UTILITY_BREAKDOWN,
 } from "@/data/stlZipData";
 
 interface Section8Inputs {
@@ -116,22 +116,44 @@ const Section8Calculator = () => {
   const [searchParams] = useSearchParams();
   const [inputs, setInputs] = useState<Section8Inputs>(initialInputs);
   const supportedZips = getSection8SupportedZips();
+  const [heating, setHeating] = useState<"owner" | "naturalGas" | "electric">("owner");
+  const [cooking, setCooking] = useState<"owner" | "naturalGas" | "electric">("owner");
+  const [waterHeating, setWaterHeating] = useState<"owner" | "naturalGas" | "electric">("owner");
+  const [water, setWater] = useState<"owner" | "city" | "county">("owner");
+  const [tenantOtherElectric, setTenantOtherElectric] = useState(false);
+  const [tenantSewer, setTenantSewer] = useState(false);
+  const [tenantTrash, setTenantTrash] = useState(false);
+  const [tenantRange, setTenantRange] = useState(false);
+  const [tenantRefrigerator, setTenantRefrigerator] = useState(false);
   const effectiveBeds = Math.min(inputs.propertyBeds, inputs.voucherBeds);
 
-  // Auto-populate Payment Standard and Utility Allowance when ZIP/beds change
+  // Auto-populate Payment Standard from ZIP/effective bedroom size.
   useEffect(() => {
     if (inputs.zip && effectiveBeds >= 0) {
       const fmr = getFmr(inputs.zip, effectiveBeds);
-      const ua = getUtilityAllowance(effectiveBeds);
-      if (fmr) {
-        setInputs(prev => ({
-          ...prev,
-          paymentStandard: fmr,
-          utilityAllowance: ua,
-        }));
-      }
+      if (fmr) setInputs(prev => ({ ...prev, paymentStandard: fmr }));
     }
   }, [inputs.zip, effectiveBeds]);
+
+  // 2026 HASLC Single Family Detached utility allowance: include only tenant-paid items.
+  useEffect(() => {
+    const i = Math.min(Math.max(effectiveBeds, 0), 6);
+    let ua = 0;
+    if (heating === "naturalGas") ua += UTILITY_BREAKDOWN.heatingNaturalGas[i];
+    if (heating === "electric") ua += UTILITY_BREAKDOWN.heatingElectric[i];
+    if (cooking === "naturalGas") ua += UTILITY_BREAKDOWN.cookingNaturalGas[i];
+    if (cooking === "electric") ua += UTILITY_BREAKDOWN.cookingElectric[i];
+    if (waterHeating === "naturalGas") ua += UTILITY_BREAKDOWN.waterHeatingNaturalGas[i];
+    if (waterHeating === "electric") ua += UTILITY_BREAKDOWN.waterHeatingElectric[i];
+    if (water === "city") ua += UTILITY_BREAKDOWN.waterCity[i];
+    if (water === "county") ua += UTILITY_BREAKDOWN.waterCounty[i];
+    if (tenantOtherElectric) ua += UTILITY_BREAKDOWN.otherElectric[i];
+    if (tenantSewer) ua += UTILITY_BREAKDOWN.sewer[i];
+    if (tenantTrash) ua += UTILITY_BREAKDOWN.trash[i];
+    if (tenantRange) ua += UTILITY_BREAKDOWN.range[i];
+    if (tenantRefrigerator) ua += UTILITY_BREAKDOWN.refrigerator[i];
+    setInputs(prev => ({ ...prev, utilityAllowance: ua }));
+  }, [effectiveBeds, heating, cooking, waterHeating, water, tenantOtherElectric, tenantSewer, tenantTrash, tenantRange, tenantRefrigerator]);
 
   // Auto-populate from URL params
   useEffect(() => {
