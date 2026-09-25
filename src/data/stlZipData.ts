@@ -326,35 +326,35 @@ export const RENT_COMPS_BY_ZIP: Record<string, { bed2: number; bed3: number; bed
   "63121": { bed2: 1100, bed3: 1400, bed4: 1650 },
 };
 
-// Full Utility Allowance Breakdown by bedroom count (HASLC Single Family 2025)
-// Source: HUD Form-52667 dated 01/01/2025
+// Full Utility Allowance Breakdown by bedroom count (HASLC Single Family Detached S8 2026)
+// Source: County Housing / HUD Form-52667, effective 01/01/2026
 // Index: 0=Studio, 1=1BR, 2=2BR, 3=3BR, 4=4BR, 5=5BR, 6=6BR
 export const UTILITY_BREAKDOWN = {
-  cookingElectric:     [7, 9, 12, 15, 19, 22, 24],
-  cookingNaturalGas:   [5, 7, 8, 11, 13, 15, 17],
-  heatingElectric:     [41, 41, 52, 64, 81, 93, 105],
-  heatingNaturalGas:   [54, 67, 80, 92, 113, 124, 138],
-  otherElectric:       [30, 38, 46, 54, 66, 74, 82],
-  range:               [4, 4, 4, 4, 4, 4, 4],
-  refrigerator:        [6, 6, 6, 6, 6, 6, 6],
-  sewer:               [45, 51, 65, 84, 111, 124, 150],
-  trash:               [14, 14, 14, 14, 14, 14, 14],
-  waterCity:           [14, 17, 21, 28, 37, 41, 50],
-  waterCounty:         [23, 29, 41, 60, 85, 97, 122],
-  waterHeatingElectric:[18, 25, 32, 39, 50, 47, 53],
-  waterHeatingNaturalGas:[11, 14, 19, 24, 29, 34, 38],
+  cookingElectric:       [8, 11, 14, 17, 21, 24, 27],
+  cookingNaturalGas:     [4, 6, 8, 10, 12, 14, 15],
+  heatingElectric:       [46, 45, 58, 71, 91, 103, 116],
+  heatingNaturalGas:     [51, 63, 75, 86, 104, 115, 127],
+  otherElectric:         [32, 41, 50, 59, 72, 81, 90],
+  range:                 [4, 4, 4, 4, 4, 4, 4],
+  refrigerator:          [6, 6, 6, 6, 6, 6, 6],
+  sewer:                 [48, 55, 70, 91, 119, 133, 162],
+  trash:                 [20, 20, 20, 20, 20, 20, 20],
+  waterCity:             [17, 20, 25, 33, 44, 49, 60],
+  waterCounty:           [27, 35, 52, 77, 110, 126, 160],
+  waterHeatingElectric:  [20, 28, 36, 44, 56, 53, 59],
+  waterHeatingNaturalGas:[10, 13, 17, 21, 27, 31, 34],
 };
 
 // Default Utility Allowances (pre-calculated with common setup)
 // Assumes: Natural Gas Heating, Electric Cooking, Other Electric, Water County, Sewer, Trash
 export const UTILITY_ALLOWANCES: Record<number, number> = {
-  0: 173, // Studio
-  1: 208, // 1 BR
-  2: 258, // 2 BR
-  3: 319, // 3 BR
-  4: 408, // 4 BR
-  5: 455, // 5 BR
-  6: 530, // 6 BR
+  0: 186,
+  1: 225,
+  2: 281,
+  3: 350,
+  4: 446,
+  5: 499,
+  6: 586,
 };
 
 // Calculate custom utility allowance based on selections
@@ -446,4 +446,9 @@ export function calculateArvQuick(zip: string, sqft: number): number | null {
 // Get list of supported ZIP codes
 export function getSupportedZips(): string[] {
   return Object.keys(ARV_PER_SF).sort();
+}
+
+// Section 8 uses the FY2026 ZIP-level rent dataset, not the smaller ARV dataset.
+export function getSection8SupportedZips(): string[] {
+  return Object.keys(FMR_BY_ZIP).sort();
 }
