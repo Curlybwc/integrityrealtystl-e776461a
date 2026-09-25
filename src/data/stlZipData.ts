@@ -348,13 +348,13 @@ export const UTILITY_BREAKDOWN = {
 // Default Utility Allowances (pre-calculated with common setup)
 // Assumes: Natural Gas Heating, Electric Cooking, Other Electric, Water County, Sewer, Trash
 export const UTILITY_ALLOWANCES: Record<number, number> = {
-  0: 181,
+  0: 186,
   1: 225,
-  2: 279,
-  3: 341,
-  4: 426,
-  5: 465,
-  6: 551,
+  2: 281,
+  3: 350,
+  4: 446,
+  5: 499,
+  6: 586,
 };
 
 // Calculate custom utility allowance based on selections
