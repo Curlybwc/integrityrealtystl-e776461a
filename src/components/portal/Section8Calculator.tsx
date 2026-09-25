@@ -215,23 +215,22 @@ const Section8Calculator = () => {
     // Tenant Rent Portion at 40% = TTP at 40% - Utility Allowance
     const tenantRentPortionAt40 = Math.max(0, ttpAt40 - utilityAllowance);
     
-    // HAP Payment = Payment Standard - TTP at 30%
-    const hapPayment = Math.max(0, paymentStandard - ttpAt30);
-    
-    // Total Allowable Gross Rent at 30% (HAP + TTP at 30%)
-    const totalAllowableGRAt30 = hapPayment + ttpAt30;
-    
-    // Rent to Owner at 30% = Total Allowable GR at 30% - Utility Allowance
-    const rentToOwnerAt30 = totalAllowableGRAt30 - utilityAllowance;
-    
-    // Total Allowable Gross Rent at 40% (HAP + TTP at 40%)
-    const totalAllowableGRAt40 = hapPayment + ttpAt40;
-    
-    // Max Rent to Owner at 40% = Total Allowable GR at 40% - Utility Allowance
-    const maxRentToOwnerAt40 = totalAllowableGRAt40 - utilityAllowance;
+    // Maximum subsidy is Payment Standard minus TTP. Actual HAP is the lower
+    // of that amount or Gross Rent minus TTP.
+    const maximumSubsidy = Math.max(0, paymentStandard - ttpAt30);
     
     // Total Gross Rent based on Requested Rent (RRO + UA)
     const grossRentFromRRO = requestedRentToOwner + utilityAllowance;
+    const hapPayment = Math.max(
+      0,
+      Math.min(maximumSubsidy, grossRentFromRRO - ttpAt30)
+    );
+    
+    // 30% basis and 40% initial-lease ceiling used for underwriting.
+    const totalAllowableGRAt30 = paymentStandard;
+    const rentToOwnerAt30 = baseRentToOwner;
+    const totalAllowableGRAt40 = paymentStandard + (tenantMonthlyIncome * 0.10);
+    const maxRentToOwnerAt40 = Math.max(0, totalAllowableGRAt40 - utilityAllowance);
 
     // Determine if 30% covers the requested rent or if 40% is needed
     const covers30 = rentToOwnerAt30 >= requestedRentToOwner;
@@ -251,6 +250,7 @@ const Section8Calculator = () => {
       tenantRentPortionAt30,
       tenantRentPortionAt40,
       // HAP
+      maximumSubsidy,
       hapPayment,
       // Gross rent totals
       totalAllowableGRAt30,
@@ -512,9 +512,9 @@ const Section8Calculator = () => {
                 HAP & Rent to Owner
               </h4>
               <ResultRow
-                label="HAP Payment (PS - TTP at 30%)"
+                label="Estimated HAP for Requested Rent"
                 value={formatCurrency(calculations.hapPayment)}
-                tooltip="Housing Assistance Payment - does not change even if tenant pays 40%"
+                tooltip="Lower of Payment Standard minus TTP or requested Gross Rent minus TTP. Final HAP is determined by the PHA."
                 highlight
               />
               <ResultRow
@@ -612,9 +612,7 @@ const Section8Calculator = () => {
 
           {/* Disclaimer */}
           <div className="mt-6 p-3 bg-muted/50 rounded text-xs text-muted-foreground">
-            <strong className="text-foreground">Note:</strong> The HAP payment will not change - only 
-            the tenant portion can change (up to 40% if the rent to owner using 30% of the tenant's 
-            income is less than the Requested Rent). Final determinations are made by the local housing authority.
+            <strong className="text-foreground">Note:</strong> This is an underwriting estimate. The 40% limit applies at initial lease-up when Gross Rent exceeds the Payment Standard. Actual TTP is based on the PHA's income calculation, and final HAP, rent reasonableness, utility allowance, and approved rent are determined by the local housing authority.
           </div>
         </CardContent>
       </Card>
