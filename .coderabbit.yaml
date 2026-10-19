@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "en-US"
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+  path_filters:
+    - "!**/*.lock"
+    - "!**/package-lock.json"
+    - "!graphify-out/**"
+    - "!.lovable/**"
+  path_instructions:
+    - path: "supabase/functions/**"
+      instructions: "Supabase Edge Functions (Deno/TypeScript). Correctness and security only: verify authentication and authorization checks on every handler, no secrets hardcoded in code, no service-role key exposure to clients, correct CORS handling. No style feedback."
+    - path: "src/**"
+      instructions: "React/TypeScript frontend. Correctness and security only: flag data leaking between users, missing auth guards on admin pages, and logic errors (dates, ranges, pagination). No style or formatting feedback."
+knowledge_base:
+  learnings:
+    scope: "auto"
+chat:
+  auto_reply: true
