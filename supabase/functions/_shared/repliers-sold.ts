@@ -69,8 +69,7 @@ export async function fetchSoldListings(
         if (failed) return;
         const url = new URL("https://api.repliers.io/listings");
         const params = {
-          zip, status: "U", lastStatus: "Sld", class: "ResidentialProperty",
-          minClosedDate: request.fromDate,
+          zip, status: "U", lastStatus: "Sld", class: "residential",
           pageNum: String(page), resultsPerPage: "100",
         };
         Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
@@ -84,7 +83,7 @@ export async function fetchSoldListings(
           });
           if (!response.ok) throw new Error(`Sold listing provider returned HTTP ${response.status}`);
           data = await response.json();
-          const __L = (data as any)?.listings?.[0]; console.log("soldProbe5", JSON.stringify({ zip, page, count: (data as any)?.count, numPages: (data as any)?.numPages, lotKeys: __L?.lot ? Object.keys(__L.lot) : [], nearbyKeys: __L?.nearby ? Object.keys(__L.nearby) : [], mapKeys: __L?.map ? Object.keys(__L.map) : [] }));
+          const __L = (data as any)?.listings?.[0]; console.log("soldProbe6", JSON.stringify({ zip, page, count: (data as any)?.count, numPages: (data as any)?.numPages, firstSoldDate: __L?.soldDate ?? null, boardId: __L?.boardId ?? null }));
         } finally {
           clearTimeout(timeout);
         }
