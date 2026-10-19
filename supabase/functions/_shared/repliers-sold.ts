@@ -70,7 +70,7 @@ export async function fetchSoldListings(
         const url = new URL("https://api.repliers.io/listings");
         const params = {
           zip, status: "U", lastStatus: "Sld", class: "residential", type: "Sale",
-          minSoldDate: request.fromDate, maxSoldDate: request.toDate,
+          minSoldDate: request.fromDate,
           pageNum: String(page), resultsPerPage: "100",
         };
         Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
@@ -84,7 +84,7 @@ export async function fetchSoldListings(
           });
           if (!response.ok) throw new Error(`Sold listing provider returned HTTP ${response.status}`);
           data = await response.json();
-          console.log("soldProbe", JSON.stringify({ zip, page, count: (data as any)?.count, numPages: (data as any)?.numPages, firstKeys: Array.isArray((data as any)?.listings) && (data as any).listings[0] ? Object.keys((data as any).listings[0]) : [], firstSoldDate: (data as any)?.listings?.[0]?.soldDate ?? null, firstRawCloseDate: (data as any)?.listings?.[0]?.raw?.CloseDate ?? null, firstZip: (data as any)?.listings?.[0]?.address?.zip ?? (data as any)?.listings?.[0]?.address?.postalCode ?? null }));
+          const __L = (data as any)?.listings?.[0]; console.log("soldProbe2", JSON.stringify({ zip, page, count: (data as any)?.count, numPages: (data as any)?.numPages, status: __L?.status ?? null, lastStatus: __L?.lastStatus ?? null, cls: __L?.class ?? null, type: __L?.type ?? null, state: __L?.address?.state ?? null, streetNumber: __L?.address?.streetNumber ?? null, streetName: __L?.address?.streetName ?? null, city: __L?.address?.city ?? null, soldDate: __L?.soldDate ?? null }));
         } finally {
           clearTimeout(timeout);
         }
