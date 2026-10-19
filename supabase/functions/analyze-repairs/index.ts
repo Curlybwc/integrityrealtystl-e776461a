@@ -3,6 +3,7 @@
 // Sources: 'user' (quota-limited), 'admin' (priority 1), 'system_core' (priority 1, ingestion).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { resolveExistingRepairAnalysis } from "../_shared/repair-enqueue.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -84,6 +85,17 @@ async function fetchListing(mlsId: string): Promise<ListingSnapshot | null> {
   };
 }
 
+function kickWorker() {
+  fetch(`${SUPABASE_URL}/functions/v1/process-repair-queue`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + SERVICE_ROLE,
+    },
+    body: JSON.stringify({ trigger: "analyze-repairs" }),
+  }).catch((e) => console.error("worker kick failed", e));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -137,14 +149,40 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (existing) {
-      if (existing.evidence_hash === evidenceHash) {
-        if (["complete", "pending", "analyzing", "quota_blocked"].includes(existing.analysis_status)) {
-          return new Response(JSON.stringify({ analysis: existing }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-        // failed → allow re-enqueue
-      } else {
-        // Evidence changed — archive old, fall through to insert new
-        await svc.from("repair_analyses").update({ is_active: false }).eq("id", existing.id);
+      const resolution = await resolveExistingRepairAnalysis(existing, evidenceHash, {
+        requeue: async (id) => {
+          const { data, error } = await svc
+            .from("repair_analyses")
+            .update({
+              analysis_status: "pending",
+              failure_reason: null,
+              failure_kind: null,
+              failure_detail: null,
+              attempt_count: 0,
+            })
+            .eq("id", id)
+            .eq("is_active", true)
+            .eq("analysis_status", "failed")
+            .select("*")
+            .maybeSingle();
+          return { data, error };
+        },
+        getActive: async (id) => {
+          const { data } = await svc
+            .from("repair_analyses")
+            .select("*")
+            .eq("id", id)
+            .eq("is_active", true)
+            .maybeSingle();
+          return data;
+        },
+        archive: async (id) => {
+          await svc.from("repair_analyses").update({ is_active: false }).eq("id", id);
+        },
+      });
+      if (resolution.kind === "return") {
+        if (resolution.kickWorker) kickWorker();
+        return new Response(JSON.stringify({ analysis: resolution.analysis }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     }
 

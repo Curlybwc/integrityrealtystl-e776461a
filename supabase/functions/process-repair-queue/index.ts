@@ -3,6 +3,12 @@
 // runs deterministic pricing (STL investor cost library v2), and writes the result back.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import {
+  positiveIntegerSetting,
+  processRepairQueue,
+  RepairPipelineError,
+  type RepairQueueDependencies,
+} from "../_shared/repair-queue.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -274,7 +280,12 @@ Analyze the attached MLS photos and produce the observations JSON.`;
   if (!resp.ok) {
     const t = await resp.text();
     console.error("Vision call failed", resp.status, t);
-    throw new Error(`AI gateway ${resp.status}: ${t.slice(0, 200)}`);
+    throw new RepairPipelineError(
+      `AI gateway ${resp.status}: ${t.slice(0, 1000)}`,
+      "lovable_ai_gateway",
+      "vision",
+      resp.status,
+    );
   }
   const j = await resp.json();
   const text = j?.choices?.[0]?.message?.content;
@@ -296,61 +307,91 @@ Deno.serve(async (req) => {
 
   const svc = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-  const { data: rulesRow } = await svc
-    .from("repair_pricing_rules")
-    .select("*")
-    .eq("is_active", true)
-    .maybeSingle();
-  if (!rulesRow) {
-    return new Response(JSON.stringify({ error: "No active pricing rules" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  const dependencies: RepairQueueDependencies<PricingRules> = {
+    now: () => new Date(),
+    staleMinutes: positiveIntegerSetting(Deno.env.get("REPAIR_ANALYZING_STALE_MINUTES"), 15),
+    maxAttempts: positiveIntegerSetting(Deno.env.get("REPAIR_MAX_ATTEMPTS"), 3),
+    batchSize: BATCH_SIZE,
+    getStaleAnalyzing: async (cutoff) => {
+      const { data, error } = await svc
+        .from("repair_analyses")
+        .select("*")
+        .eq("is_active", true)
+        .eq("analysis_status", "analyzing")
+        .lte("updated_at", cutoff);
+      if (error) throw error;
+      return data ?? [];
+    },
+    reap: async (row, patch) => {
+      const { data, error } = await svc
+        .from("repair_analyses")
+        .update(patch)
+        .eq("id", row.id)
+        .eq("is_active", true)
+        .eq("analysis_status", "analyzing")
+        .eq("attempt_count", row.attempt_count)
+        .select("*")
+        .maybeSingle();
+      return { data, error };
+    },
+    getCandidates: async (limit, excludeIds) => {
+      let query = svc
+        .from("repair_analyses")
+        .select("*")
+        .eq("analysis_status", "pending")
+        .eq("is_active", true)
+        .order("priority", { ascending: true })
+        .order("created_at", { ascending: true });
+      if (excludeIds.length) query = query.not("id", "in", `(${excludeIds.join(",")})`);
+      const { data, error } = await query.limit(limit);
+      if (error) throw error;
+      return data ?? [];
+    },
+    claim: async (row) => {
+      const { data, error } = await svc
+        .from("repair_analyses")
+        .update({ analysis_status: "analyzing", attempt_count: row.attempt_count + 1 })
+        .eq("id", row.id)
+        .eq("analysis_status", "pending")
+        .eq("is_active", true)
+        .eq("attempt_count", row.attempt_count)
+        .select("*")
+        .maybeSingle();
+      return { data, error };
+    },
+    writeAttempt: async (row, patch) => {
+      const { data, error } = await svc
+        .from("repair_analyses")
+        .update(patch)
+        .eq("id", row.id)
+        .eq("analysis_status", "analyzing")
+        .eq("attempt_count", row.attempt_count)
+        .select("*")
+        .maybeSingle();
+      return { data, error };
+    },
+    getRules: async () => {
+      const { data } = await svc
+        .from("repair_pricing_rules")
+        .select("*")
+        .eq("is_active", true)
+        .maybeSingle();
+      return data ? { rules: data.rules as PricingRules, pricingVersion: data.version as number } : null;
+    },
+    callVision,
+    priceRepairs,
+  };
+
+  try {
+    const results = await processRepairQueue(dependencies);
+    return new Response(JSON.stringify({ processed: results.length, results }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("repair queue failed", error);
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Repair queue failed" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
-  const rules = rulesRow.rules as PricingRules;
-  const pricingVersion = rulesRow.version as number;
-
-  const { data: pending } = await svc
-    .from("repair_analyses")
-    .select("*")
-    .eq("analysis_status", "pending")
-    .eq("is_active", true)
-    .order("priority", { ascending: true })
-    .order("created_at", { ascending: false })
-    .limit(BATCH_SIZE);
-
-  const rows = pending ?? [];
-  const results: any[] = [];
-
-  for (const row of rows) {
-    await svc.from("repair_analyses").update({ analysis_status: "analyzing" }).eq("id", row.id);
-    try {
-      const snap = row.evidence_snapshot ?? {};
-      const observations = await callVision(snap);
-      const priced = priceRepairs(observations, snap.sqft ?? 0, snap.baths ?? 0, rules);
-
-      await svc.from("repair_analyses").update({
-        analysis_status: "complete",
-        observations,
-        line_items: priced.line_items,
-        total_repair_estimate: priced.total,
-        gut_rehab_mode: priced.gut_rehab_mode,
-        pricing_version: pricingVersion,
-        engine_version: ENGINE_VERSION,
-        model: MODEL,
-        photo_count_analyzed: Math.min(MAX_PHOTOS, (snap.photo_urls ?? []).length),
-        analyzed_at: new Date().toISOString(),
-      }).eq("id", row.id);
-
-      results.push({ id: row.id, status: "complete", total: priced.total });
-    } catch (e) {
-      console.error("worker error", row.id, e);
-      await svc.from("repair_analyses").update({
-        analysis_status: "failed",
-        failure_reason: "Analysis failed. Please retry or contact support.",
-      }).eq("id", row.id);
-      results.push({ id: row.id, status: "failed" });
-    }
-  }
-
-  return new Response(JSON.stringify({ processed: results.length, results }), {
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
 });
