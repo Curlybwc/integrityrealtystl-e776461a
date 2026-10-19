@@ -84,6 +84,7 @@ export async function fetchSoldListings(
           });
           if (!response.ok) throw new Error(`Sold listing provider returned HTTP ${response.status}`);
           data = await response.json();
+          console.log("soldProbe", JSON.stringify({ zip, page, count: (data as any)?.count, numPages: (data as any)?.numPages, firstKeys: Array.isArray((data as any)?.listings) && (data as any).listings[0] ? Object.keys((data as any).listings[0]) : [], firstSoldDate: (data as any)?.listings?.[0]?.soldDate ?? null, firstRawCloseDate: (data as any)?.listings?.[0]?.raw?.CloseDate ?? null, firstZip: (data as any)?.listings?.[0]?.address?.zip ?? (data as any)?.listings?.[0]?.address?.postalCode ?? null }));
         } finally {
           clearTimeout(timeout);
         }
