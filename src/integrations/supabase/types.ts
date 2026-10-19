@@ -110,6 +110,86 @@ export type Database = {
         }
         Relationships: []
       }
+      client_email_schedule_sends: {
+        Row: {
+          detail: Json
+          id: string
+          period_from: string | null
+          period_to: string | null
+          row_count: number
+          schedule_id: string
+          sent_at: string
+          status: string
+        }
+        Insert: {
+          detail?: Json
+          id?: string
+          period_from?: string | null
+          period_to?: string | null
+          row_count?: number
+          schedule_id: string
+          sent_at?: string
+          status: string
+        }
+        Update: {
+          detail?: Json
+          id?: string
+          period_from?: string | null
+          period_to?: string | null
+          row_count?: number
+          schedule_id?: string
+          sent_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_email_schedule_sends_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "client_email_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_email_schedules: {
+        Row: {
+          cadence: string
+          client_email: string
+          client_name: string
+          config: Json
+          created_at: string
+          file_format: string
+          id: string
+          is_active: boolean
+          send_mode: string
+          source_type: string
+        }
+        Insert: {
+          cadence: string
+          client_email: string
+          client_name: string
+          config?: Json
+          created_at?: string
+          file_format?: string
+          id?: string
+          is_active?: boolean
+          send_mode?: string
+          source_type: string
+        }
+        Update: {
+          cadence?: string
+          client_email?: string
+          client_name?: string
+          config?: Json
+          created_at?: string
+          file_format?: string
+          id?: string
+          is_active?: boolean
+          send_mode?: string
+          source_type?: string
+        }
+        Relationships: []
+      }
       comp_report_overrides: {
         Row: {
           created_at: string
@@ -667,10 +747,6 @@ export type Database = {
           sms_opt_in: boolean
           user_id: string
         }[]
-      }
-      bootstrap_set_vault_service_key: {
-        Args: { p_key: string }
-        Returns: undefined
       }
       get_access_tier: { Args: { _user_id: string }; Returns: string }
       get_preview_runs_remaining: {
