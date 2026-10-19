@@ -668,6 +668,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      bootstrap_set_vault_service_key: {
+        Args: { p_key: string }
+        Returns: undefined
+      }
       get_access_tier: { Args: { _user_id: string }; Returns: string }
       get_preview_runs_remaining: {
         Args: { _user_id: string }
