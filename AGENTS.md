@@ -1,5 +1,7 @@
 # AGENTS.md
 
+- Email Schedules uses the shared scheduler domain type and a local client schema extension when generated types omit its table; this preserves the managed client and existing query behavior.
+
 ## graphify
 
 This repo carries a Graphify knowledge graph in `graphify-out/` (graph.json, GRAPH_REPORT.md, graph.html), generated from the codebase — the TypeScript/React source plus the Supabase edge functions and migrations — and committed so every builder (Codex, Lovable, or a successor tool) works from the same map.

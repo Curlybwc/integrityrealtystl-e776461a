@@ -5,10 +5,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import { getSoldSchedulePlan } from "../../../supabase/functions/_shared/email-schedules";
+import { getSoldSchedulePlan, type EmailSchedule } from "../../../supabase/functions/_shared/email-schedules";
 
-type EmailSchedule = Database["public"]["Tables"]["client_email_schedules"]["Row"];
+// Keep the generated client untouched while its schema omits this existing table.
+type ScheduleDatabase = Omit<Database, "public"> & {
+  public: Omit<Database["public"], "Tables"> & {
+    Tables: Database["public"]["Tables"] & {
+      client_email_schedules: {
+        Row: EmailSchedule;
+        Insert: Partial<EmailSchedule>;
+        Update: Partial<EmailSchedule>;
+        Relationships: [];
+      };
+    };
+  };
+};
+const scheduleClient = supabase as unknown as SupabaseClient<ScheduleDatabase>;
 
 const reportDetails = (schedule: EmailSchedule) => {
   if (schedule.source_type !== "sold_report") return schedule.source_type.replace(/_/g, " ");
@@ -33,7 +47,7 @@ const AdminEmailSchedules = () => {
       const loaded: EmailSchedule[] = [];
       let cursor: string | null = null;
       while (true) {
-        let query = supabase.from("client_email_schedules").select("*").order("id").limit(500);
+        let query = scheduleClient.from("client_email_schedules").select("*").order("id").limit(500);
         if (cursor) query = query.gt("id", cursor);
         const { data, error: loadError } = await query;
         if (loadError) throw new Error(loadError.message);
@@ -56,7 +70,7 @@ const AdminEmailSchedules = () => {
     setProcessingId(schedule.id);
     setError(null);
     try {
-      const { data, error: updateError } = await supabase
+      const { data, error: updateError } = await scheduleClient
         .from("client_email_schedules")
         .update({ is_active: !schedule.is_active })
         .eq("id", schedule.id)
