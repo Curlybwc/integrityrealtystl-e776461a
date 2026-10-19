@@ -35,7 +35,7 @@ function normalizeSoldListing(value: unknown, request: SoldReportRequest, zips: 
   // metadata. Some MLS response projections omit these fields altogether.
   if (value.status != null && stringValue(value.status).toUpperCase() !== "U") return null;
   if (value.lastStatus != null && stringValue(value.lastStatus).toLowerCase() !== "sld") return null;
-  if (value.class != null && stringValue(value.class).toLowerCase() !== "residential") return null;
+  if (value.class != null && !["residential", "residentialproperty"].includes(stringValue(value.class).toLowerCase())) return null;
   if (value.type != null && stringValue(value.type).toLowerCase() !== "sale") return null;
 
   return { address: unit ? `${street} #${unit}` : street, city, state: "MO", zip, soldDate, mlsNumber };
@@ -69,7 +69,7 @@ export async function fetchSoldListings(
         if (failed) return;
         const url = new URL("https://api.repliers.io/listings");
         const params = {
-          zip, status: "U", lastStatus: "Sld", class: "residential", type: "Sale",
+          zip, status: "U", lastStatus: "Sld", class: "residential",
           minSoldDate: request.fromDate,
           pageNum: String(page), resultsPerPage: "100",
         };
@@ -84,7 +84,7 @@ export async function fetchSoldListings(
           });
           if (!response.ok) throw new Error(`Sold listing provider returned HTTP ${response.status}`);
           data = await response.json();
-          const __L = (data as any)?.listings?.[0]; console.log("soldProbe2", JSON.stringify({ zip, page, count: (data as any)?.count, numPages: (data as any)?.numPages, status: __L?.status ?? null, lastStatus: __L?.lastStatus ?? null, cls: __L?.class ?? null, type: __L?.type ?? null, state: __L?.address?.state ?? null, streetNumber: __L?.address?.streetNumber ?? null, streetName: __L?.address?.streetName ?? null, city: __L?.address?.city ?? null, soldDate: __L?.soldDate ?? null }));
+          const __L = (data as any)?.listings?.[0]; console.log("soldProbe3", JSON.stringify({ zip, page, count: (data as any)?.count, numPages: (data as any)?.numPages, county: __L?.address?.county ?? null, addressKeys: __L?.address ? Object.keys(__L.address) : [] }));
         } finally {
           clearTimeout(timeout);
         }
