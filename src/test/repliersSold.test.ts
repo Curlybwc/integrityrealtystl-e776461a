@@ -52,11 +52,15 @@ describe("Repliers sold reports", () => {
     expect(fetcher.mock.calls.some(([url]) => zipAndPage(url).page === 2)).toBe(true);
   });
 
-  it("normalizes soldDate with closedDate fallback and excludes dates, ZIPs, states and statuses outside the report", async () => {
+  it("normalizes soldDate with raw.CloseDate fallback and excludes dates, ZIPs, states and statuses outside the report", async () => {
     const records = [
-      listing("sold", { address: { streetNumber: 12, streetDirection: "N", streetName: "Main", streetSuffix: "Ave", unitNumber: "2B", city: "St Charles", state: "mo", zip: "63301-1234" } }),
-      listing("closed", { soldDate: undefined, closedDate: "2026-10-11" }),
-      listing("fallback", { soldDate: "invalid", closedDate: "2026-10-12" }),
+      listing("sold", { raw: { CloseDate: "2026-10-18" }, address: { streetNumber: 12, streetDirection: "N", streetName: "Main", streetSuffix: "Ave", unitNumber: "2B", city: "St Charles", state: "mo", zip: "63301-1234" } }),
+      listing("raw-only", { soldDate: undefined, raw: { CloseDate: "2026-10-11T00:00:00Z" } }),
+      listing("fallback", { soldDate: "invalid", raw: { CloseDate: "2026-10-12" } }),
+      listing("closed-only", { soldDate: undefined, closedDate: "2026-10-13" }),
+      listing("null-raw", { soldDate: undefined, raw: null }),
+      listing("array-raw", { soldDate: undefined, raw: [{ CloseDate: "2026-10-14" }] }),
+      listing("string-raw", { soldDate: undefined, raw: "2026-10-15" }),
       listing("old", { soldDate: "2026-09-18" }),
       listing("future", { soldDate: "2026-10-19" }),
       listing("no-date", { soldDate: undefined }),
@@ -70,7 +74,8 @@ describe("Repliers sold reports", () => {
     ];
     const fetcher = vi.fn(async (url: string | URL | Request) => zipAndPage(url).zip === "63301" ? response(records) : emptyResponse());
     const rows = await fetchSoldListings(request, "test-key", fetcher);
-    expect(rows.map((row) => row.mlsNumber)).toEqual(["fallback", "closed", "sold"]);
+    expect(rows.map((row) => row.mlsNumber)).toEqual(["fallback", "raw-only", "sold"]);
+    expect(rows.find((row) => row.mlsNumber === "raw-only")?.soldDate).toBe("2026-10-11");
     expect(rows.find((row) => row.mlsNumber === "sold")).toEqual({
       address: "12 N Main Ave #2B", city: "St Charles", state: "MO", zip: "63301", soldDate: "2026-10-10", mlsNumber: "sold",
     });

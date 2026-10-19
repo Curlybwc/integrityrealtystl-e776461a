@@ -1,17 +1,17 @@
 # Graph Report - integrityrealtystl-e776461a  (2026-10-19)
 
 ## Corpus Check
-- 292 files · ~136,167 words
+- 292 files · ~136,705 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 8 file(s) not represented in the graph (top: .css 2, (none) 1, .lock 1)
 
 ## Summary
-- 1501 nodes · 4888 edges · 79 communities (57 shown, 22 thin omitted)
+- 1501 nodes · 4892 edges · 79 communities (57 shown, 22 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 19 edges (avg confidence: 0.91)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8a4372ae`
+- Built from commit: `6a05b959`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -121,7 +121,7 @@ Nodes (39): lucide-react, BuyerDisclaimers(), BuyerHero(), BuyerProcess(), Buyer
 
 ### Community 2 - "Card"
 Cohesion: 0.08
-Nodes (76): @testing-library/react, APPLIANCE_KEYS, FIELDS, NumericKey, RepairPricingEditor(), DetailRow(), ListingDetailBase(), ListingDetailBaseProps (+68 more)
+Nodes (76): APPLIANCE_KEYS, FIELDS, NumericKey, RepairPricingEditor(), DetailRow(), ListingDetailBase(), ListingDetailBaseProps, RawListing (+68 more)
 
 ### Community 3 - "dependencies"
 Cohesion: 0.04
@@ -312,8 +312,8 @@ Cohesion: 0.32
 Nodes (5): ai_analysis_quota_updated_at, public.repair_pricing_rules, repair_analyses_updated_at, repair_pricing_rules_active_uniq, repair_pricing_rules_version_uniq
 
 ### Community 52 - "email-schedules.ts"
-Cohesion: 0.07
-Nodes (46): fflate, vitest, row, schedule, emptyResponse(), request, response(), exportFile() (+38 more)
+Cohesion: 0.06
+Nodes (46): fflate, @testing-library/react, vitest, { invoke, buildSoldExport }, row, schedule, emptyResponse(), request (+38 more)
 
 ### Community 53 - "dotloop-send-baa/index.ts"
 Cohesion: 0.25
@@ -354,10 +354,10 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `Button` be split into smaller, more focused modules?**
   _Cohesion score 0.08737522019964768 - nodes in this community are weakly interconnected._
 - **Why does `lucide-react` connect `lucide-react` to `Button`, `Card`, `cn`, `zip-combobox.tsx`, `DealUnderwritingPanel.tsx`, `dialog.tsx`, `sidebar.tsx`, `package.json`, `DealAnalyzer.tsx`, `lib/compArv.ts`, `utils.ts`, `BatchAnalysisTable.tsx`, `App.tsx`, `CompReportStatus.tsx`, `DealAlertSettings.tsx`, `carousel.tsx`, `PortalPartnerProfile.tsx`, `hooks/use-toast.ts`, `sheet.tsx`, `pagination.tsx`, `navigation-menu.tsx`, `breadcrumb.tsx`?**
-  _High betweenness centrality (0.117) - this node is a cross-community bridge._
+  _High betweenness centrality (0.118) - this node is a cross-community bridge._
 - **Should `lucide-react` be split into smaller, more focused modules?**
   _Cohesion score 0.05809979494190021 - nodes in this community are weakly interconnected._
 - **Why does `react` connect `Button` to `Card`, `cn`, `zip-combobox.tsx`, `DealUnderwritingPanel.tsx`, `dialog.tsx`, `sidebar.tsx`, `package.json`, `DealAnalyzer.tsx`, `lib/compArv.ts`, `utils.ts`, `BatchAnalysisTable.tsx`, `repairAnalysis.ts`, `App.tsx`, `CompReportStatus.tsx`, `DealAlertSettings.tsx`, `carousel.tsx`, `PortalPartnerProfile.tsx`, `form.tsx`, `hooks/use-toast.ts`, `chart.tsx`, `sheet.tsx`, `class-variance-authority`, `pagination.tsx`, `navigation-menu.tsx`, `breadcrumb.tsx`, `drawer.tsx`?**
-  _High betweenness centrality (0.105) - this node is a cross-community bridge._
+  _High betweenness centrality (0.106) - this node is a cross-community bridge._
 - **Should `Card` be split into smaller, more focused modules?**
-  _Cohesion score 0.07564102564102564 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0784313725490196 - nodes in this community are weakly interconnected._

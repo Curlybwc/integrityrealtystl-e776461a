@@ -33,7 +33,7 @@ describe("AdminEmailSchedules", () => {
     saveSchedule.mockResolvedValueOnce({ data: { id: schedule.id, is_active: false }, error: null });
     render(<AdminEmailSchedules />);
     expect(await screen.findByText("Mark Parkinson")).toBeInTheDocument();
-    expect(screen.getByText("St. Charles County · Last 30 days")).toBeInTheDocument();
+    expect(screen.getByText("St. Charles County · Last 32 days")).toBeInTheDocument();
     expect(from).toHaveBeenCalledWith("client_email_schedules");
 
     fireEvent.click(screen.getByRole("button", { name: "Pause schedule for Mark Parkinson" }));

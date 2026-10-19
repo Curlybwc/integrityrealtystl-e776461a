@@ -52,6 +52,7 @@ export type ScheduleDependencies = {
   isStillActive: (scheduleId: string) => Promise<boolean>;
   deliver: (schedule: EmailSchedule, plan: SoldSchedulePlan, attachment: ScheduleAttachment, idempotencyKey: string) => Promise<string>;
   finish: (sendId: string, result: ScheduleRunResult) => Promise<void>;
+  recordUnclaimed: (schedule: EmailSchedule, plan: SoldSchedulePlan | null, result: ScheduleRunResult) => Promise<void>;
 };
 
 /** UTC calendar buckets. Weekly schedules begin Monday; a new schedule runs on its first wake. */
@@ -82,10 +83,13 @@ export function getSoldSchedulePlan(schedule: EmailSchedule, now: Date): SoldSch
   if (schedule.file_format !== "xlsx" && schedule.file_format !== "csv") {
     throw new Error("Unsupported schedule file format");
   }
+  // Month starts can be 31 days apart. At least 32 inclusive UTC dates make
+  // consecutive monthly reports overlap; successful MLS IDs remove duplicates.
+  const lookbackDays = schedule.cadence === "monthly" ? Math.max(days, 32) : days;
   return {
     county: county.name,
-    lookbackDays: days,
-    ...getSoldReportWindow(days, now),
+    lookbackDays,
+    ...getSoldReportWindow(lookbackDays, now),
     format: schedule.file_format,
   };
 }
@@ -111,8 +115,8 @@ export function soldScheduleCoverNote(schedule: EmailSchedule, plan: SoldSchedul
 }
 
 /**
- * A unique database claim makes every cadence bucket at most one attempt, including dry runs,
- * failures and interrupted runs. We deliberately do not retry uncertain email delivery automatically.
+ * Configured runs claim at most one delivery attempt per bucket, including failures
+ * and interrupted runs. Unconfigured previews never acquire or consume that claim.
  */
 export async function processEmailSchedule(schedule: EmailSchedule, deps: ScheduleDependencies): Promise<ScheduleRunResult | null> {
   if (!schedule.is_active || schedule.send_mode !== "automatic") return null;
@@ -124,8 +128,17 @@ export async function processEmailSchedule(schedule: EmailSchedule, deps: Schedu
   } catch (error) {
     validationError = error instanceof Error ? error.message : "Invalid schedule";
   }
-  const sendId = await deps.claim(schedule, bucket, plan);
-  if (!sendId) return null;
+  // Check Resend configuration before acquiring a delivery claim. Preview logs
+  // deliberately omit cadenceBucket, the unique index's claim key.
+  let sendId: string | null = null;
+  if (deps.emailConfigured) {
+    sendId = await deps.claim(schedule, bucket, plan);
+    if (!sendId) return null;
+  }
+  const detail = {
+    ...(deps.emailConfigured ? { cadenceBucket: bucket } : { previewCadenceBucket: bucket }),
+    sourceType: schedule.source_type,
+  };
 
   let result: ScheduleRunResult;
   try {
@@ -133,7 +146,6 @@ export async function processEmailSchedule(schedule: EmailSchedule, deps: Schedu
     const rows = await deps.fetchRows(plan);
     const history = await deps.successfulSends(schedule.id, plan.fromDate);
     const newRows = getNewSoldRows(rows, history);
-    const detail = { cadenceBucket: bucket, sourceType: schedule.source_type };
     if (!newRows.length) {
       result = { status: "no_new_matches", rowCount: 0, detail };
     } else {
@@ -160,10 +172,11 @@ export async function processEmailSchedule(schedule: EmailSchedule, deps: Schedu
     result = {
       status: "failed",
       rowCount: 0,
-      detail: { cadenceBucket: bucket, error: error instanceof Error ? error.message : "Schedule processing failed" },
+      detail: { ...detail, error: error instanceof Error ? error.message : "Schedule processing failed" },
     };
   }
   // A failed database write must reject the invocation, especially after provider acceptance.
-  await deps.finish(sendId, result);
+  if (sendId) await deps.finish(sendId, result);
+  else await deps.recordUnclaimed(schedule, plan, result);
   return result;
 }

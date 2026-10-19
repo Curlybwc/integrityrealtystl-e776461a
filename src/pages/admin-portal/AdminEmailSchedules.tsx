@@ -6,18 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { getSoldSchedulePlan } from "../../../supabase/functions/_shared/email-schedules";
 
 type EmailSchedule = Database["public"]["Tables"]["client_email_schedules"]["Row"];
 
 const reportDetails = (schedule: EmailSchedule) => {
   if (schedule.source_type !== "sold_report") return schedule.source_type.replace(/_/g, " ");
-  const config = schedule.config;
-  if (config && typeof config === "object" && !Array.isArray(config)) {
-    const county = typeof config.county === "string" ? config.county : "";
-    const days = typeof config.lookbackDays === "number" ? `Last ${config.lookbackDays} days` : "";
-    return [county, days].filter(Boolean).join(" · ") || "Sold listings";
+  try {
+    const plan = getSoldSchedulePlan(schedule, new Date());
+    return `${plan.county} · Last ${plan.lookbackDays} days`;
+  } catch {
+    return "Invalid sold report configuration";
   }
-  return "Sold listings";
 };
 
 const AdminEmailSchedules = () => {

@@ -35,9 +35,10 @@ CREATE INDEX client_email_schedule_sends_successful_window_idx
   ON public.client_email_schedule_sends (schedule_id, period_to)
   WHERE status = 'sent';
 
--- The first daily wake in a UTC calendar bucket claims that bucket before any external request.
--- A failure, interrupted execution or email-not-configured outcome is not automatically retried:
--- this avoids duplicate delivery after an ambiguous provider response or database failure.
+-- Configured delivery attempts claim the bucket before any external request.
+-- Failures and interrupted deliveries are not automatically retried, avoiding duplicates
+-- after ambiguous provider responses. Unconfigured previews omit cadenceBucket and
+-- leave delivery eligible when Resend is configured later in the same bucket.
 CREATE UNIQUE INDEX client_email_schedule_sends_cadence_bucket_key
   ON public.client_email_schedule_sends (schedule_id, (detail ->> 'cadenceBucket'))
   WHERE detail ? 'cadenceBucket';

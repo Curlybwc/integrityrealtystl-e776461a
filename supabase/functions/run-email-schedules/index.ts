@@ -154,6 +154,20 @@ Deno.serve(async (req) => {
                 }).eq("id", sendId).eq("status", "processing").select("id").single();
               if (finishError || !updated) throw new Error("Unable to record schedule outcome");
             },
+            // No Resend key: build/log a preview without the cadenceBucket claim
+            // key so configuring email later in this same bucket remains eligible.
+            recordUnclaimed: async (current, plan, result) => {
+              const { error: previewError } = await svc.from("client_email_schedule_sends")
+                .insert({
+                  schedule_id: current.id,
+                  period_from: plan?.fromDate ?? null,
+                  period_to: plan?.toDate ?? null,
+                  row_count: result.rowCount,
+                  status: result.status,
+                  detail: result.detail,
+                });
+              if (previewError) throw new Error("Unable to record unconfigured schedule preview");
+            },
           });
           if (result) counts[result.status] = (counts[result.status] ?? 0) + 1;
           else skipped++;

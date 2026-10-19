@@ -19,7 +19,8 @@ function soldCalendarDate(value: unknown): string | undefined {
 function normalizeSoldListing(value: unknown, request: SoldReportRequest, zips: Set<string>): SoldRow | null {
   if (!isObject(value) || !isObject(value.address)) return null;
   const address = value.address;
-  const soldDate = soldCalendarDate(value.soldDate) ?? soldCalendarDate(value.closedDate);
+  const raw = isObject(value.raw) ? value.raw : {};
+  const soldDate = soldCalendarDate(value.soldDate) ?? soldCalendarDate(raw.CloseDate);
   const zip = stringValue(address.zip || address.postalCode).slice(0, 5);
   const state = stringValue(address.state).toUpperCase();
   const mlsNumber = stringValue(value.mlsNumber);
