@@ -35,9 +35,12 @@ describe("Repliers sold reports", () => {
       expect(parsed.searchParams.get("status")).toBe("U");
       expect(parsed.searchParams.get("lastStatus")).toBe("Sld");
       expect(parsed.searchParams.get("class")).toBe("residential");
-      expect(parsed.searchParams.get("type")).toBe("Sale");
-      expect(parsed.searchParams.get("minSoldDate")).toBe(request.fromDate);
-      expect(parsed.searchParams.get("maxSoldDate")).toBe(request.toDate);
+      expect(parsed.searchParams.get("zip")).toBe(zip);
+      expect(parsed.searchParams.get("resultsPerPage")).toBe("100");
+      expect(parsed.searchParams.get("pageNum")).toBe(String(page));
+      for (const key of ["type", "minSoldDate", "maxSoldDate", "minClosedDate", "maxClosedDate"]) {
+        expect(parsed.searchParams.has(key)).toBe(false);
+      }
       expect(init?.headers).toHaveProperty("REPLIERS-API-KEY", "test-key");
       expect(parsed.searchParams.has("repliers_api_key")).toBe(false);
       if (zip === "63301") return page === 1
@@ -79,6 +82,46 @@ describe("Repliers sold reports", () => {
     expect(rows.find((row) => row.mlsNumber === "sold")).toEqual({
       address: "12 N Main Ave #2B", city: "St Charles", state: "MO", zip: "63301", soldDate: "2026-10-10", mlsNumber: "sold",
     });
+  });
+
+  it("accepts a payload shaped like the live Repliers response", async () => {
+    const live = listing("LIVE1", { class: "ResidentialProperty", address: { streetNumber: "5", streetName: "Oak", streetSuffix: "Dr", city: "St. Charles", state: "Missouri", zip: "63301" } });
+    const fetcher = vi.fn(async (url: string | URL | Request) => zipAndPage(url).zip === "63301" ? response([live]) : emptyResponse());
+    const rows = await fetchSoldListings(request, "test-key", fetcher);
+    expect(rows).toEqual([{ address: "5 Oak Dr", city: "St. Charles", state: "MO", zip: "63301", soldDate: "2026-10-10", mlsNumber: "LIVE1" }]);
+  });
+
+  it("stops paging a ZIP after a page entirely older than the window", async () => {
+    const old = (id: string) => listing(id, { soldDate: "2026-01-01T00:00:00.000Z" });
+    const fetcher = vi.fn(async (url: string | URL | Request) => {
+      const { zip, page } = zipAndPage(url);
+      if (zip !== "63301") return emptyResponse();
+      return page === 1 ? response([listing("N1"), old("O1")], 1, 50, 5000)
+        : page === 2 ? response([old("O2"), old("O3")], 2, 50, 5000)
+        : response([listing("NEVER")], page, 50, 5000);
+    });
+    const rows = await fetchSoldListings(request, "test-key", fetcher);
+    expect(rows.map((row) => row.mlsNumber)).toEqual(["N1"]);
+    expect(fetcher.mock.calls.map(([url]) => zipAndPage(url)).filter((c) => c.zip === "63301").map((c) => c.page)).toEqual([1, 2]);
+  });
+
+  it("collects in-window rows across multiple pages", async () => {
+    const fetcher = vi.fn(async (url: string | URL | Request) => {
+      const { zip, page } = zipAndPage(url);
+      if (zip !== "63301") return emptyResponse();
+      return response([listing(`P${page}A`), listing(`P${page}B`)], page, 3, 6);
+    });
+    const rows = await fetchSoldListings(request, "test-key", fetcher);
+    expect(rows.map((row) => row.mlsNumber).sort()).toEqual(["P1A", "P1B", "P2A", "P2B", "P3A", "P3B"]);
+  });
+
+  it("still throws on an inconsistent page mid-walk", async () => {
+    const fetcher = vi.fn(async (url: string | URL | Request) => {
+      const { zip, page } = zipAndPage(url);
+      if (zip !== "63301") return emptyResponse();
+      return page === 1 ? response([listing("A")], 1, 3, 3) : response([listing("B")], 2, 4, 3);
+    });
+    await expect(fetchSoldListings(request, "test-key", fetcher)).rejects.toThrow();
   });
 
   it("rejects upstream failures rather than returning a partial report", async () => {
