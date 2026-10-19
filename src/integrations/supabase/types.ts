@@ -14,6 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_email_schedules: {
+        Row: {
+          id: string
+          client_name: string
+          client_email: string
+          source_type: string
+          config: Json
+          cadence: string
+          send_mode: string
+          file_format: string
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          client_name: string
+          client_email: string
+          source_type: string
+          config?: Json
+          cadence: string
+          send_mode?: string
+          file_format?: string
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          client_name?: string
+          client_email?: string
+          source_type?: string
+          config?: Json
+          cadence?: string
+          send_mode?: string
+          file_format?: string
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+      client_email_schedule_sends: {
+        Row: {
+          id: string
+          schedule_id: string
+          sent_at: string
+          period_from: string | null
+          period_to: string | null
+          row_count: number
+          status: string
+          detail: Json
+        }
+        Insert: {
+          id?: string
+          schedule_id: string
+          sent_at?: string
+          period_from?: string | null
+          period_to?: string | null
+          row_count?: number
+          status: string
+          detail?: Json
+        }
+        Update: {
+          id?: string
+          schedule_id?: string
+          sent_at?: string
+          period_from?: string | null
+          period_to?: string | null
+          row_count?: number
+          status?: string
+          detail?: Json
+        }
+        Relationships: [{
+          foreignKeyName: "client_email_schedule_sends_schedule_id_fkey"
+          columns: ["schedule_id"]
+          isOneToOne: false
+          referencedRelation: "client_email_schedules"
+          referencedColumns: ["id"]
+        }]
+      }
       ai_analysis_quota: {
         Row: {
           count: number

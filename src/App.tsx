@@ -72,6 +72,8 @@ import AdminPortalLayout from "./components/admin-portal/AdminPortalLayout";
 import AdminDashboard from "./pages/admin-portal/AdminDashboard";
 import AdminDealPot from "./pages/admin-portal/AdminDealPot";
 import AdminMlsImport from "./pages/admin-portal/AdminMlsImport";
+import AdminSoldExport from "./pages/admin-portal/AdminSoldExport";
+import AdminEmailSchedules from "./pages/admin-portal/AdminEmailSchedules";
 import AdminSettings from "./pages/admin-portal/AdminSettings";
 import AdminUsers from "./pages/admin-portal/AdminUsers";
 import AdminUserDetail from "./pages/admin-portal/AdminUserDetail";
@@ -163,6 +165,8 @@ const App = () => (
             <Route index element={<AdminDashboard />} />
             <Route path="deal-pot" element={<AdminDealPot />} />
             <Route path="mls-import" element={<AdminMlsImport />} />
+            <Route path="sold-export" element={<AdminSoldExport />} />
+            <Route path="email-schedules" element={<AdminEmailSchedules />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="users/:userId" element={<AdminUserDetail />} />

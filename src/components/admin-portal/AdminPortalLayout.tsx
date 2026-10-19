@@ -12,6 +12,8 @@ import {
   Users,
   CheckCircle,
   Shield,
+  Download,
+  CalendarClock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/integrity-logo.png";
@@ -23,6 +25,8 @@ const navItems = [
   { title: "Dashboard", href: "/portal/admin", icon: LayoutDashboard },
   { title: "Deal Pot", href: "/portal/admin/deal-pot", icon: Building2 },
   { title: "MLS Import", href: "/portal/admin/mls-import", icon: Search },
+  { title: "Sold Export", href: "/portal/admin/sold-export", icon: Download },
+  { title: "Email Schedules", href: "/portal/admin/email-schedules", icon: CalendarClock },
   { title: "Users", href: "/portal/admin/users", icon: Users },
   { title: "Approvals", href: "/portal/admin/approvals", icon: CheckCircle },
   { title: "Settings", href: "/portal/admin/settings", icon: Settings },
