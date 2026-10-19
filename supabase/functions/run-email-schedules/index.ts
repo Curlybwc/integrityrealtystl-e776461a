@@ -67,6 +67,13 @@ Deno.serve(async (req) => {
           const result = await processEmailSchedule(schedule, {
             now,
             emailConfigured: Boolean(resendKey),
+            latestSuccessfulPeriodTo: async (scheduleId) => {
+              const { data: latest, error: latestError } = await svc.from("client_email_schedule_sends")
+                .select("period_to").eq("schedule_id", scheduleId).eq("status", "sent")
+                .not("period_to", "is", null).order("period_to", { ascending: false }).limit(1).maybeSingle();
+              if (latestError) throw new Error("Unable to load successful report coverage");
+              return latest?.period_to ?? null;
+            },
             claim: async (current, bucket, plan) => {
               const { data: send, error: claimError } = await svc.from("client_email_schedule_sends")
                 .insert({
@@ -172,7 +179,7 @@ Deno.serve(async (req) => {
           if (result) counts[result.status] = (counts[result.status] ?? 0) + 1;
           else skipped++;
         } catch {
-          // Preserve the processing claim after uncertain completion; never resend this bucket.
+          // If outcome recording failed, conservatively preserve the processing claim.
           logWriteFailed = true;
           console.error("Email schedule execution or outcome recording failed", schedule.id);
         }

@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 
 const { invoke, buildSoldExport } = vi.hoisted(() => ({
   invoke: vi.fn(),
@@ -86,10 +87,45 @@ describe("AdminSoldExport", () => {
     expect(screen.getByRole("button", { name: "Download XLSX" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Download CSV" })).toBeDisabled();
 
-    invoke.mockResolvedValueOnce({ data: null, error: { message: "Access denied" } });
+    invoke.mockResolvedValueOnce({ data: null, error: new FunctionsHttpError(new Response(
+      JSON.stringify({ error: "Admin access required" }), { status: 403, headers: { "Content-Type": "application/json" } },
+    )) });
     fireEvent.click(screen.getByRole("button", { name: "Fetch sold listings" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Access denied");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Admin access required");
     expect(screen.queryByText("0 sold homes")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Fetch sold listings" })).toBeEnabled();
+  });
+
+  it.each([
+    { name: "malformed JSON", response: () => new Response("{", { status: 500 }) },
+    { name: "missing error field", response: () => new Response(JSON.stringify({ message: "Unavailable" }), { status: 500 }) },
+    { name: "non-string error field", response: () => new Response(JSON.stringify({ error: { message: "Unavailable" } }), { status: 500 }) },
+    { name: "null JSON body", response: () => new Response("null", { status: 500 }) },
+    { name: "unreadable body", response: async () => {
+      const response = new Response(JSON.stringify({ error: "Already consumed" }), { status: 500 });
+      await response.text();
+      return response;
+    } },
+  ])("falls back to the SDK message for a response with $name", async ({ response }) => {
+    const invokeError = new FunctionsHttpError(await response());
+    invoke.mockResolvedValue({ data: null, error: invokeError });
+    render(<AdminSoldExport />);
+    fireEvent.click(screen.getByRole("button", { name: "Fetch sold listings" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(invokeError.message);
+    expect(screen.getByRole("button", { name: "Fetch sold listings" })).toBeEnabled();
+  });
+
+  it("retains the SDK message when an invocation error has no Response context", async () => {
+    invoke.mockResolvedValue({ data: null, error: { message: "Unable to reach the service" } });
+    render(<AdminSoldExport />);
+    fireEvent.click(screen.getByRole("button", { name: "Fetch sold listings" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Unable to reach the service");
+  });
+
+  it("still reports an error returned in a successful invocation body", async () => {
+    invoke.mockResolvedValue({ data: { error: "Sold listing service is not configured" }, error: null });
+    render(<AdminSoldExport />);
+    fireEvent.click(screen.getByRole("button", { name: "Fetch sold listings" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Sold listing service is not configured");
   });
 });

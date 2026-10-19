@@ -19,7 +19,7 @@ const schedule = {
 describe("AdminEmailSchedules", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    const updateQuery = { eq, select: selectUpdate, single: saveSchedule };
+    const updateQuery = { eq, select: selectUpdate, maybeSingle: saveSchedule };
     eq.mockReturnValue(updateQuery);
     selectUpdate.mockReturnValue(updateQuery);
     update.mockReturnValue(updateQuery);
@@ -33,7 +33,7 @@ describe("AdminEmailSchedules", () => {
     saveSchedule.mockResolvedValueOnce({ data: { id: schedule.id, is_active: false }, error: null });
     render(<AdminEmailSchedules />);
     expect(await screen.findByText("Mark Parkinson")).toBeInTheDocument();
-    expect(screen.getByText("St. Charles County · Last 32 days")).toBeInTheDocument();
+    expect(screen.getByText("St. Charles County · At least 32 days")).toBeInTheDocument();
     expect(from).toHaveBeenCalledWith("client_email_schedules");
 
     fireEvent.click(screen.getByRole("button", { name: "Pause schedule for Mark Parkinson" }));
@@ -55,5 +55,14 @@ describe("AdminEmailSchedules", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Update denied");
     await waitFor(() => expect(screen.getByRole("button", { name: "Pause schedule for Mark Parkinson" })).toBeEnabled());
     expect(screen.getByText("Active")).toBeInTheDocument();
+  });
+
+  it("reports a concurrent schedule change when the guarded update matches zero rows", async () => {
+    saveSchedule.mockResolvedValue({ data: null, error: null });
+    render(<AdminEmailSchedules />);
+    fireEvent.click(await screen.findByRole("button", { name: "Pause schedule for Mark Parkinson" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("This schedule changed. Reload the page and try again.");
+    expect(screen.getByText("Active")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pause schedule for Mark Parkinson" })).toBeEnabled();
   });
 });

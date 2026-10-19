@@ -14,7 +14,7 @@ const reportDetails = (schedule: EmailSchedule) => {
   if (schedule.source_type !== "sold_report") return schedule.source_type.replace(/_/g, " ");
   try {
     const plan = getSoldSchedulePlan(schedule, new Date());
-    return `${plan.county} · Last ${plan.lookbackDays} days`;
+    return `${plan.county} · At least ${plan.lookbackDays} days`;
   } catch {
     return "Invalid sold report configuration";
   }
@@ -62,7 +62,7 @@ const AdminEmailSchedules = () => {
         .eq("id", schedule.id)
         .eq("is_active", schedule.is_active)
         .select("id, is_active")
-        .single();
+        .maybeSingle();
       if (updateError) throw new Error(updateError.message);
       if (!data) throw new Error("This schedule changed. Reload the page and try again.");
       setSchedules((previous) => previous.map((item) => item.id === data.id ? { ...item, is_active: data.is_active } : item));
@@ -78,6 +78,7 @@ const AdminEmailSchedules = () => {
       <div>
         <h1 className="text-2xl font-serif font-medium text-foreground">Email Schedules</h1>
         <p className="text-muted-foreground">Review scheduled client reports and pause or resume delivery.</p>
+        <p className="text-sm text-muted-foreground">Reports also cover missed periods since the last successful send.</p>
       </div>
 
       {error && <p role="alert" className="rounded-md border border-destructive p-4 text-sm text-destructive">{error}</p>}

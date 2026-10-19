@@ -7,6 +7,7 @@ import {
   type EmailSchedule,
   type ScheduleDependencies,
   type ScheduleRunResult,
+  type SoldSchedulePlan,
 } from "../../supabase/functions/_shared/email-schedules";
 import type { SoldRow } from "../../supabase/functions/_shared/sold-report";
 
@@ -35,21 +36,35 @@ const row: SoldRow = {
 function harness() {
   const claims = new Set<string>();
   const outcomes: ScheduleRunResult[] = [];
+  const attempts = new Map<string, { key: string; plan: SoldSchedulePlan | null }>();
+  const records: (ScheduleRunResult & { periodTo: string | null })[] = [];
   const deps: ScheduleDependencies = {
     now: new Date("2026-10-19T12:00:00Z"),
     emailConfigured: true,
-    claim: vi.fn(async (current, bucket) => {
+    latestSuccessfulPeriodTo: vi.fn(async () =>
+      records.filter((record) => record.status === "sent" && record.periodTo !== null)
+        .map((record) => record.periodTo!).sort().pop() ?? null),
+    claim: vi.fn(async (current, bucket, plan) => {
       const key = `${current.id}/${bucket}`;
       if (claims.has(key)) return null;
       claims.add(key);
-      return key;
+      const id = `attempt-${attempts.size + 1}`;
+      attempts.set(id, { key, plan });
+      return id;
     }),
-    successfulSends: vi.fn(async () => outcomes),
+    successfulSends: vi.fn(async (_id, fromDate) => records.filter((record) => record.periodTo !== null && record.periodTo >= fromDate)),
     fetchRows: vi.fn(async () => [row]),
     buildFile: vi.fn(() => ({ filename: "sold-report.xlsx", contentType: "application/xlsx", bytes: new Uint8Array([1, 2, 3]) })),
     isStillActive: vi.fn(async () => true),
     deliver: vi.fn(async () => "provider-1"),
-    finish: vi.fn(async (_id, result) => { outcomes.push(result); }),
+    finish: vi.fn(async (id, result) => {
+      const attempt = attempts.get(id)!;
+      outcomes.push(result);
+      records.push({ ...result, periodTo: attempt.plan?.toDate ?? null });
+      // Model the partial unique index: only a successful log update that removes
+      // cadenceBucket releases a claim, never a failed finish() write.
+      if (!("cadenceBucket" in result.detail)) claims.delete(attempt.key);
+    }),
     recordUnclaimed: vi.fn(async (_schedule, _plan, result) => { outcomes.push(result); }),
   };
   return { deps, claims, outcomes };
@@ -89,6 +104,14 @@ describe("email schedule cadence and delivery", () => {
       .toMatchObject({ fromDate: "2026-09-03", toDate: "2026-11-01", lookbackDays: 60 });
     expect(getSoldSchedulePlan({ ...schedule, cadence: "daily" }, now))
       .toMatchObject({ fromDate: "2026-10-03", toDate: "2026-11-01", lookbackDays: 30 });
+  });
+
+  it("anchors delayed reports to successful coverage and describes the expanded window accurately", () => {
+    const plan = getSoldSchedulePlan(schedule, new Date("2026-12-05T11:00:00Z"), "2026-10-01");
+    expect(plan).toMatchObject({ fromDate: "2026-10-01", toDate: "2026-12-05", lookbackDays: 66 });
+    expect(soldScheduleCoverNote(schedule, plan)).toContain("over the last 66 days");
+    // A recent or future watermark must not shorten the configured report window.
+    expect(getSoldSchedulePlan(schedule, new Date("2026-11-01T11:00:00Z"), "2026-10-20").fromDate).toBe("2026-10-01");
   });
 
   it("sends on the first wake and only one concurrent invocation can claim the period", async () => {
@@ -163,6 +186,7 @@ describe("email schedule cadence and delivery", () => {
     expect(await processEmailSchedule(schedule, deps)).toMatchObject({ status: "no_new_matches", rowCount: 0 });
     expect(deps.buildFile).not.toHaveBeenCalled();
     expect(deps.deliver).not.toHaveBeenCalled();
+    expect(await processEmailSchedule(schedule, deps)).toBeNull();
   });
 
   it("checks pause state again after fetching and before delivery", async () => {
@@ -180,10 +204,81 @@ describe("email schedule cadence and delivery", () => {
     expect(deps.fetchRows).not.toHaveBeenCalled();
   });
 
-  it("records delivery failure without an automatic retry in that bucket", async () => {
+  it.each(["coverage", "history", "fetch", "build", "state"])("releases a pre-delivery %s failure so a later wake can retry the same bucket", async (phase) => {
+    const { deps, claims } = harness();
+    const error = new Error("Temporary pre-delivery outage");
+    if (phase === "coverage") vi.mocked(deps.latestSuccessfulPeriodTo).mockRejectedValueOnce(error);
+    if (phase === "history") vi.mocked(deps.successfulSends).mockRejectedValueOnce(error);
+    if (phase === "fetch") vi.mocked(deps.fetchRows).mockRejectedValueOnce(error);
+    if (phase === "build") vi.mocked(deps.buildFile).mockImplementationOnce(() => { throw error; });
+    if (phase === "state") vi.mocked(deps.isStillActive).mockRejectedValueOnce(error);
+    const failed = await processEmailSchedule(schedule, deps);
+    expect(failed).toMatchObject({ status: "failed", detail: { releasedCadenceBucket: "monthly:2026-10" } });
+    expect(failed?.detail).not.toHaveProperty("cadenceBucket");
+    expect(deps.deliver).not.toHaveBeenCalled();
+    expect(claims.size).toBe(0);
+    deps.now = new Date("2026-10-20T12:00:00Z");
+    expect(await processEmailSchedule(schedule, deps)).toMatchObject({ status: "sent" });
+    expect(deps.deliver).toHaveBeenCalledTimes(1);
+  });
+
+  it("releases a mid-run pause and covers the paused period after resuming later in the same month", async () => {
     const { deps } = harness();
-    vi.mocked(deps.deliver).mockRejectedValue(new Error("Email delivery could not be confirmed"));
-    expect(await processEmailSchedule(schedule, deps)).toMatchObject({ status: "failed", detail: { error: "Email delivery could not be confirmed" } });
+    const rows = [
+      { ...row, mlsNumber: "already-sent", soldDate: "2026-09-01" },
+      { ...row, mlsNumber: "paused-early", soldDate: "2026-09-02" },
+      { ...row, mlsNumber: "paused-later", soldDate: "2026-10-02" },
+    ];
+    vi.mocked(deps.fetchRows).mockImplementation(async (plan) => rows.filter((item) => item.soldDate >= plan.fromDate && item.soldDate <= plan.toDate));
+    deps.now = new Date("2026-09-01T11:00:00Z");
+    await processEmailSchedule(schedule, deps);
+    deps.now = new Date("2026-10-01T11:00:00Z");
+    vi.mocked(deps.isStillActive).mockResolvedValueOnce(false);
+    const paused = await processEmailSchedule(schedule, deps);
+    expect(paused).toMatchObject({ status: "skipped_paused", detail: { releasedCadenceBucket: "monthly:2026-10" } });
+    expect(paused?.detail).not.toHaveProperty("cadenceBucket");
+    deps.now = new Date("2026-10-12T11:00:00Z");
+    const resumed = await processEmailSchedule(schedule, deps);
+    expect(resumed).toMatchObject({ status: "sent", rowCount: 2, detail: { mlsNumbers: ["paused-early", "paused-later"] } });
+    expect(deps.successfulSends).toHaveBeenLastCalledWith(schedule.id, "2026-09-01");
+    expect(deps.fetchRows).toHaveBeenLastCalledWith(expect.objectContaining({ fromDate: "2026-09-01", toDate: "2026-10-12" }));
+    expect(deps.deliver).toHaveBeenCalledTimes(2);
+  });
+
+  it("recovers an entire failed month's unsent band exactly once using expanded history and fetch windows", async () => {
+    const { deps } = harness();
+    const rows = [
+      { ...row, mlsNumber: "boundary-sent", soldDate: "2026-10-01" },
+      { ...row, mlsNumber: "missed-oct-2", soldDate: "2026-10-02" },
+      { ...row, mlsNumber: "missed-oct-30", soldDate: "2026-10-30" },
+      { ...row, mlsNumber: "new-nov-15", soldDate: "2026-11-15" },
+    ];
+    vi.mocked(deps.fetchRows).mockImplementation(async (plan) => rows.filter((item) => item.soldDate >= plan.fromDate && item.soldDate <= plan.toDate));
+    deps.now = new Date("2026-10-01T11:00:00Z");
+    await processEmailSchedule(schedule, deps);
+    deps.now = new Date("2026-11-01T11:00:00Z");
+    vi.mocked(deps.fetchRows).mockRejectedValueOnce(new Error("Repliers temporarily unavailable"));
+    expect(await processEmailSchedule(schedule, deps)).toMatchObject({ status: "failed", detail: { releasedCadenceBucket: "monthly:2026-11" } });
+    deps.now = new Date("2026-12-01T11:00:00Z");
+    expect(await processEmailSchedule(schedule, deps)).toMatchObject({ status: "sent", rowCount: 3, detail: { mlsNumbers: ["missed-oct-2", "missed-oct-30", "new-nov-15"] } });
+    expect(deps.successfulSends).toHaveBeenLastCalledWith(schedule.id, "2026-10-01");
+    expect(deps.fetchRows).toHaveBeenLastCalledWith(expect.objectContaining({ fromDate: "2026-10-01", toDate: "2026-12-01", lookbackDays: 62 }));
+    expect(vi.mocked(deps.claim).mock.calls[2][2]).toMatchObject({ fromDate: "2026-10-01", toDate: "2026-12-01" });
+    expect(await processEmailSchedule(schedule, deps)).toBeNull();
+    deps.now = new Date("2027-01-01T11:00:00Z");
+    expect(await processEmailSchedule(schedule, deps)).toMatchObject({ status: "no_new_matches" });
+    expect(deps.fetchRows).toHaveBeenLastCalledWith(expect.objectContaining({ fromDate: "2026-12-01", toDate: "2027-01-01" }));
+    expect(deps.deliver).toHaveBeenCalledTimes(2);
+  });
+
+  it.each(["async rejection", "synchronous throw"])("retains the claim after a delivery %s without retrying", async (failure) => {
+    const { deps } = harness();
+    const error = new Error("Email delivery could not be confirmed");
+    if (failure === "async rejection") vi.mocked(deps.deliver).mockRejectedValue(error);
+    else vi.mocked(deps.deliver).mockImplementation(() => { throw error; });
+    const failed = await processEmailSchedule(schedule, deps);
+    expect(failed).toMatchObject({ status: "failed", detail: { cadenceBucket: "monthly:2026-10", error: error.message } });
+    expect(failed?.detail).not.toHaveProperty("releasedCadenceBucket");
     expect(await processEmailSchedule(schedule, deps)).toBeNull();
     expect(deps.deliver).toHaveBeenCalledTimes(1);
   });
@@ -194,6 +289,15 @@ describe("email schedule cadence and delivery", () => {
     await expect(processEmailSchedule(schedule, deps)).rejects.toThrow("Unable to record schedule outcome");
     expect(await processEmailSchedule(schedule, deps)).toBeNull();
     expect(deps.deliver).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the processing claim when recording a pre-delivery failure itself fails", async () => {
+    const { deps } = harness();
+    vi.mocked(deps.fetchRows).mockRejectedValue(new Error("Source unavailable"));
+    vi.mocked(deps.finish).mockRejectedValue(new Error("Database unavailable"));
+    await expect(processEmailSchedule(schedule, deps)).rejects.toThrow("Database unavailable");
+    expect(await processEmailSchedule(schedule, deps)).toBeNull();
+    expect(deps.deliver).not.toHaveBeenCalled();
   });
 
   it("logs invalid source configuration without fetching or delivering", async () => {

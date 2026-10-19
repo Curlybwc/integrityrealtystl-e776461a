@@ -46,7 +46,20 @@ const AdminSoldExport = () => {
       const { data, error: invokeError } = await supabase.functions.invoke("fetch-sold-listings", {
         body: { county, ...window },
       });
-      if (invokeError) throw new Error(invokeError.message);
+      if (invokeError) {
+        let message = invokeError.message;
+        if (invokeError.context instanceof Response) {
+          try {
+            const body: unknown = await invokeError.context.json();
+            if (body && typeof body === "object" && "error" in body && typeof body.error === "string") {
+              message = body.error;
+            }
+          } catch {
+            // Keep the SDK message when the error response cannot be decoded.
+          }
+        }
+        throw new Error(message);
+      }
       if (data?.error) throw new Error(data.error);
       if (!Array.isArray(data?.rows)) throw new Error("The sold-listings response could not be read. Please try again.");
       setResult({ county, ...window, rows: data.rows as SoldRow[] });

@@ -35,10 +35,11 @@ CREATE INDEX client_email_schedule_sends_successful_window_idx
   ON public.client_email_schedule_sends (schedule_id, period_to)
   WHERE status = 'sent';
 
--- Configured delivery attempts claim the bucket before any external request.
--- Failures and interrupted deliveries are not automatically retried, avoiding duplicates
--- after ambiguous provider responses. Unconfigured previews omit cadenceBucket and
--- leave delivery eligible when Resend is configured later in the same bucket.
+-- Configured execution claims the bucket before fetching MLS rows or sending email.
+-- Once delivery is attempted, failures and interruptions retain cadenceBucket to avoid
+-- duplicates after ambiguous provider responses. Provably pre-delivery failures and
+-- pauses replace it with releasedCadenceBucket so later wakes can retry. Unconfigured
+-- previews omit the claim key and remain eligible after Resend is configured.
 CREATE UNIQUE INDEX client_email_schedule_sends_cadence_bucket_key
   ON public.client_email_schedule_sends (schedule_id, (detail ->> 'cadenceBucket'))
   WHERE detail ? 'cadenceBucket';

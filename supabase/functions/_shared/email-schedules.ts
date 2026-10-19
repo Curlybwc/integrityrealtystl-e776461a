@@ -1,6 +1,7 @@
 import {
   getSoldReportCounty,
   getSoldReportWindow,
+  isSoldReportDate,
   type SoldRow,
 } from "./sold-report.ts";
 
@@ -45,6 +46,7 @@ export type ScheduleAttachment = {
 export type ScheduleDependencies = {
   now: Date;
   emailConfigured: boolean;
+  latestSuccessfulPeriodTo: (scheduleId: string) => Promise<string | null>;
   claim: (schedule: EmailSchedule, bucket: string, plan: SoldSchedulePlan | null) => Promise<string | null>;
   successfulSends: (scheduleId: string, fromDate: string) => Promise<ScheduleSend[]>;
   fetchRows: (plan: SoldSchedulePlan) => Promise<SoldRow[]>;
@@ -67,7 +69,7 @@ export function getScheduleCadenceBucket(cadence: string, now: Date): string {
   throw new Error("Unsupported schedule cadence");
 }
 
-export function getSoldSchedulePlan(schedule: EmailSchedule, now: Date): SoldSchedulePlan {
+export function getSoldSchedulePlan(schedule: EmailSchedule, now: Date, latestSuccessfulPeriodTo: string | null = null): SoldSchedulePlan {
   // Source dispatch belongs in the runner; the database shapes also support future report types.
   if (schedule.source_type !== "sold_report") throw new Error("Unsupported schedule source type");
   if (!schedule.config || typeof schedule.config !== "object" || Array.isArray(schedule.config)) {
@@ -85,11 +87,21 @@ export function getSoldSchedulePlan(schedule: EmailSchedule, now: Date): SoldSch
   }
   // Month starts can be 31 days apart. At least 32 inclusive UTC dates make
   // consecutive monthly reports overlap; successful MLS IDs remove duplicates.
-  const lookbackDays = schedule.cadence === "monthly" ? Math.max(days, 32) : days;
+  let lookbackDays = schedule.cadence === "monthly" ? Math.max(days, 32) : days;
+  const window = getSoldReportWindow(lookbackDays, now);
+  if (latestSuccessfulPeriodTo !== null) {
+    if (!isSoldReportDate(latestSuccessfulPeriodTo)) throw new Error("Invalid successful report coverage date");
+    // Include the last successful coverage date so delayed wakes, failed months,
+    // and pauses cannot leave an unsent band. MLS IDs deduplicate this overlap.
+    if (latestSuccessfulPeriodTo < window.fromDate) {
+      window.fromDate = latestSuccessfulPeriodTo;
+      lookbackDays = Math.round((Date.parse(window.toDate) - Date.parse(window.fromDate)) / 86_400_000) + 1;
+    }
+  }
   return {
     county: county.name,
     lookbackDays,
-    ...getSoldReportWindow(lookbackDays, now),
+    ...window,
     format: schedule.file_format,
   };
 }
@@ -115,8 +127,9 @@ export function soldScheduleCoverNote(schedule: EmailSchedule, plan: SoldSchedul
 }
 
 /**
- * Configured runs claim at most one delivery attempt per bucket, including failures
- * and interrupted runs. Unconfigured previews never acquire or consume that claim.
+ * Configured runs claim at most one delivery attempt per bucket. Failures and pauses
+ * before delivery release the claim; any attempted or interrupted delivery keeps it.
+ * Unconfigured previews never acquire or consume a claim.
  */
 export async function processEmailSchedule(schedule: EmailSchedule, deps: ScheduleDependencies): Promise<ScheduleRunResult | null> {
   if (!schedule.is_active || schedule.send_mode !== "automatic") return null;
@@ -125,6 +138,8 @@ export async function processEmailSchedule(schedule: EmailSchedule, deps: Schedu
   let validationError: string | null = null;
   try {
     plan = getSoldSchedulePlan(schedule, deps.now);
+    const latestSuccessfulPeriodTo = await deps.latestSuccessfulPeriodTo(schedule.id);
+    plan = getSoldSchedulePlan(schedule, deps.now, latestSuccessfulPeriodTo);
   } catch (error) {
     validationError = error instanceof Error ? error.message : "Invalid schedule";
   }
@@ -141,10 +156,11 @@ export async function processEmailSchedule(schedule: EmailSchedule, deps: Schedu
   };
 
   let result: ScheduleRunResult;
+  let deliveryAttempted = false;
   try {
     if (!plan || validationError) throw new Error(validationError ?? "Invalid schedule");
-    const rows = await deps.fetchRows(plan);
     const history = await deps.successfulSends(schedule.id, plan.fromDate);
+    const rows = await deps.fetchRows(plan);
     const newRows = getNewSoldRows(rows, history);
     if (!newRows.length) {
       result = { status: "no_new_matches", rowCount: 0, detail };
@@ -159,6 +175,9 @@ export async function processEmailSchedule(schedule: EmailSchedule, deps: Schedu
           detail: { ...detail, filename: attachment.filename },
         };
       } else {
+        // Set before invoking deliver: even a synchronous throw is an attempt
+        // whose outcome may be ambiguous and must never trigger an automatic retry.
+        deliveryAttempted = true;
         const providerId = await deps.deliver(schedule, plan, attachment, `schedule-${schedule.id}-${bucket}`);
         result = {
           status: "sent",
@@ -174,6 +193,10 @@ export async function processEmailSchedule(schedule: EmailSchedule, deps: Schedu
       rowCount: 0,
       detail: { ...detail, error: error instanceof Error ? error.message : "Schedule processing failed" },
     };
+  }
+  if (sendId && !deliveryAttempted && (result.status === "failed" || result.status === "skipped_paused")) {
+    const { cadenceBucket: releasedCadenceBucket, ...releasedDetail } = result.detail;
+    result.detail = { ...releasedDetail, releasedCadenceBucket };
   }
   // A failed database write must reject the invocation, especially after provider acceptance.
   if (sendId) await deps.finish(sendId, result);
