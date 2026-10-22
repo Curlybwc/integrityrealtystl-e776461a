@@ -535,11 +535,14 @@ export type Database = {
         Row: {
           analysis_status: string
           analyzed_at: string | null
+          attempt_count: number
           created_at: string
           engine_version: string | null
           evidence_hash: string
           evidence_snapshot: Json | null
           failure_reason: string | null
+          failure_kind: string | null
+          failure_detail: Json | null
           gut_rehab_mode: boolean
           id: string
           is_active: boolean
@@ -559,11 +562,14 @@ export type Database = {
         Insert: {
           analysis_status?: string
           analyzed_at?: string | null
+          attempt_count?: number
           created_at?: string
           engine_version?: string | null
           evidence_hash: string
           evidence_snapshot?: Json | null
           failure_reason?: string | null
+          failure_kind?: string | null
+          failure_detail?: Json | null
           gut_rehab_mode?: boolean
           id?: string
           is_active?: boolean
@@ -583,11 +589,14 @@ export type Database = {
         Update: {
           analysis_status?: string
           analyzed_at?: string | null
+          attempt_count?: number
           created_at?: string
           engine_version?: string | null
           evidence_hash?: string
           evidence_snapshot?: Json | null
           failure_reason?: string | null
+          failure_kind?: string | null
+          failure_detail?: Json | null
           gut_rehab_mode?: boolean
           id?: string
           is_active?: boolean
