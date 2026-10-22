@@ -3,6 +3,7 @@
 // Sources: 'user' (quota-limited), 'admin' (priority 1), 'system_core' (priority 1, ingestion).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { enqueueWithQuota, getQuotaBlockedAnalysis, resolveRepairSource, type RepairSource } from "../_shared/repair-access.ts";
 import { resolveExistingRepairAnalysis } from "../_shared/repair-enqueue.ts";
 
 const corsHeaders = {
@@ -107,7 +108,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const mlsListingId: string = body?.mlsListingId;
-    const source: "user" | "admin" | "system_core" = body?.source ?? "user";
+    const requestedSource: unknown = body?.source;
     if (!mlsListingId || typeof mlsListingId !== "string") {
       return new Response(JSON.stringify({ error: "mlsListingId required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -115,7 +116,8 @@ Deno.serve(async (req) => {
     // system_core bypasses user identity and quota; requires service-role bearer token
     const isServiceRole = authHeader === `Bearer ${SERVICE_ROLE}`;
     let userId: string | null = null;
-    if (source === "system_core") {
+    let source: RepairSource = requestedSource === "system_core" ? "system_core" : "user";
+    if (requestedSource === "system_core") {
       if (!isServiceRole) {
         return new Response(JSON.stringify({ error: "system_core requires service role" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
@@ -127,6 +129,12 @@ Deno.serve(async (req) => {
       userId = userData?.user?.id ?? null;
       if (!userId) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (requestedSource === "admin") {
+        source = await resolveRepairSource(requestedSource, userId, mlsListingId, async () => {
+          const { data, error } = await userClient.rpc("has_role", { _user_id: userId, _role: "admin" });
+          return !error && data === true;
+        });
       }
     }
 
@@ -186,64 +194,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Quota check for user-source
-    let priority = source === "user" ? 2 : 1;
-    if (source === "user") {
-      const monthKey = new Date().toISOString().slice(0, 7);
-      const { data: quotaRow } = await svc
-        .from("ai_analysis_quota")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("month_key", monthKey)
-        .maybeSingle();
-
-      const used = quotaRow?.count ?? 0;
-      const limit = quotaRow?.monthly_limit ?? 200;
-
-      if (used >= limit) {
-        // Dedup quota_blocked for this listing+user this month
-        const { data: blocked } = await svc
-          .from("repair_analyses")
-          .select("*")
-          .eq("mls_listing_id", mlsListingId)
-          .eq("is_active", true)
-          .eq("analysis_status", "quota_blocked")
-          .eq("requested_by", userId)
-          .maybeSingle();
-
-        if (blocked) {
-          return new Response(JSON.stringify({ analysis: blocked }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-
-        // Insert one quota_blocked sentinel (don't count it, don't enqueue)
-        // Archive any other active row first to keep partial unique happy
-        await svc.from("repair_analyses").update({ is_active: false }).eq("mls_listing_id", mlsListingId).eq("is_active", true);
-        const { data: blockedRow } = await svc.from("repair_analyses").insert({
-          mls_listing_id: mlsListingId,
-          evidence_hash: evidenceHash,
-          analysis_status: "quota_blocked",
-          requested_by: userId,
-          priority: 2,
-          is_active: true,
-        }).select("*").single();
-        return new Response(JSON.stringify({ analysis: blockedRow }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-
-      // Increment quota
-      if (quotaRow) {
-        await svc.from("ai_analysis_quota").update({ count: used + 1 }).eq("id", quotaRow.id);
-      } else {
-        await svc.from("ai_analysis_quota").insert({ user_id: userId, month_key: monthKey, count: 1, monthly_limit: 200 });
-      }
-    }
-
-    // Insert pending row
-    const { data: pending, error: insertErr } = await svc.from("repair_analyses").insert({
+    const pendingValues = {
       mls_listing_id: mlsListingId,
       evidence_hash: evidenceHash,
       analysis_status: "pending",
       requested_by: userId,
-      priority,
+      priority: source === "user" ? 2 : 1,
       is_active: true,
       evidence_snapshot: {
         address: listing.address,
@@ -256,11 +212,97 @@ Deno.serve(async (req) => {
         remarks: listing.remarks,
         photo_urls: listing.photo_urls,
       },
-    }).select("*").single();
+    };
+    const insertPending = () => svc.from("repair_analyses").insert(pendingValues).select("*").single();
 
-    if (insertErr) {
-      console.error("insert pending failed", insertErr);
-      return new Response(JSON.stringify({ error: "Failed to queue analysis" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    let pending: unknown;
+    if (source === "user") {
+      const monthKey = new Date().toISOString().slice(0, 7);
+      const enqueueResult = await enqueueWithQuota({
+        claim: async () => {
+          const { data, error } = await svc.rpc("claim_ai_quota", { p_user_id: userId, p_month_key: monthKey });
+          if (error) throw error;
+          if (data !== null && !Number.isInteger(data)) throw new Error("Invalid quota claim result");
+          return data as number | null;
+        },
+        insert: insertPending,
+        refund: async (claimedCount) => {
+          const { data, error } = await svc
+            .from("ai_analysis_quota")
+            .update({ count: Math.max(0, claimedCount - 1) })
+            .eq("user_id", userId)
+            .eq("month_key", monthKey)
+            .eq("count", claimedCount)
+            .select("count")
+            .maybeSingle();
+          if (error || !data) throw error ?? new Error("Quota claim changed before refund");
+          console.info("Refunded quota claim after pending insert failure", { userId, mlsListingId });
+        },
+        onExhausted: () => getQuotaBlockedAnalysis({
+          findOwnSentinel: async () => {
+            const { data } = await svc.from("repair_analyses")
+              .select("*")
+              .eq("mls_listing_id", mlsListingId)
+              .eq("is_active", true)
+              .eq("analysis_status", "quota_blocked")
+              .eq("requested_by", userId)
+              .maybeSingle();
+            return data;
+          },
+          archiveDisplaceable: async () => {
+            const { error } = await svc.from("repair_analyses")
+              .update({ is_active: false })
+              .eq("mls_listing_id", mlsListingId)
+              .eq("is_active", true)
+              .or(`requested_by.eq.${userId},analysis_status.in.(failed,quota_blocked)`);
+            if (error) throw error;
+          },
+          findOtherLiveAnalysis: async () => {
+            const { data } = await svc.from("repair_analyses")
+              .select("*")
+              .eq("mls_listing_id", mlsListingId)
+              .eq("is_active", true)
+              .in("analysis_status", ["pending", "analyzing", "complete"])
+              .maybeSingle();
+            return data;
+          },
+          insertSentinel: async () => {
+            const { data, error } = await svc.from("repair_analyses").insert({
+              mls_listing_id: mlsListingId,
+              evidence_hash: evidenceHash,
+              analysis_status: "quota_blocked",
+              requested_by: userId,
+              priority: 2,
+              is_active: true,
+            }).select("*").single();
+            return { data, error };
+          },
+          findActiveAnalysis: async () => {
+            const { data } = await svc.from("repair_analyses")
+              .select("*")
+              .eq("mls_listing_id", mlsListingId)
+              .eq("is_active", true)
+              .maybeSingle();
+            return data;
+          },
+        }),
+        logRefundFailure: (error) => console.error("Quota refund failed", { userId, mlsListingId, error }),
+      });
+      if (enqueueResult.kind === "exhausted") {
+        return new Response(JSON.stringify({ analysis: enqueueResult.analysis }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (enqueueResult.error) {
+        console.error("insert pending failed", enqueueResult.error);
+        return new Response(JSON.stringify({ error: "Failed to queue analysis" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      pending = enqueueResult.data;
+    } else {
+      const { data, error } = await insertPending();
+      if (error) {
+        console.error("insert pending failed", error);
+        return new Response(JSON.stringify({ error: "Failed to queue analysis" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      pending = data;
     }
 
     // Fire-and-forget worker kick (don't await)

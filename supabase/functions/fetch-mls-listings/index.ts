@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { listingServiceError, shapeSingleListing } from "../_shared/public-listing-response.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -248,8 +249,9 @@ serve(async (req) => {
       params.mlsNumber.length > 0 &&
       !params.zip;
 
-    if (!isPublicSingleLookup) {
-      const authHeader = req.headers.get("Authorization") ?? "";
+    const authHeader = req.headers.get("Authorization") ?? "";
+    let isAnonymousSingleLookup = isPublicSingleLookup;
+    if (!isPublicSingleLookup || authHeader.startsWith("Bearer ")) {
       if (!authHeader.startsWith("Bearer ")) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 401,
@@ -271,6 +273,7 @@ serve(async (req) => {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
+        if (isPublicSingleLookup) isAnonymousSingleLookup = false;
       } catch (authErr) {
         console.error("auth verification failed:", authErr);
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -283,7 +286,8 @@ serve(async (req) => {
 
     // Comps mode: sold-only search around a subject
     if (params.mode === "comps") {
-      const subject = params.subject || {};
+      const subject: Record<string, unknown> =
+        params.subject && typeof params.subject === "object" ? params.subject : {};
       const url = new URL("https://api.repliers.io/listings");
       url.searchParams.set("class", "residential");
       url.searchParams.set("status", "U");
@@ -337,7 +341,7 @@ serve(async (req) => {
       if (!resp.ok) {
         const errText = await resp.text();
         console.error(`Comps fetch error: ${resp.status} ${errText}`);
-        return new Response(JSON.stringify({ error: errText }), {
+        return new Response(JSON.stringify(listingServiceError(resp.status)), {
           status: resp.status,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -360,7 +364,7 @@ serve(async (req) => {
         const errText = await mlsResp.text();
         console.error(`Single listing error: ${mlsResp.status} ${errText}`);
         return new Response(
-          JSON.stringify({ error: `Repliers returned ${mlsResp.status}`, details: errText }),
+          JSON.stringify(listingServiceError(mlsResp.status)),
           { status: mlsResp.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -368,7 +372,7 @@ serve(async (req) => {
       console.log(`Single listing raw keys: ${Object.keys(mlsData).join(", ")}`);
       console.log(`Single listing raw JSON: ${JSON.stringify(mlsData).substring(0, 3000)}`);
       const listing = normalizeListing(mlsData);
-      const singleListings = [listing];
+      const singleListings = [shapeSingleListing(listing, isAnonymousSingleLookup)];
       await supplementMissingSqft(singleListings);
       return new Response(
         JSON.stringify({ count: 1, page: 1, numPages: 1, listings: singleListings }),
@@ -419,7 +423,7 @@ serve(async (req) => {
         const errorText = await response.text();
         console.error(`Repliers API error: ${response.status} ${errorText}`);
         return new Response(
-          JSON.stringify({ error: `Repliers API returned ${response.status}`, details: errorText }),
+          JSON.stringify(listingServiceError(response.status)),
           { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
