@@ -51,9 +51,9 @@ const MAX_LISTINGS_PER_ZIP = 20_000;
 
 /** Fetch pages for every configured ZIP. No server-side date parameters are
  * sent because they silently drop most in-window records; the window is
- * enforced client-side. A ZIP's walk stops on a fully old page only while
- * sold dates remain in non-increasing order. Any upstream failure rejects the
- * whole export. */
+ * enforced client-side. A ZIP's walk stops on a fully old page only after the
+ * first page and while sold dates remain in non-increasing order. Any upstream
+ * failure rejects the whole export. */
 export async function fetchSoldListings(
   request: SoldReportRequest,
   apiKey: string,
@@ -144,7 +144,7 @@ export async function fetchSoldListings(
           const row = normalizeSoldListing(listing, request, zips);
           if (row) rows.set(row.mlsNumber, row);
         }
-        if (newerInPage === 0 && !soldDateOrderBroken) { stoppedEarly = true; break; }
+        if (page > 1 && newerInPage === 0 && !soldDateOrderBroken) { stoppedEarly = true; break; }
         page++;
       } while (page <= (numPages ?? 0) && page <= MAX_PAGES_PER_ZIP);
       if (!stoppedEarly && (numPages ?? 0) <= MAX_PAGES_PER_ZIP && received !== expectedCount) throw new Error("Sold listing provider returned an incomplete result count");
