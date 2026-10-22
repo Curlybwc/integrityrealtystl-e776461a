@@ -37,12 +37,17 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !serviceRole) return json({ error: "Server configuration missing" }, 500);
+  const svc = createClient(supabaseUrl, serviceRole);
   // Internal worker, matching process-repair-queue. Browser/admin JWTs cannot trigger emails.
   if (req.headers.get("Authorization") !== `Bearer ${serviceRole}`) {
-    return json({ error: "Forbidden" }, 403);
+    // Lovable Cloud never exposes the service_role key; cron_wake_token lives only in Vault and can only wake this runner.
+    const { data: cronWakeToken, error } = await svc.rpc("get_cron_wake_token");
+    if (error || typeof cronWakeToken !== "string" || !cronWakeToken ||
+      req.headers.get("Authorization") !== "Bearer " + cronWakeToken) {
+      return json({ error: "Forbidden" }, 403);
+    }
   }
 
-  const svc = createClient(supabaseUrl, serviceRole);
   const resendKey = Deno.env.get("RESEND_API_KEY");
   const repliersKey = Deno.env.get("REPLIERS_API_KEY");
   const now = new Date();
