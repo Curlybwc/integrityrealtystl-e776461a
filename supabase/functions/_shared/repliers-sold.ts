@@ -16,11 +16,16 @@ function soldCalendarDate(value: unknown): string | undefined {
   return isSoldReportDate(day) ? day : undefined;
 }
 
+function extractSoldDate(value: unknown): string | undefined {
+  if (!isObject(value)) return undefined;
+  const raw = isObject(value.raw) ? value.raw : {};
+  return soldCalendarDate(value.soldDate) ?? soldCalendarDate(raw.CloseDate);
+}
+
 function normalizeSoldListing(value: unknown, request: SoldReportRequest, zips: Set<string>): SoldRow | null {
   if (!isObject(value) || !isObject(value.address)) return null;
   const address = value.address;
-  const raw = isObject(value.raw) ? value.raw : {};
-  const soldDate = soldCalendarDate(value.soldDate) ?? soldCalendarDate(raw.CloseDate);
+  const soldDate = extractSoldDate(value);
   const zip = stringValue(address.zip || address.postalCode).slice(0, 5);
   const state = stringValue(address.state).toUpperCase();
   const mlsNumber = stringValue(value.mlsNumber);
@@ -41,8 +46,14 @@ function normalizeSoldListing(value: unknown, request: SoldReportRequest, zips: 
   return { address: unit ? `${street} #${unit}` : street, city, state: "MO", zip, soldDate, mlsNumber };
 }
 
-/** Fetch every page for every configured ZIP; any upstream failure rejects the
- * whole export so a partial report cannot be mistaken for a complete one. */
+const MAX_PAGES_PER_ZIP = 100;
+const MAX_LISTINGS_PER_ZIP = 20_000;
+
+/** Fetch pages for every configured ZIP. Repliers orders results newest-first by
+ * soldDate and its server-side sold/closed date filters silently drop most
+ * in-window records, so no date parameters are sent: the window is enforced
+ * client-side and a ZIP's walk stops once a page has no listing on or after
+ * fromDate. Any upstream failure rejects the whole export. */
 export async function fetchSoldListings(
   request: SoldReportRequest,
   apiKey: string,
@@ -63,6 +74,7 @@ export async function fetchSoldListings(
       let numPages: number | undefined;
       let expectedCount: number | undefined;
       let received = 0;
+      let stoppedEarly = false;
       const pageFingerprints = new Set<string>();
       const zipMlsNumbers = new Set<string>();
       do {
@@ -83,7 +95,6 @@ export async function fetchSoldListings(
           });
           if (!response.ok) throw new Error(`Sold listing provider returned HTTP ${response.status}`);
           data = await response.json();
-          const __L = (data as any)?.listings?.[0]; console.log("soldProbe6", JSON.stringify({ zip, page, count: (data as any)?.count, numPages: (data as any)?.numPages, firstSoldDate: __L?.soldDate ?? null, boardId: __L?.boardId ?? null }));
         } finally {
           clearTimeout(timeout);
         }
@@ -111,6 +122,8 @@ export async function fetchSoldListings(
         }
         pageFingerprints.add(fingerprint);
         received += data.listings.length;
+        if (received > MAX_LISTINGS_PER_ZIP) throw new Error("Sold listing provider returned too many listings for one ZIP");
+        let newerInPage = 0;
         for (const listing of data.listings) {
           // A moving result set can repeat part of a previous page while still
           // matching count. Reject overlap within this ZIP rather than silently
@@ -120,12 +133,15 @@ export async function fetchSoldListings(
             throw new Error("Sold listing provider repeated a listing within a ZIP; retry the report");
           }
           if (mlsNumber) zipMlsNumbers.add(mlsNumber);
+          const listingDate = extractSoldDate(listing);
+          if (listingDate && listingDate >= request.fromDate) newerInPage++;
           const row = normalizeSoldListing(listing, request, zips);
           if (row) rows.set(row.mlsNumber, row);
         }
+        if (newerInPage === 0) { stoppedEarly = true; break; }
         page++;
-      } while (page <= (numPages ?? 0));
-      if (received !== expectedCount) throw new Error("Sold listing provider returned an incomplete result count");
+      } while (page <= (numPages ?? 0) && page <= MAX_PAGES_PER_ZIP);
+      if (!stoppedEarly && (numPages ?? 0) <= MAX_PAGES_PER_ZIP && received !== expectedCount) throw new Error("Sold listing provider returned an incomplete result count");
     }
   };
   await Promise.all(Array.from({ length: Math.min(4, county.zips.length) }, () => worker().catch((error) => {
