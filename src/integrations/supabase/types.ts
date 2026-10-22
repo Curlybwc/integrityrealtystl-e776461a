@@ -540,9 +540,9 @@ export type Database = {
           engine_version: string | null
           evidence_hash: string
           evidence_snapshot: Json | null
-          failure_reason: string | null
-          failure_kind: string | null
           failure_detail: Json | null
+          failure_kind: string | null
+          failure_reason: string | null
           gut_rehab_mode: boolean
           id: string
           is_active: boolean
@@ -567,9 +567,9 @@ export type Database = {
           engine_version?: string | null
           evidence_hash: string
           evidence_snapshot?: Json | null
-          failure_reason?: string | null
-          failure_kind?: string | null
           failure_detail?: Json | null
+          failure_kind?: string | null
+          failure_reason?: string | null
           gut_rehab_mode?: boolean
           id?: string
           is_active?: boolean
@@ -594,9 +594,9 @@ export type Database = {
           engine_version?: string | null
           evidence_hash?: string
           evidence_snapshot?: Json | null
-          failure_reason?: string | null
-          failure_kind?: string | null
           failure_detail?: Json | null
+          failure_kind?: string | null
+          failure_reason?: string | null
           gut_rehab_mode?: boolean
           id?: string
           is_active?: boolean
@@ -758,6 +758,7 @@ export type Database = {
         }[]
       }
       get_access_tier: { Args: { _user_id: string }; Returns: string }
+      get_cron_wake_token: { Args: never; Returns: string }
       get_preview_runs_remaining: {
         Args: { _user_id: string }
         Returns: number
