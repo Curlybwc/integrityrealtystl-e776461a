@@ -226,16 +226,9 @@ Deno.serve(async (req) => {
           return data as number | null;
         },
         insert: insertPending,
-        refund: async (claimedCount) => {
-          const { data, error } = await svc
-            .from("ai_analysis_quota")
-            .update({ count: Math.max(0, claimedCount - 1) })
-            .eq("user_id", userId)
-            .eq("month_key", monthKey)
-            .eq("count", claimedCount)
-            .select("count")
-            .maybeSingle();
-          if (error || !data) throw error ?? new Error("Quota claim changed before refund");
+        refund: async () => {
+          const { data, error } = await svc.rpc("refund_ai_quota", { p_user_id: userId, p_month_key: monthKey });
+          if (error || data === null) throw error ?? new Error("Quota claim missing during refund");
           console.info("Refunded quota claim after pending insert failure", { userId, mlsListingId });
         },
         onExhausted: () => getQuotaBlockedAnalysis({

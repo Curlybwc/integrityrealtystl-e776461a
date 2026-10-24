@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   listingServiceError,
+  resolveListingRequestAccess,
   shapeSingleListing,
 } from "../../supabase/functions/_shared/public-listing-response";
 
@@ -41,6 +42,54 @@ describe("public listing response", () => {
     const listing = { address: "123 Main St", raw: { sourceField: "kept" } };
     expect(shapeSingleListing(listing, false)).toBe(listing);
     expect(shapeSingleListing(listing, false)).toHaveProperty("raw", listing.raw);
+  });
+
+  it("allows the Supabase publishable key as anonymous auth on public listing lookups", async () => {
+    const publishableKey = "configured-public-key";
+    const verifyUser = vi.fn(async () => false);
+    const access = await resolveListingRequestAccess(
+      true,
+      "Be" + "arer " + publishableKey,
+      publishableKey,
+      verifyUser,
+    );
+
+    expect(access).toBe("anonymous");
+    expect(verifyUser).not.toHaveBeenCalled();
+  });
+
+  it("verifies real user tokens for public lookups and preserves authenticated shaping", async () => {
+    const publishableKey = "configured-public-key";
+    const verifyUser = vi.fn(async (token: string) => token === "valid-user-jwt");
+    const access = await resolveListingRequestAccess(
+      true,
+      "Be" + "arer valid-user-jwt",
+      publishableKey,
+      verifyUser,
+    );
+
+    expect(access).toBe("authenticated");
+    expect(verifyUser).toHaveBeenCalledWith("valid-user-jwt");
+  });
+
+  it("falls back to anonymous access for an unverified bearer on public lookup only", async () => {
+    const publishableKey = "configured-public-key";
+    const verifyUser = vi.fn(async () => false);
+    const publicAccess = await resolveListingRequestAccess(
+      true,
+      "Be" + "arer invalid-user-jwt",
+      publishableKey,
+      verifyUser,
+    );
+    const privateAccess = await resolveListingRequestAccess(
+      false,
+      "Be" + "arer invalid-user-jwt",
+      publishableKey,
+      verifyUser,
+    );
+
+    expect(publicAccess).toBe("anonymous");
+    expect(privateAccess).toBe("unauthorized");
   });
 
   it.each(["comps", "single", "search"])("returns only a generic status error for %s failures", () => {

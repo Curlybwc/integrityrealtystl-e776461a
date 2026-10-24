@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { listingServiceError, shapeSingleListing } from "../_shared/public-listing-response.ts";
+import {
+  listingServiceError,
+  resolveListingRequestAccess,
+  shapeSingleListing,
+} from "../_shared/public-listing-response.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -250,40 +254,34 @@ serve(async (req) => {
       !params.zip;
 
     const authHeader = req.headers.get("Authorization") ?? "";
-    let isAnonymousSingleLookup = isPublicSingleLookup;
-    if (!isPublicSingleLookup || authHeader.startsWith("Bearer ")) {
-      if (!authHeader.startsWith("Bearer ")) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      try {
-        const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.45.0");
-        const supabase = createClient(
-          Deno.env.get("SUPABASE_URL")!,
-          Deno.env.get("SUPABASE_ANON_KEY")!,
-          { global: { headers: { Authorization: authHeader } } }
-        );
-        const token = authHeader.replace("Bearer ", "");
-        const { data, error } = await supabase.auth.getUser(token);
-        if (error || !data?.user) {
-          return new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
+    const access = await resolveListingRequestAccess(
+      isPublicSingleLookup,
+      authHeader,
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      async (token) => {
+        try {
+          const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.45.0");
+          const supabase = createClient(
+            Deno.env.get("SUPABASE_URL")!,
+            Deno.env.get("SUPABASE_ANON_KEY")!,
+            { global: { headers: { Authorization: authHeader } } }
+          );
+          const { data, error } = await supabase.auth.getUser(token);
+          return !error && !!data?.user;
+        } catch (authErr) {
+          console.error("auth verification failed:", authErr);
+          return false;
         }
-        if (isPublicSingleLookup) isAnonymousSingleLookup = false;
-      } catch (authErr) {
-        console.error("auth verification failed:", authErr);
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      },
+    );
+    const isAnonymousSingleLookup = access === "anonymous";
+
+    if (access === "unauthorized") {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
-
-
     // Comps mode: sold-only search around a subject
     if (params.mode === "comps") {
       const subject: Record<string, unknown> =

@@ -127,7 +127,7 @@ describe("repair request access and quota", () => {
     const result = await enqueueWithQuota({
       claim: async () => ++count,
       insert: async () => ({ data: null, error: new Error("insert failed") }),
-      refund: async (claimedCount) => { count = Math.max(0, claimedCount - 1); },
+      refund: async () => { count = Math.max(count - 1, 0); },
       onExhausted: async () => ({ id: "blocked" }),
       logRefundFailure: vi.fn(),
     });
@@ -143,7 +143,7 @@ describe("repair request access and quota", () => {
     const result = await enqueueWithQuota({
       claim: async () => ++count,
       insert: async () => { throw new Error("connection lost"); },
-      refund: async (claimedCount) => { count = Math.max(0, claimedCount - 1); },
+      refund: async () => { count = Math.max(count - 1, 0); },
       onExhausted: async () => ({ id: "blocked" }),
       logRefundFailure,
     });
@@ -152,6 +152,25 @@ describe("repair request access and quota", () => {
     expect(result.kind).toBe("insert");
     if (result.kind === "insert") expect(result.error).toEqual(new Error("connection lost"));
     expect(logRefundFailure).not.toHaveBeenCalled();
+  });
+
+  it("atomically refunds one claim without overwriting concurrent claims", async () => {
+    let count = 9;
+    const result = await enqueueWithQuota({
+      claim: async () => {
+        count += 1;
+        const claimedCount = count;
+        count += 1;
+        return claimedCount;
+      },
+      insert: async () => ({ data: null, error: new Error("insert failed") }),
+      refund: async () => { count = Math.max(count - 1, 0); },
+      onExhausted: async () => ({ id: "blocked" }),
+      logRefundFailure: vi.fn(),
+    });
+
+    expect(count).toBe(10);
+    expect(result.kind).toBe("insert");
   });
 
   it("does not displace another user's active live analysis for an exhausted caller", async () => {

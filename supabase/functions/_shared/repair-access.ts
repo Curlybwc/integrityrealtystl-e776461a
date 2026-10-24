@@ -27,7 +27,7 @@ export type QuotaEnqueueResult<T> =
 export async function enqueueWithQuota<T>(dependencies: {
   claim: () => Promise<number | null>;
   insert: () => Promise<QuotaInsertResult<T>>;
-  refund: (claimedCount: number) => Promise<void>;
+  refund: () => Promise<void>;
   onExhausted: () => Promise<T>;
   logRefundFailure: (error: unknown) => void;
 }): Promise<QuotaEnqueueResult<T>> {
@@ -45,7 +45,7 @@ export async function enqueueWithQuota<T>(dependencies: {
   if (!result.error && result.data) return { kind: "insert", ...result };
 
   try {
-    await dependencies.refund(claimedCount);
+    await dependencies.refund();
   } catch (error) {
     try {
       dependencies.logRefundFailure(error);
