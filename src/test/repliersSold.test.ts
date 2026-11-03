@@ -29,6 +29,19 @@ describe("sold-report window and county configuration", () => {
 });
 
 describe("Repliers sold reports", () => {
+  it("the request asks for the sold-date sort", async () => {
+    const fetcher = vi.fn(async (url: string | URL | Request) => {
+      const parsed = new URL(String(url));
+      expect(parsed.searchParams.get("sortBy")).toBe("soldDateDesc");
+      for (const key of ["type", "minSoldDate", "maxSoldDate", "minClosedDate", "maxClosedDate"]) {
+        expect(parsed.searchParams.has(key)).toBe(false);
+      }
+      return emptyResponse();
+    });
+    await fetchSoldListings(request, "test-key", fetcher);
+    expect(fetcher).toHaveBeenCalled();
+  });
+
   it("fetches all ZIPs and every page with sold residential filters, retaining one row per MLS number", async () => {
     const fetcher = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
       const { zip, page, parsed } = zipAndPage(url);
@@ -103,6 +116,20 @@ describe("Repliers sold reports", () => {
     const rows = await fetchSoldListings(request, "test-key", fetcher);
     expect(rows.map((row) => row.mlsNumber)).toEqual(["N1"]);
     expect(fetcher.mock.calls.map(([url]) => zipAndPage(url)).filter((c) => c.zip === "63301").map((c) => c.page)).toEqual([1, 2]);
+  });
+
+  it("an out-of-order page disables early stop for that ZIP", async () => {
+    const old = (id: string, soldDate: string) => listing(id, { soldDate });
+    const fetcher = vi.fn(async (url: string | URL | Request) => {
+      const { zip, page } = zipAndPage(url);
+      if (zip !== "63301") return emptyResponse();
+      if (page === 1) return response([old("O1", "2026-09-18")], 1, 3, 3);
+      if (page === 2) return response([listing("N1")], 2, 3, 3);
+      return response([old("O2", "2026-09-17")], 3, 3, 3);
+    });
+    const rows = await fetchSoldListings(request, "test-key", fetcher);
+    expect(rows.map((row) => row.mlsNumber)).toEqual(["N1"]);
+    expect(fetcher.mock.calls.map(([url]) => zipAndPage(url)).filter((c) => c.zip === "63301").map((c) => c.page)).toEqual([1, 2, 3]);
   });
 
   it("collects in-window rows across multiple pages", async () => {
