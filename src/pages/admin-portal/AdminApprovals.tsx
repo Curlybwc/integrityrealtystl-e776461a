@@ -45,6 +45,36 @@ const AdminApprovals = () => {
   const handleAction = async (request: AccessRequest, action: "approved" | "denied") => {
     setProcessingId(request.id);
 
+    // If approving, grant the role FIRST. The request may only be recorded
+    // and shown as "approved" once the grant has actually succeeded — if
+    // the grant fails, the request stays pending and the failure is shown.
+    if (action === "approved") {
+      const roleMap: Record<string, string> = {
+        investor: "user",
+        wholesaler: "user",
+        partner: "moderator",
+        admin: "admin",
+      };
+
+      // Grant role in user_roles table
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .upsert({
+          user_id: request.user_id,
+          role: (roleMap[request.portal] || "user") as any,
+        }, { onConflict: "user_id,role" });
+
+      if (roleError) {
+        toast({
+          title: "Approval failed",
+          description: `The ${request.portal} role could not be granted (${roleError.message}), so this request was not approved. It is still pending — please try again.`,
+          variant: "destructive",
+        });
+        setProcessingId(null);
+        return;
+      }
+    }
+
     const { data: authData } = await supabase.auth.getUser();
 
     // Update request status
@@ -58,31 +88,16 @@ const AdminApprovals = () => {
       .eq("id", request.id);
 
     if (updateError) {
-      toast({ title: "Error", description: updateError.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description:
+          action === "approved"
+            ? `The role was granted, but the approval could not be saved (${updateError.message}). This request still shows as pending — approving it again is safe.`
+            : updateError.message,
+        variant: "destructive",
+      });
       setProcessingId(null);
       return;
-    }
-
-    // If approved, grant the role
-    if (action === "approved") {
-      const roleMap: Record<string, string> = {
-        investor: "user",
-        wholesaler: "user",
-        partner: "moderator",
-        admin: "admin",
-      };
-      
-      // Grant role in user_roles table
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .upsert({
-          user_id: request.user_id,
-          role: (roleMap[request.portal] || "user") as any,
-        }, { onConflict: "user_id,role" });
-
-      if (roleError) {
-        console.error("Role grant error:", roleError);
-      }
     }
 
     toast({
