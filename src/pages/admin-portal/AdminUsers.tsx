@@ -30,6 +30,12 @@ interface UserRole {
 
 const PORTAL_ROLES = ["investor", "wholesaler", "partner", "admin"] as const;
 
+// IA-R01 / Authority Matrix §8: an invite grants nothing by default —
+// admin is never a default and no role is preselected. The inviter must
+// explicitly choose every role an invite carries.
+const emptyInviteRoles = (): Record<string, boolean> =>
+  Object.fromEntries(PORTAL_ROLES.map((role) => [role, false]));
+
 const AdminUsers = () => {
   const { toast } = useToast();
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -49,12 +55,7 @@ const AdminUsers = () => {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
-  const [inviteRoles, setInviteRoles] = useState<Record<string, boolean>>({
-    admin: true,
-    investor: true,
-    wholesaler: true,
-    partner: true,
-  });
+  const [inviteRoles, setInviteRoles] = useState<Record<string, boolean>>(emptyInviteRoles);
   const [inviting, setInviting] = useState(false);
 
   const fetchData = async () => {
@@ -201,7 +202,7 @@ const AdminUsers = () => {
       });
       setInviteEmail("");
       setInviteName("");
-      setInviteRoles({ admin: true, investor: true, wholesaler: true, partner: true });
+      setInviteRoles(emptyInviteRoles());
       setInviteOpen(false);
       fetchData();
     }
@@ -277,7 +278,7 @@ const AdminUsers = () => {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                They'll receive an email invite to set their password. Selected roles are granted automatically when they accept.
+                They'll receive an email invite to set their password. Selected roles are granted when the invite is sent — nothing is granted unless you select it here.
               </p>
               <Button type="submit" className="w-full" disabled={inviting}>
                 {inviting ? (

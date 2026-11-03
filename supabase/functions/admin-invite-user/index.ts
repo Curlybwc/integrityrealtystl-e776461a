@@ -58,7 +58,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    const requestedRoles: string[] = Array.isArray(roles) && roles.length > 0 ? roles : ["admin"];
+    // IA-R01 / Authority Matrix §8: admin is never a default. A missing or
+    // empty roles list grants nothing and is rejected below (400), so no
+    // caller can obtain a grant the inviter did not explicitly choose.
+    const requestedRoles: string[] = Array.isArray(roles) ? roles : [];
     const validRoles = requestedRoles.filter((r) => ALLOWED_ROLES.includes(r as any));
     if (validRoles.length === 0) {
       return new Response(JSON.stringify({ error: "No valid roles provided" }), {
