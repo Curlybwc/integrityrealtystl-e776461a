@@ -223,6 +223,30 @@ const PortalResources = () => {
         </CardContent>
       </Card>
 
+      {/* Guides — moved from Documents (07.06 decided Q8: Resources is their home) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Guides
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <h3 className="font-medium text-foreground">Investment Property Checklist</h3>
+            <p className="text-sm text-muted-foreground">
+              A checklist for evaluating investment properties.
+            </p>
+          </div>
+          <div>
+            <h3 className="font-medium text-foreground">Due Diligence Guide</h3>
+            <p className="text-sm text-muted-foreground">
+              Steps to take when evaluating a property before purchase.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Disclaimer */}
       <div className="bg-muted/50 border border-border rounded-lg p-4">
         <p className="text-xs text-muted-foreground">

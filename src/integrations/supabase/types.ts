@@ -190,6 +190,91 @@ export type Database = {
         }
         Relationships: []
       }
+      document_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          document_id: string
+          event: string
+          id: string
+          source: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          document_id: string
+          event: string
+          id?: string
+          source?: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          document_id?: string
+          event?: string
+          id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_events_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          client_visible: boolean
+          created_at: string
+          expires_at: string | null
+          fingerprint: string
+          id: string
+          kind: string
+          mime_type: string
+          owner_id: string
+          size_bytes: number
+          storage_path: string
+          title: string
+        }
+        Insert: {
+          client_visible?: boolean
+          created_at?: string
+          expires_at?: string | null
+          fingerprint: string
+          id?: string
+          kind: string
+          mime_type: string
+          owner_id: string
+          size_bytes: number
+          storage_path: string
+          title: string
+        }
+        Update: {
+          client_visible?: boolean
+          created_at?: string
+          expires_at?: string | null
+          fingerprint?: string
+          id?: string
+          kind?: string
+          mime_type?: string
+          owner_id?: string
+          size_bytes?: number
+          storage_path?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comp_report_overrides: {
         Row: {
           created_at: string
