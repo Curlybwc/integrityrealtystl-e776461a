@@ -275,6 +275,142 @@ export type Database = {
           },
         ]
       }
+      signature_events: {
+        Row: {
+          created_at: string
+          id: string
+          normalized_status: string | null
+          payload: Json
+          provider_event: string
+          request_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          normalized_status?: string | null
+          payload?: Json
+          provider_event: string
+          request_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          normalized_status?: string | null
+          payload?: Json
+          provider_event?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signature_events_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "signature_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signature_request_signers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          request_id: string
+          role: string
+          signer_order: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          request_id: string
+          role?: string
+          signer_order?: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          request_id?: string
+          role?: string
+          signer_order?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signature_request_signers_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "signature_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signature_requests: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          document_id: string | null
+          id: string
+          kind: string
+          owner_id: string
+          provider: string
+          provider_document_id: string | null
+          sent_by: string | null
+          status: string
+          template_ref: string | null
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          kind?: string
+          owner_id: string
+          provider: string
+          provider_document_id?: string | null
+          sent_by?: string | null
+          status?: string
+          template_ref?: string | null
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          kind?: string
+          owner_id?: string
+          provider?: string
+          provider_document_id?: string | null
+          sent_by?: string | null
+          status?: string
+          template_ref?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signature_requests_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_requests_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comp_report_overrides: {
         Row: {
           created_at: string
@@ -521,8 +657,10 @@ export type Database = {
         Row: {
           baa_dotloop_document_id: string | null
           baa_dotloop_loop_id: string | null
+          baa_provider: string | null
           baa_sent_at: string | null
           baa_signed_at: string | null
+          baa_signing_request_id: string | null
           baa_status: Database["public"]["Enums"]["baa_status"]
           baa_verified_at: string | null
           created_at: string
@@ -542,8 +680,10 @@ export type Database = {
         Insert: {
           baa_dotloop_document_id?: string | null
           baa_dotloop_loop_id?: string | null
+          baa_provider?: string | null
           baa_sent_at?: string | null
           baa_signed_at?: string | null
+          baa_signing_request_id?: string | null
           baa_status?: Database["public"]["Enums"]["baa_status"]
           baa_verified_at?: string | null
           created_at?: string
@@ -563,8 +703,10 @@ export type Database = {
         Update: {
           baa_dotloop_document_id?: string | null
           baa_dotloop_loop_id?: string | null
+          baa_provider?: string | null
           baa_sent_at?: string | null
           baa_signed_at?: string | null
+          baa_signing_request_id?: string | null
           baa_status?: Database["public"]["Enums"]["baa_status"]
           baa_verified_at?: string | null
           created_at?: string
@@ -841,6 +983,17 @@ export type Database = {
           sms_opt_in: boolean
           user_id: string
         }[]
+      }
+      complete_baa_send: {
+        Args: {
+          p_provider: string
+          p_provider_document_id: string
+          p_request_id: string
+          p_sent_at: string
+          p_signer_email: string
+          p_signer_name: string
+        }
+        Returns: undefined
       }
       get_access_tier: { Args: { _user_id: string }; Returns: string }
       get_cron_wake_token: { Args: never; Returns: string }

@@ -219,7 +219,7 @@ const PortalOnboarding = () => {
             </CardTitle>
             <CardDescription>
               Missouri law requires a signed Buyer's Agency Agreement before we can represent you in a
-              transaction. We'll send it to you through Dotloop for e-signature.
+              transaction. We'll email it to you for e-signature.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -233,7 +233,7 @@ const PortalOnboarding = () => {
               <div className="bg-accent/40 border border-border rounded-md p-4 text-sm space-y-2">
                 <p className="font-medium text-foreground">Check your email</p>
                 <p className="text-muted-foreground text-xs">
-                  We've sent your Buyer's Agency Agreement via Dotloop. Sign it from the email and this
+                  We've emailed your Buyer's Agency Agreement for e-signature. Sign it from the email and this
                   page will update once verified. Didn't get it? You can resend below.
                 </p>
                 <SendBaaBlock onSent={refresh} resend />
@@ -256,7 +256,7 @@ const SendBaaBlock = ({ onSent, resend = false }: { onSent: () => Promise<void>;
 
   const send = async () => {
     setSending(true);
-    const res = await supabase.functions.invoke("dotloop-send-baa", { body: {} });
+    const res = await supabase.functions.invoke("signing-send-baa", { body: {} });
     const data = res.data as { error?: string; detail?: string; ok?: boolean } | null;
     if (res.error || data?.error) {
       toast({
@@ -270,7 +270,7 @@ const SendBaaBlock = ({ onSent, resend = false }: { onSent: () => Promise<void>;
     } else {
       toast({
         title: resend ? "BAA resent" : "BAA sent",
-        description: "Check your email from Dotloop to sign the agreement.",
+        description: "Check your email to sign the agreement.",
       });
       await onSent();
     }
@@ -290,12 +290,12 @@ const SendBaaBlock = ({ onSent, resend = false }: { onSent: () => Promise<void>;
     <div className="bg-accent/40 border border-border rounded-md p-4 text-sm space-y-2">
       <p className="font-medium text-foreground">Send your Buyer's Agency Agreement</p>
       <p className="text-muted-foreground text-xs">
-        We'll email the agreement to you through Dotloop for e-signature. Once signed, your account is
+        We'll email the agreement to you for e-signature. Once signed, your account is
         upgraded to full access.
       </p>
       <Button size="sm" disabled={sending} onClick={send}>
         {sending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-        Send my BAA via Dotloop
+        Send my BAA for signature
       </Button>
     </div>
   );
@@ -357,7 +357,7 @@ const BaaStatusBlock = ({ status }: { status: string }) => {
   const map: Record<string, { label: string; tone: string }> = {
     not_required: { label: "Not required for your account type", tone: "text-muted-foreground" },
     not_sent: { label: "Not yet sent", tone: "text-amber-600" },
-    sent: { label: "Sent — awaiting your signature in Dotloop", tone: "text-amber-600" },
+    sent: { label: "Sent — awaiting your signature", tone: "text-amber-600" },
     signed: { label: "Signed — full access unlocked", tone: "text-primary" },
     verified: { label: "Signed & verified — full access", tone: "text-primary" },
   };
