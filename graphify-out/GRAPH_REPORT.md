@@ -1,42 +1,42 @@
-# Graph Report - integrityrealtystl-e776461a  (2026-10-19)
+# Graph Report - integrity-repo  (2026-11-04)
 
 ## Corpus Check
-- 296 files · ~140,455 words
+- 302 files · ~145,332 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 8 file(s) not represented in the graph (top: .css 2, (none) 1, .lock 1)
 
 ## Summary
-- 1530 nodes · 4944 edges · 91 communities (63 shown, 28 thin omitted)
-- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 21 edges (avg confidence: 0.91)
+- 1585 nodes · 5041 edges · 89 communities (63 shown, 26 thin omitted)
+- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 23 edges (avg confidence: 0.9)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9f94e11f`
+- Built from commit: `6a33fb77`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - Button
 - lucide-react
-- App.tsx
+- Card
 - dependencies
 - cn
-- zip-combobox.tsx
+- DealPhotoViewer.tsx
 - PortalSearchAnalyzer.tsx
-- PortalDealDetail.tsx
-- dialog.tsx
+- DealUnderwritingPanel.tsx
+- vitest
 - sidebar.tsx
 - package.json
 - DealAnalyzer.tsx
 - lib/compArv.ts
 - utils.ts
-- BatchAnalysisTable.tsx
-- Section8Calculator.tsx
-- Badge
+- documents.ts
+- repliersSold.test.ts
+- sold-export.ts
 - repairAnalysis.ts
-- client.ts
+- DealAlertSettings.tsx
 - devDependencies
-- CompReportStatus.tsx
+- repliers-sold.ts
 - 20260309130000_admin_user_control_center.sql
 - compilerOptions
 - Reliability / Fragility / Consistency Audit
@@ -47,7 +47,7 @@
 - ref_https
 - compilerOptions
 - carousel.tsx
-- DealUnderwritingPanel.tsx
+- client.ts
 - Daily Property Harvest – Implementation Plan
 - form.tsx
 - toast.tsx
@@ -57,16 +57,16 @@
 - AGENTS.md
 - 20260610193325_b5c38f28-c644-4c8a-aaef-5bb77537f83a.sql
 - sheet.tsx
-- useDeals
+- types.ts
 - compilerOptions
 - 20260518204925_11b6b949-19f4-4e3f-9779-98095acb9075.sql
 - class-variance-authority
 - pagination.tsx
 - repair-queue.ts
 - navigation-menu.tsx
-- scripts
+- PortalLocalNetwork.tsx
 - drawer.tsx
-- InvestorPortalLayout.tsx
+- 20261103210000_0706_document_catalog.sql
 - 20260518212230_77cfae76-ddf9-4e2b-88fa-1d9b251d7daf.sql
 - email-schedules.ts
 - dotloop-send-baa/index.ts
@@ -74,9 +74,9 @@
 - send-deal-alert/index.ts
 - Index.tsx
 - 20260313202934_3a069b5a-7922-4625-a790-d33f07d4f0a3.sql
-- vite.config.ts
+- previewAuthStorage.ts
 - 20260904233540_7a273280-f5c3-439a-ac44-3b4b4fab29b9.sql
-- sonner.tsx
+- input-otp.tsx
 - 20260309120000_harden_user_roles_auth.sql
 - 20260518231855_ecf4842a-193b-4756-8bac-85b8268a90b1.sql
 - public.user_roles
@@ -84,11 +84,9 @@
 - public.user_roles
 - CompArvPanel.tsx
 - public.admin_list_users
-- aspect-ratio.tsx
-- tailwindcss
+- createDocumentsService
+- public.get_cron_wake_token
 - roadmap.md
-- @testing-library/jest-dom
-- compEvidence.ts
 - scroll-area.tsx
 - admin-invite-user/index.ts
 
@@ -96,7 +94,7 @@
 1. `cn()` - 260 edges
 2. `Button` - 165 edges
 3. `lucide-react` - 136 edges
-4. `react` - 124 edges
+4. `react` - 125 edges
 5. `Input` - 87 edges
 6. `Label` - 85 edges
 7. `useToast()` - 71 edges
@@ -119,91 +117,91 @@
 ## Import Cycles
 - None detected.
 
-## Communities (91 total, 28 thin omitted)
+## Communities (89 total, 26 thin omitted)
 
 ### Community 0 - "Button"
-Cohesion: 0.09
-Nodes (77): react, react-router-dom, DealPhotoViewer(), BuyerIntakeForm(), Footer(), Header(), navLinks, InvestorIntakeForm() (+69 more)
+Cohesion: 0.07
+Nodes (110): react, react-router-dom, App(), queryClient, AdminPortalLayout(), navItems, BuyerIntakeForm(), Footer() (+102 more)
 
 ### Community 1 - "lucide-react"
 Cohesion: 0.06
 Nodes (39): lucide-react, BuyerDisclaimers(), BuyerHero(), BuyerProcess(), BuyerRepresentationDisclosure(), BuyerSearchCTA(), BuyerTestimonials(), BuyerValueProposition() (+31 more)
 
-### Community 2 - "App.tsx"
-Cohesion: 0.07
-Nodes (83): react-dom, @tanstack/react-query, App(), queryClient, AdminPortalLayout(), DealPotTable(), APPLIANCE_KEYS, FIELDS (+75 more)
+### Community 2 - "Card"
+Cohesion: 0.05
+Nodes (107): @tanstack/react-query, DealPotTable(), APPLIANCE_KEYS, FIELDS, NumericKey, RepairPricingEditor(), DetailRow(), ListingDetailBase() (+99 more)
 
 ### Community 3 - "dependencies"
 Cohesion: 0.04
 Nodes (54): dependencies, class-variance-authority, clsx, cmdk, date-fns, embla-carousel-react, fflate, @fontsource/inter (+46 more)
 
 ### Community 4 - "cn"
-Cohesion: 0.05
-Nodes (55): @radix-ui/react-accordion, @radix-ui/react-avatar, @radix-ui/react-context-menu, @radix-ui/react-dropdown-menu, @radix-ui/react-menubar, @radix-ui/react-radio-group, @radix-ui/react-slot, AccordionContent (+47 more)
+Cohesion: 0.07
+Nodes (42): @radix-ui/react-accordion, @radix-ui/react-avatar, @radix-ui/react-context-menu, @radix-ui/react-dropdown-menu, AccordionContent, AccordionItem, AccordionTrigger, Avatar (+34 more)
 
-### Community 5 - "zip-combobox.tsx"
-Cohesion: 0.15
-Nodes (16): cmdk, Command, CommandDialog(), CommandDialogProps, CommandEmpty, CommandGroup, CommandInput, CommandItem (+8 more)
+### Community 5 - "DealPhotoViewer.tsx"
+Cohesion: 0.08
+Nodes (35): cmdk, @radix-ui/react-dialog, @radix-ui/react-popover, DealPhotoViewer(), DealPhotoViewerProps, DealPotTableProps, GatedAction(), Props (+27 more)
 
 ### Community 6 - "PortalSearchAnalyzer.tsx"
-Cohesion: 0.07
-Nodes (33): Access tier model, Backend enforcement, Dotloop integration (not yet wired), Frontend enforcement, Onboarding wizard, Profile fields added, Required at signup (`src/pages/Signup.tsx`), BAA requirement (Investor + Buyer only) (+25 more)
+Cohesion: 0.06
+Nodes (41): Access tier model, Backend enforcement, Dotloop integration (not yet wired), Frontend enforcement, Onboarding wizard, Profile fields added, Required at signup (`src/pages/Signup.tsx`), BAA requirement (Investor + Buyer only) (+33 more)
 
-### Community 7 - "PortalDealDetail.tsx"
-Cohesion: 0.19
-Nodes (20): Props, SaveDealButton(), initial, State, useSavedDeals(), approxEqual(), buildSnapshotFromDeal(), diffUnderwriting() (+12 more)
+### Community 7 - "DealUnderwritingPanel.tsx"
+Cohesion: 0.06
+Nodes (62): next-themes, @radix-ui/react-tabs, sonner, SendDealAlertPanel(), CheckMlsUpdatesButton(), Chip(), LiveSnapshot, Props (+54 more)
 
-### Community 8 - "dialog.tsx"
-Cohesion: 0.31
-Nodes (8): ListingPhotoModal(), ListingPhotoModalProps, DialogContent, DialogDescription, DialogFooter(), DialogHeader(), DialogOverlay, DialogTitle
+### Community 8 - "vitest"
+Cohesion: 0.10
+Nodes (10): @supabase/supabase-js, @testing-library/react, vitest, h, pendingRequest, { from, loadSchedules, update, eq, selectUpdate, saveSchedule }, schedule, { invoke, buildSoldExport } (+2 more)
 
 ### Community 9 - "sidebar.tsx"
 Cohesion: 0.07
-Nodes (30): Separator, Sidebar, SidebarContent, SidebarContext, SidebarFooter, SidebarGroup, SidebarGroupAction, SidebarGroupContent (+22 more)
+Nodes (29): @radix-ui/react-separator, Separator, SidebarContent, SidebarContext, SidebarFooter, SidebarGroup, SidebarGroupAction, SidebarGroupContent (+21 more)
 
 ### Community 10 - "package.json"
-Cohesion: 0.07
-Nodes (32): name, private, type, version, autoprefixer, clsx, date-fns, eslint (+24 more)
+Cohesion: 0.05
+Nodes (36): name, private, type, version, autoprefixer, date-fns, eslint, @eslint/js (+28 more)
 
 ### Community 11 - "DealAnalyzer.tsx"
-Cohesion: 0.11
-Nodes (25): DealAnalyzer(), DealInputs, formatCurrency(), formatPercent(), InfoTooltip(), initialInputs, ResultRow(), Alert (+17 more)
+Cohesion: 0.16
+Nodes (20): @radix-ui/react-tooltip, CompReportStatus(), formatCurrency(), STATUS_CLASS, STATUS_LABEL, timeAgo(), DealAnalyzer(), DealInputs (+12 more)
 
 ### Community 12 - "lib/compArv.ts"
-Cohesion: 0.13
-Nodes (26): useCompArv(), ADJ, assignTier(), buildCompArv(), computeAdjustments(), detectSoftFlags(), Eligibility, evaluateEligibility() (+18 more)
+Cohesion: 0.14
+Nodes (25): useCompArv(), ADJ, assignTier(), buildCompArv(), computeAdjustments(), detectSoftFlags(), Eligibility, evaluateEligibility() (+17 more)
 
 ### Community 13 - "utils.ts"
 Cohesion: 0.07
-Nodes (22): input-otp, @radix-ui/react-hover-card, @radix-ui/react-popover, @radix-ui/react-slider, react-day-picker, react-resizable-panels, NavLink, NavLinkCompatProps (+14 more)
+Nodes (19): clsx, @radix-ui/react-hover-card, @radix-ui/react-progress, @radix-ui/react-radio-group, @radix-ui/react-slider, react-day-picker, react-resizable-panels, tailwind-merge (+11 more)
 
-### Community 14 - "BatchAnalysisTable.tsx"
-Cohesion: 0.12
-Nodes (26): AnalyzedListing, BatchAnalysisTableProps, SortField, StrategyFilter, strategyOrder, ViewMode, ListingCard(), ListingCardProps (+18 more)
+### Community 14 - "documents.ts"
+Cohesion: 0.15
+Nodes (15): blobBytes(), CatalogDocument, DOCUMENT_KIND_LABELS, DOCUMENT_KINDS, DocumentKind, DocumentsClient, documentsService, EXPECTED_STANDING_KINDS (+7 more)
 
-### Community 15 - "Section8Calculator.tsx"
-Cohesion: 0.24
-Nodes (9): formatCurrency(), InfoTooltip(), initialInputs, ResultRow(), Section8Calculator(), Section8Inputs, getSection8SupportedZips(), UTILITY_BREAKDOWN (+1 more)
+### Community 15 - "repliersSold.test.ts"
+Cohesion: 0.20
+Nodes (9): emptyResponse(), request, response(), CallerClient, createFetchSoldListingsHandler(), getUser(), soldReportCorsHeaders, SoldReportRequest (+1 more)
 
-### Community 16 - "Badge"
-Cohesion: 0.13
-Nodes (22): @radix-ui/react-tabs, SendDealAlertPanel(), CheckMlsUpdatesButton(), Chip(), LiveSnapshot, Props, RepairQuotaChip(), Badge() (+14 more)
+### Community 16 - "sold-export.ts"
+Cohesion: 0.23
+Nodes (12): fflate, exportFile(), row, buildSoldExport(), csvCell(), SOLD_EXPORT_COLUMNS, SoldExportFormat, values() (+4 more)
 
 ### Community 17 - "repairAnalysis.ts"
-Cohesion: 0.14
-Nodes (18): Props, useRepairAnalysis(), UseRepairAnalysisOpts, AnalysisStatus, fetchActiveAnalysesBulk(), fetchActiveAnalysis(), QuotaState, RepairAnalysisRow (+10 more)
+Cohesion: 0.20
+Nodes (12): Props, RepairQuotaChip(), useRepairAnalysis(), UseRepairAnalysisOpts, AnalysisStatus, fetchActiveAnalysesBulk(), fetchActiveAnalysis(), fetchQuotaState() (+4 more)
 
-### Community 18 - "client.ts"
-Cohesion: 0.07
-Nodes (39): @radix-ui/react-switch, navItems, DealAlertSettings(), SOURCES, STRATEGIES, Switch, useHasRole(), UseHasRoleResult (+31 more)
+### Community 18 - "DealAlertSettings.tsx"
+Cohesion: 0.26
+Nodes (15): DealAlertSettings(), SOURCES, STRATEGIES, Switch, disablePushOnThisDevice(), enablePushOnThisDevice(), encodeKey(), getRegistration() (+7 more)
 
 ### Community 19 - "devDependencies"
-Cohesion: 0.09
-Nodes (22): devDependencies, autoprefixer, eslint, @eslint/js, eslint-plugin-react-hooks, eslint-plugin-react-refresh, globals, jsdom (+14 more)
+Cohesion: 0.06
+Nodes (30): devDependencies, autoprefixer, eslint, @eslint/js, eslint-plugin-react-hooks, eslint-plugin-react-refresh, globals, jsdom (+22 more)
 
-### Community 20 - "CompReportStatus.tsx"
-Cohesion: 0.47
-Nodes (5): CompReportStatus(), formatCurrency(), STATUS_CLASS, STATUS_LABEL, timeAgo()
+### Community 20 - "repliers-sold.ts"
+Cohesion: 0.38
+Nodes (10): extractSoldDate(), fetchSoldListings(), isObject(), JsonObject, normalizeSoldListing(), soldCalendarDate(), stringValue(), isSoldReportDate() (+2 more)
 
 ### Community 21 - "20260309130000_admin_user_control_center.sql"
 Cohesion: 0.15
@@ -223,7 +221,7 @@ Nodes (5): client_email_schedule_sends_cadence_bucket_key, client_email_schedule
 
 ### Community 25 - "compReports.ts"
 Cohesion: 0.17
-Nodes (25): Props, useCompReport(), UseCompReportArgs, UseCompReportReturn, buildSummary(), closeReport(), CompReportRow, computeSnapshotStatus() (+17 more)
+Nodes (24): Props, useCompReport(), UseCompReportArgs, UseCompReportReturn, buildSummary(), closeReport(), CompReportRow, computeSnapshotStatus() (+16 more)
 
 ### Community 26 - "fetch-comp-arv/index.ts"
 Cohesion: 0.16
@@ -245,17 +243,17 @@ Nodes (15): compilerOptions, allowImportingTsExtensions, isolatedModules, lib, m
 Cohesion: 0.17
 Nodes (14): embla-carousel-react, Carousel, CarouselApi, CarouselContent, CarouselContext, CarouselContextProps, CarouselItem, CarouselNext (+6 more)
 
-### Community 31 - "DealUnderwritingPanel.tsx"
+### Community 31 - "client.ts"
 Cohesion: 0.27
-Nodes (14): DealUnderwritingPanel(), Metric(), moneyInput(), AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter() (+6 more)
+Nodes (7): useHasRole(), UseHasRoleResult, useUserRoles(), UseUserRolesResult, supabase, allPortals, PortalSelector()
 
 ### Community 32 - "Daily Property Harvest – Implementation Plan"
 Cohesion: 0.14
 Nodes (13): 1. Database Table: `deals`, 2. Edge Function: `daily-mls-harvest`, 3. Cron Schedule, 4. Frontend: `/deals` Page, 5. Admin Trigger, Behavior, Columns, Daily Property Harvest – Implementation Plan (+5 more)
 
 ### Community 33 - "form.tsx"
-Cohesion: 0.19
-Nodes (12): @radix-ui/react-label, react-hook-form, FormControl, FormDescription, FormFieldContext, FormFieldContextValue, FormItem, FormItemContext (+4 more)
+Cohesion: 0.10
+Nodes (20): @radix-ui/react-label, @radix-ui/react-slot, react-hook-form, Breadcrumb, BreadcrumbEllipsis(), BreadcrumbItem, BreadcrumbLink, BreadcrumbList (+12 more)
 
 ### Community 34 - "toast.tsx"
 Cohesion: 0.26
@@ -279,11 +277,11 @@ Nodes (7): analyzer_usage_user_ran_at_idx, consent_log_user_idx, public.analyzer
 
 ### Community 40 - "sheet.tsx"
 Cohesion: 0.24
-Nodes (9): @radix-ui/react-dialog, SheetContent, SheetContentProps, SheetDescription, SheetFooter(), SheetHeader(), SheetOverlay, SheetTitle (+1 more)
+Nodes (9): SheetContent, SheetContentProps, SheetDescription, SheetFooter(), SheetHeader(), SheetOverlay, SheetTitle, sheetVariants (+1 more)
 
-### Community 41 - "useDeals"
-Cohesion: 0.30
-Nodes (11): DealPhotoViewerProps, DealPotTableProps, loadDeals(), MOCK_DEALS, resetDeals(), SAMPLE_PHOTOS, saveDeals(), useDeals() (+3 more)
+### Community 41 - "types.ts"
+Cohesion: 0.18
+Nodes (10): CompositeTypes, Constants, Database, DatabaseWithoutInternals, DefaultSchema, Enums, Json, Tables (+2 more)
 
 ### Community 42 - "compilerOptions"
 Cohesion: 0.18
@@ -309,25 +307,25 @@ Nodes (33): NOW, computeEvidenceHash(), corsHeaders, ListingSnapshot, normalizeR
 Cohesion: 0.28
 Nodes (8): @radix-ui/react-navigation-menu, NavigationMenu, NavigationMenuContent, NavigationMenuIndicator, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle, NavigationMenuViewport
 
-### Community 48 - "scripts"
-Cohesion: 0.25
-Nodes (8): scripts, build, build:dev, dev, lint, preview, test, test:watch
+### Community 48 - "PortalLocalNetwork.tsx"
+Cohesion: 0.43
+Nodes (6): getContractors(), getPartnersByType(), NetworkPartner, networkPartners, PartnerType, PortalLocalNetwork()
 
 ### Community 49 - "drawer.tsx"
 Cohesion: 0.25
 Nodes (7): vaul, DrawerContent, DrawerDescription, DrawerFooter(), DrawerHeader(), DrawerOverlay, DrawerTitle
 
-### Community 50 - "InvestorPortalLayout.tsx"
-Cohesion: 0.32
-Nodes (8): PartnerPortalLayout(), AccessTierBanner(), Props, InvestorPortalLayout(), navItems, navItems, WholesalerPortalLayout(), usePortalAuth()
+### Community 50 - "20261103210000_0706_document_catalog.sql"
+Cohesion: 0.39
+Nodes (5): document_events_document_idx, documents_owner_created_idx, documents_owner_fingerprint_key, public.document_events, public.documents
 
 ### Community 51 - "20260518212230_77cfae76-ddf9-4e2b-88fa-1d9b251d7daf.sql"
 Cohesion: 0.32
 Nodes (5): ai_analysis_quota_updated_at, public.repair_pricing_rules, repair_analyses_updated_at, repair_pricing_rules_active_uniq, repair_pricing_rules_version_uniq
 
 ### Community 52 - "email-schedules.ts"
-Cohesion: 0.06
-Nodes (51): fflate, @supabase/supabase-js, @testing-library/react, vitest, { from, loadSchedules, update, eq, selectUpdate, saveSchedule }, schedule, { invoke, buildSoldExport }, row (+43 more)
+Cohesion: 0.16
+Nodes (15): row, schedule, corsHeaders, EmailSchedule, getNewSoldRows(), getScheduleCadenceBucket(), getSoldSchedulePlan(), processEmailSchedule() (+7 more)
 
 ### Community 53 - "dotloop-send-baa/index.ts"
 Cohesion: 0.25
@@ -345,29 +343,29 @@ Nodes (7): AboutSection(), AudienceCard(), AudienceCardProps, audiences, Audienc
 Cohesion: 0.43
 Nodes (4): on_auth_user_created, public.handle_new_user(), public.portal_access_requests, public.profiles
 
-### Community 58 - "vite.config.ts"
-Cohesion: 0.40
-Nodes (3): lovable-tagger, vite, @vitejs/plugin-react-swc
+### Community 58 - "previewAuthStorage.ts"
+Cohesion: 0.33
+Nodes (6): brokeredPreviewStorage(), BrokerReply, BrokerRequest, BrokerRequestType, PreviewAuthStorage, readBrokerReply()
 
 ### Community 59 - "20260904233540_7a273280-f5c3-439a-ac44-3b4b4fab29b9.sql"
 Cohesion: 0.53
 Nodes (4): public.alert_preferences, public.deal_alerts_sent, public.push_subscriptions, update_alert_preferences_updated_at
 
-### Community 60 - "sonner.tsx"
-Cohesion: 0.40
-Nodes (4): next-themes, sonner, Toaster(), ToasterProps
+### Community 60 - "input-otp.tsx"
+Cohesion: 0.33
+Nodes (5): input-otp, InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot
 
 ### Community 62 - "20260518231855_ecf4842a-193b-4756-8bac-85b8268a90b1.sql"
 Cohesion: 0.70
 Nodes (4): idx_saved_deals_property_key, idx_saved_deals_user, public.saved_deals, trg_saved_deals_updated_at
 
 ### Community 66 - "CompArvPanel.tsx"
-Cohesion: 0.24
-Nodes (6): @radix-ui/react-collapsible, CompArvPanel(), CompRow(), fmt(), Props, tierColor
+Cohesion: 0.16
+Nodes (13): CompArvPanel(), CompRow(), fmt(), Props, tierColor, buildCompEvidence(), caveats(), CompEvidenceRow (+5 more)
 
-### Community 86 - "compEvidence.ts"
-Cohesion: 0.39
-Nodes (6): buildCompEvidence(), caveats(), CompEvidenceRow, driverSet(), relevanceReasons(), ScoredComp
+### Community 68 - "createDocumentsService"
+Cohesion: 0.67
+Nodes (4): createDocumentsService(), appendEvent(), findByFingerprint(), from()
 
 ### Community 87 - "scroll-area.tsx"
 Cohesion: 0.67
@@ -375,23 +373,23 @@ Nodes (3): @radix-ui/react-scroll-area, ScrollArea, ScrollBar
 
 ## Knowledge Gaps
 - **14 isolated node(s):** `@fontsource/inter`, `@fontsource/playfair-display`, `@hookform/resolvers`, `date-fns`, `tailwindcss-animate` (+9 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 495 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **28 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 518 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **26 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cn()` connect `cn` to `Button`, `App.tsx`, `zip-combobox.tsx`, `PortalDealDetail.tsx`, `dialog.tsx`, `sidebar.tsx`, `DealAnalyzer.tsx`, `utils.ts`, `BatchAnalysisTable.tsx`, `Badge`, `client.ts`, `carousel.tsx`, `DealUnderwritingPanel.tsx`, `form.tsx`, `toast.tsx`, `chart.tsx`, `sheet.tsx`, `class-variance-authority`, `pagination.tsx`, `navigation-menu.tsx`, `drawer.tsx`, `InvestorPortalLayout.tsx`, `scroll-area.tsx`?**
-  _High betweenness centrality (0.139) - this node is a cross-community bridge._
+- **Why does `cn()` connect `cn` to `Button`, `Card`, `DealPhotoViewer.tsx`, `PortalSearchAnalyzer.tsx`, `DealUnderwritingPanel.tsx`, `sidebar.tsx`, `DealAnalyzer.tsx`, `utils.ts`, `DealAlertSettings.tsx`, `carousel.tsx`, `form.tsx`, `toast.tsx`, `chart.tsx`, `sheet.tsx`, `class-variance-authority`, `pagination.tsx`, `navigation-menu.tsx`, `drawer.tsx`, `input-otp.tsx`, `scroll-area.tsx`?**
+  _High betweenness centrality (0.140) - this node is a cross-community bridge._
 - **What connects `@fontsource/inter`, `@fontsource/playfair-display`, `@hookform/resolvers` to the rest of the system?**
   _14 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Button` be split into smaller, more focused modules?**
-  _Cohesion score 0.09436320459942507 - nodes in this community are weakly interconnected._
-- **Why does `lucide-react` connect `lucide-react` to `Button`, `App.tsx`, `cn`, `zip-combobox.tsx`, `PortalSearchAnalyzer.tsx`, `PortalDealDetail.tsx`, `dialog.tsx`, `sidebar.tsx`, `package.json`, `DealAnalyzer.tsx`, `utils.ts`, `BatchAnalysisTable.tsx`, `Section8Calculator.tsx`, `Badge`, `repairAnalysis.ts`, `client.ts`, `CompReportStatus.tsx`, `carousel.tsx`, `DealUnderwritingPanel.tsx`, `toast.tsx`, `sheet.tsx`, `pagination.tsx`, `navigation-menu.tsx`, `InvestorPortalLayout.tsx`, `Index.tsx`, `CompArvPanel.tsx`?**
-  _High betweenness centrality (0.120) - this node is a cross-community bridge._
+  _Cohesion score 0.06914344685242518 - nodes in this community are weakly interconnected._
+- **Why does `lucide-react` connect `lucide-react` to `Button`, `Card`, `cn`, `DealPhotoViewer.tsx`, `PortalSearchAnalyzer.tsx`, `DealUnderwritingPanel.tsx`, `sidebar.tsx`, `package.json`, `DealAnalyzer.tsx`, `utils.ts`, `documents.ts`, `repairAnalysis.ts`, `DealAlertSettings.tsx`, `carousel.tsx`, `client.ts`, `form.tsx`, `toast.tsx`, `sheet.tsx`, `pagination.tsx`, `navigation-menu.tsx`, `PortalLocalNetwork.tsx`, `Index.tsx`, `input-otp.tsx`, `CompArvPanel.tsx`?**
+  _High betweenness centrality (0.110) - this node is a cross-community bridge._
 - **Should `lucide-react` be split into smaller, more focused modules?**
   _Cohesion score 0.05809979494190021 - nodes in this community are weakly interconnected._
-- **Why does `react` connect `Button` to `App.tsx`, `cn`, `zip-combobox.tsx`, `PortalSearchAnalyzer.tsx`, `PortalDealDetail.tsx`, `dialog.tsx`, `sidebar.tsx`, `package.json`, `DealAnalyzer.tsx`, `lib/compArv.ts`, `utils.ts`, `BatchAnalysisTable.tsx`, `Section8Calculator.tsx`, `Badge`, `repairAnalysis.ts`, `client.ts`, `compReports.ts`, `carousel.tsx`, `DealUnderwritingPanel.tsx`, `form.tsx`, `toast.tsx`, `chart.tsx`, `sheet.tsx`, `useDeals`, `class-variance-authority`, `pagination.tsx`, `navigation-menu.tsx`, `drawer.tsx`, `InvestorPortalLayout.tsx`, `CompArvPanel.tsx`, `scroll-area.tsx`?**
-  _High betweenness centrality (0.108) - this node is a cross-community bridge._
-- **Should `App.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.0698247138925105 - nodes in this community are weakly interconnected._
+- **Why does `react` connect `Button` to `Card`, `cn`, `DealPhotoViewer.tsx`, `PortalSearchAnalyzer.tsx`, `DealUnderwritingPanel.tsx`, `sidebar.tsx`, `package.json`, `DealAnalyzer.tsx`, `lib/compArv.ts`, `utils.ts`, `documents.ts`, `repairAnalysis.ts`, `DealAlertSettings.tsx`, `compReports.ts`, `carousel.tsx`, `client.ts`, `form.tsx`, `toast.tsx`, `chart.tsx`, `sheet.tsx`, `class-variance-authority`, `pagination.tsx`, `navigation-menu.tsx`, `drawer.tsx`, `input-otp.tsx`, `CompArvPanel.tsx`, `scroll-area.tsx`?**
+  _High betweenness centrality (0.102) - this node is a cross-community bridge._
+- **Should `Card` be split into smaller, more focused modules?**
+  _Cohesion score 0.05287502267368039 - nodes in this community are weakly interconnected._
