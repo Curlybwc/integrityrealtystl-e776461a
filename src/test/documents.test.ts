@@ -1,3 +1,4 @@
+import { File as NodeFile } from "node:buffer";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
@@ -15,7 +16,14 @@ const OWNER = "11111111-1111-1111-1111-111111111111";
 const ABC_SHA256 = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
 
 function makeFile(content = "abc") {
-  return new File([content], "proof-of-funds.pdf", { type: "application/pdf" });
+  // Node's own File, not the jsdom global: this suite runs in a jsdom
+  // environment whose Blob has no arrayBuffer(), so fingerprintFile fell
+  // back to FileReader and got a jsdom-realm ArrayBuffer — which Node 20's
+  // WebCrypto rejects in crypto.subtle.digest ("2nd argument is not
+  // instance of ArrayBuffer"). A node:buffer File returns its bytes in
+  // Node's realm, which SubtleCrypto accepts on every supported Node.
+  // Production browser code is unaffected (same-realm Blob there).
+  return new NodeFile([content], "proof-of-funds.pdf", { type: "application/pdf" }) as unknown as File;
 }
 
 interface FakeState {
