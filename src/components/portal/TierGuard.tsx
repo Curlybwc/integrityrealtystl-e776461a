@@ -29,7 +29,7 @@ const TierGuard = ({ requiredTier, portal = "investor", children, featureName }:
       : `${featureName ?? "This feature"} requires a completed profile`;
   const desc =
     requiredTier === "full"
-      ? "To submit offers, request walkthroughs, or use other client tools, we need a signed Buyer's Agency Agreement on file. We'll send it to you through Dotloop."
+      ? "To submit offers, request walkthroughs, or use other client tools, we need a signed Buyer's Agency Agreement on file. We'll email it to you for e-signature."
       : "Add your phone and accept the email & SMS alerts to access this feature.";
 
   return (

@@ -1,3 +1,6 @@
+// DEPRECATED (07.06 Packet INT-07.06-2): superseded by signing-send-baa,
+// which runs the same contract over the BoldSign provider abstraction.
+// Kept in place for history; no caller invokes this function anymore.
 // Phase 1 (scaffold): Dotloop BAA send endpoint.
 //
 // Live Dotloop API calls are intentionally NOT wired yet — the customer does
