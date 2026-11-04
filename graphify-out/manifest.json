@@ -330,8 +330,8 @@
     "semantic_hash": ""
   },
   "src/components/portal/TierGuard.tsx": {
-    "mtime": 1793799743.3106582,
-    "seen": 1793799838.8409708,
+    "mtime": 1793807062.7376747,
+    "seen": 1793807289.8910494,
     "ast_hash": "a1f0aa114ead9e81ce8b068ec0fdd6ec",
     "semantic_hash": ""
   },
@@ -900,9 +900,9 @@
     "semantic_hash": ""
   },
   "src/integrations/supabase/types.ts": {
-    "mtime": 1793799764.3783832,
-    "seen": 1793799838.841155,
-    "ast_hash": "074fd6a524ecb555a9b4dfeb77fbed6e",
+    "mtime": 1793807186.381543,
+    "seen": 1793807289.8912065,
+    "ast_hash": "3d3f094092cf3c21ded218f6439e0946",
     "semantic_hash": ""
   },
   "src/lib/compArv.ts": {
@@ -1140,8 +1140,8 @@
     "semantic_hash": ""
   },
   "src/pages/admin-portal/AdminUsers.tsx": {
-    "mtime": 1793799743.3097,
-    "seen": 1793799838.841242,
+    "mtime": 1793807062.749889,
+    "seen": 1793807289.8912787,
     "ast_hash": "288f83eb2fb82b38e00c2bf83bdd3760",
     "semantic_hash": ""
   },
@@ -1254,8 +1254,8 @@
     "semantic_hash": ""
   },
   "src/pages/portal/PortalOnboarding.tsx": {
-    "mtime": 1793799745.94478,
-    "seen": 1793799838.8412805,
+    "mtime": 1793807062.7510061,
+    "seen": 1793807289.8913095,
     "ast_hash": "10bc047734e79ccc5ce0d6d62532a2d6",
     "semantic_hash": ""
   },
@@ -1404,8 +1404,8 @@
     "semantic_hash": ""
   },
   "supabase/functions/dotloop-send-baa/index.ts": {
-    "mtime": 1793799735.765382,
-    "seen": 1793799838.841388,
+    "mtime": 1793807062.7705123,
+    "seen": 1793807289.8913863,
     "ast_hash": "034933081e820600f010bae974a52b4b",
     "semantic_hash": ""
   },
@@ -1872,45 +1872,51 @@
     "semantic_hash": ""
   },
   "src/test/signing.test.ts": {
-    "mtime": 1793799784.5823839,
-    "seen": 1793799838.8413415,
-    "ast_hash": "e076eb5e0f72496b403904e9de48e576",
+    "mtime": 1793807240.002013,
+    "seen": 1793807289.8913476,
+    "ast_hash": "9d1e7afc6c174b21443fd0f84d936cf5",
     "semantic_hash": ""
   },
   "supabase/functions/_shared/signing/baa-send.ts": {
-    "mtime": 1793799715.7542882,
-    "seen": 1793799838.8413634,
-    "ast_hash": "8173a7a8de71ec8f15fa65b8fb9e99dd",
+    "mtime": 1793807138.5533843,
+    "seen": 1793807289.8913653,
+    "ast_hash": "a723e4d1e82b197102d631108d6efa2a",
     "semantic_hash": ""
   },
   "supabase/functions/_shared/signing/boldsign.ts": {
-    "mtime": 1793799706.6993809,
-    "seen": 1793799838.8413658,
+    "mtime": 1793807062.7608135,
+    "seen": 1793807289.8913672,
     "ast_hash": "5f2eee4fe2be153c4e865463fcaff9ed",
     "semantic_hash": ""
   },
   "supabase/functions/_shared/signing/provider.ts": {
-    "mtime": 1793799697.8510687,
-    "seen": 1793799838.841368,
+    "mtime": 1793807062.7609823,
+    "seen": 1793807289.891369,
     "ast_hash": "e31a62bf77708337635d27406b43086e",
     "semantic_hash": ""
   },
   "supabase/functions/_shared/signing/state.ts": {
-    "mtime": 1793799697.8493805,
-    "seen": 1793799838.8413696,
+    "mtime": 1793807062.7629755,
+    "seen": 1793807289.891371,
     "ast_hash": "d90041f342e95326af55edb79b793219",
     "semantic_hash": ""
   },
   "supabase/functions/signing-send-baa/index.ts": {
-    "mtime": 1793799729.5233817,
-    "seen": 1793799838.8414953,
-    "ast_hash": "56963f32f10be26015b1503b1f0cc5e8",
+    "mtime": 1793807160.8024125,
+    "seen": 1793807289.8914,
+    "ast_hash": "8271cac1c18b09fc3f48fdb426cb4471",
     "semantic_hash": ""
   },
   "supabase/migrations/20261104090000_0706_signing_state.sql": {
-    "mtime": 1793799688.2783802,
-    "seen": 1793799838.8415446,
+    "mtime": 1793807062.774392,
+    "seen": 1793807289.8914435,
     "ast_hash": "10287becd8b56b896fd047fd65eb9fc2",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20261104100000_0706_signing_atomicity.sql": {
+    "mtime": 1793807062.4418852,
+    "seen": 1793807289.8914464,
+    "ast_hash": "2806746f6e484a2c35892ff96aaaa21a",
     "semantic_hash": ""
   }
 }

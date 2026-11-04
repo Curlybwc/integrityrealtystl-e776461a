@@ -12,7 +12,11 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createBoldSignProvider } from "../_shared/signing/boldsign.ts";
-import { sendBaa, type BaaSendDeps } from "../_shared/signing/baa-send.ts";
+import {
+  ClaimConflictError,
+  sendBaa,
+  type BaaSendDeps,
+} from "../_shared/signing/baa-send.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -72,6 +76,7 @@ Deno.serve(async (req) => {
     const deps: BaaSendDeps = {
       provider: apiKey ? createBoldSignProvider({ apiKey }) : null,
       templateId: templateId ?? null,
+      now: () => new Date(),
       async loadProfile(id) {
         const { data, error } = await admin
           .from("profiles")
@@ -84,52 +89,61 @@ Deno.serve(async (req) => {
       async findOpenRequest(ownerId) {
         const { data, error } = await admin
           .from("signature_requests")
-          .select("id, provider, provider_document_id, status")
+          .select("id, provider, provider_document_id, status, created_at")
           .eq("owner_id", ownerId)
           .eq("kind", "baa")
-          .in("status", ["sent", "partially_signed"])
+          .in("status", ["prepared", "sent", "partially_signed"])
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
         if (error) throw new Error(error.message);
         return data;
       },
-      async createRequest(args) {
+      async claimRequest(args) {
         const { data, error } = await admin
           .from("signature_requests")
           .insert({
             owner_id: args.ownerId,
             kind: "baa",
             provider: args.provider,
-            provider_document_id: args.providerDocumentId,
-            status: "sent",
+            status: "prepared",
             template_ref: args.templateRef,
             sent_by: args.sentBy,
           })
           .select("id")
           .single();
-        if (error) throw new Error(error.message);
-        const { error: signerErr } = await admin.from("signature_request_signers").insert({
-          request_id: data.id,
-          name: args.signerName,
-          email: args.signerEmail,
-          role: "Buyer",
-          signer_order: 1,
-          status: "pending",
-        });
-        if (signerErr) throw new Error(signerErr.message);
+        if (error) {
+          if ((error as { code?: string }).code === "23505") throw new ClaimConflictError();
+          throw new Error(error.message);
+        }
         return { id: data.id };
       },
-      async markProfileSent(args) {
+      async attachProviderDocument(requestId, providerDocumentId) {
         const { error } = await admin
-          .from("profiles")
-          .update({
-            baa_status: "sent",
-            baa_sent_at: args.sentAt,
-            baa_provider: args.provider,
-            baa_signing_request_id: args.signingRequestId,
-          })
-          .eq("id", args.profileId);
+          .from("signature_requests")
+          .update({ provider_document_id: providerDocumentId })
+          .eq("id", requestId);
+        if (error) throw new Error(error.message);
+      },
+      async completeSend(args) {
+        // complete_baa_send: request completion + signer + profile in
+        // one transaction (migration 20261104100000).
+        const { error } = await admin.rpc("complete_baa_send", {
+          p_request_id: args.requestId,
+          p_provider: args.provider,
+          p_provider_document_id: args.providerDocumentId,
+          p_signer_name: args.signerName,
+          p_signer_email: args.signerEmail,
+          p_sent_at: args.sentAt,
+        });
+        if (error) throw new Error(error.message);
+      },
+      async releaseClaim(requestId) {
+        const { error } = await admin
+          .from("signature_requests")
+          .delete()
+          .eq("id", requestId)
+          .eq("status", "prepared");
         if (error) throw new Error(error.message);
       },
     };
@@ -166,6 +180,17 @@ Deno.serve(async (req) => {
       case "provider_failed":
         console.error("signing-send-baa provider failure:", result.detail);
         return json(502, { error: "Signing send failed", detail: result.detail });
+      case "record_failed":
+        // The provider document exists; a retry adopts it and completes
+        // the recording instead of sending a duplicate.
+        console.error("signing-send-baa record failure:", result.detail);
+        return json(500, {
+          error: "Send reached the provider but could not be recorded",
+          detail: result.detail,
+          code: "SIGNING_RECORD_FAILED",
+          document_id: result.providerDocumentId,
+          signing_request_id: result.requestId,
+        });
     }
   } catch (err) {
     console.error("signing-send-baa unexpected error:", err);

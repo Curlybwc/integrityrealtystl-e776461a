@@ -984,6 +984,17 @@ export type Database = {
           user_id: string
         }[]
       }
+      complete_baa_send: {
+        Args: {
+          p_provider: string
+          p_provider_document_id: string
+          p_request_id: string
+          p_sent_at: string
+          p_signer_email: string
+          p_signer_name: string
+        }
+        Returns: undefined
+      }
       get_access_tier: { Args: { _user_id: string }; Returns: string }
       get_cron_wake_token: { Args: never; Returns: string }
       get_preview_runs_remaining: {

@@ -9,6 +9,7 @@ import {
   mapBoldSignSignerStatus,
 } from "../../supabase/functions/_shared/signing/state";
 import {
+  ClaimConflictError,
   sendBaa,
   type BaaProfile,
   type BaaSendDeps,
@@ -128,12 +129,38 @@ const PROFILE: BaaProfile = {
   baa_status: "not_sent",
 };
 
-function makeDeps(overrides: Partial<BaaSendDeps> = {}) {
-  const calls = { created: [] as unknown[], marked: [] as unknown[], sends: 0 };
+interface StoreRow {
+  id: string;
+  provider: string;
+  provider_document_id: string | null;
+  status: string;
+  created_at: string;
+  signers: number;
+}
+
+/**
+ * In-memory model of the database semantics the fix relies on:
+ *  - claimRequest enforces the partial unique index (one open request
+ *    per owner) by throwing ClaimConflictError;
+ *  - completeSend models complete_baa_send's single transaction: it
+ *    either applies request+signer+profile together or (when
+ *    failComplete is set) applies NOTHING, like a rolled-back txn.
+ */
+function makeStore() {
+  const store = {
+    rows: [] as StoreRow[],
+    profileMarked: [] as { provider: string; signingRequestId: string }[],
+    sends: 0,
+    failComplete: false,
+    providerFails: false,
+  };
+  let seq = 0;
   const provider: SigningProvider = {
     name: "boldsign",
     sendFromTemplate: async () => {
-      calls.sends += 1;
+      store.sends += 1;
+      await new Promise((r) => setTimeout(r, 5));
+      if (store.providerFails) throw new Error("BoldSign is down");
       return { providerDocumentId: "doc-42" };
     },
     getDocumentStatus: async () => ({ providerDocumentId: "x", status: "sent", signers: [] }),
@@ -145,78 +172,139 @@ function makeDeps(overrides: Partial<BaaSendDeps> = {}) {
   const deps: BaaSendDeps = {
     provider,
     templateId: "tpl-1",
+    now: () => new Date(),
     loadProfile: async () => PROFILE,
-    findOpenRequest: async () => null,
-    createRequest: async (args) => {
-      calls.created.push(args);
-      return { id: "req-1" };
+    findOpenRequest: async () =>
+      store.rows.find((r) => ["prepared", "sent", "partially_signed"].includes(r.status)) ?? null,
+    claimRequest: async () => {
+      if (store.rows.some((r) => ["prepared", "sent", "partially_signed"].includes(r.status))) {
+        throw new ClaimConflictError();
+      }
+      seq += 1;
+      const row: StoreRow = {
+        id: `req-${seq}`, provider: "boldsign", provider_document_id: null,
+        status: "prepared", created_at: new Date().toISOString(), signers: 0,
+      };
+      store.rows.push(row);
+      return { id: row.id };
     },
-    markProfileSent: async (args) => {
-      calls.marked.push(args);
+    attachProviderDocument: async (requestId, providerDocumentId) => {
+      const row = store.rows.find((r) => r.id === requestId)!;
+      row.provider_document_id = providerDocumentId;
     },
-    ...overrides,
+    completeSend: async (args) => {
+      if (store.failComplete) {
+        // e.g. the signer INSERT fails inside complete_baa_send: the
+        // whole transaction rolls back — no request flip, no signer,
+        // no profile change.
+        throw new Error("insert into signature_request_signers failed");
+      }
+      const row = store.rows.find((r) => r.id === args.requestId)!;
+      row.status = "sent";
+      row.signers += 1;
+      store.profileMarked.push({ provider: args.provider, signingRequestId: args.requestId });
+    },
+    releaseClaim: async (requestId) => {
+      store.rows = store.rows.filter((r) => !(r.id === requestId && r.status === "prepared"));
+    },
   };
-  return { deps, calls };
+  return { store, deps };
 }
 
 describe("BAA send orchestration (the scaffold's preserved contract)", () => {
-  it("refuses an already-signed profile without touching the provider", async () => {
-    const { deps, calls } = makeDeps({
-      loadProfile: async () => ({ ...PROFILE, baa_status: "signed" }),
-    });
+  it("refuses an already-signed profile without claiming or sending", async () => {
+    const { store, deps } = makeStore();
+    deps.loadProfile = async () => ({ ...PROFILE, baa_status: "signed" });
     const result = await sendBaa(deps, { targetUserId: "user-1", callerId: "admin-1" });
     expect(result.outcome).toBe("already_signed");
-    expect(calls.sends).toBe(0);
-    expect(calls.created).toEqual([]);
-    expect(calls.marked).toEqual([]);
+    expect(store.sends).toBe(0);
+    expect(store.rows).toEqual([]);
   });
 
   it("returns the open request on resend instead of sending a duplicate", async () => {
-    const { deps, calls } = makeDeps({
-      findOpenRequest: async () => ({
-        id: "req-open", provider: "boldsign", provider_document_id: "doc-9", status: "sent",
-      }),
+    const { store, deps } = makeStore();
+    store.rows.push({
+      id: "req-open", provider: "boldsign", provider_document_id: "doc-9",
+      status: "sent", created_at: new Date().toISOString(), signers: 1,
     });
     const result = await sendBaa(deps, { targetUserId: "user-1", callerId: "user-1" });
     expect(result).toEqual({ outcome: "already_sent", requestId: "req-open", providerDocumentId: "doc-9" });
-    expect(calls.sends).toBe(0);
+    expect(store.sends).toBe(0);
   });
 
   it("answers not_configured with zero writes when the provider is absent", async () => {
-    const { deps, calls } = makeDeps({ provider: null });
+    const { store, deps } = makeStore();
+    deps.provider = null;
     const result = await sendBaa(deps, { targetUserId: "user-1", callerId: "user-1" });
     expect(result.outcome).toBe("not_configured");
-    expect(calls.created).toEqual([]);
-    expect(calls.marked).toEqual([]);
+    expect(store.rows).toEqual([]);
+    expect(store.profileMarked).toEqual([]);
   });
 
-  it("never mutates anything when the provider call fails", async () => {
-    const failing: SigningProvider = {
-      name: "boldsign",
-      sendFromTemplate: async () => {
-        throw new Error("BoldSign is down");
-      },
-      getDocumentStatus: async () => { throw new Error("x"); },
-      remind: async () => {},
-      revoke: async () => {},
-      downloadExecuted: async () => new ArrayBuffer(0),
-      downloadAuditLog: async () => new ArrayBuffer(0),
-    };
-    const { deps, calls } = makeDeps({ provider: failing });
+  it("releases the claim and mutates nothing durable when the provider fails", async () => {
+    const { store, deps } = makeStore();
+    store.providerFails = true;
     const result = await sendBaa(deps, { targetUserId: "user-1", callerId: "user-1" });
     expect(result).toEqual({ outcome: "provider_failed", detail: "BoldSign is down" });
-    expect(calls.created).toEqual([]);
-    expect(calls.marked).toEqual([]);
+    expect(store.rows).toEqual([]);
+    expect(store.profileMarked).toEqual([]);
   });
 
-  it("on success creates the request record, then marks the profile sent via the new columns", async () => {
-    const { deps, calls } = makeDeps();
+  it("on success: one claim, one send, one atomic completion", async () => {
+    const { store, deps } = makeStore();
     const result = await sendBaa(deps, { targetUserId: "user-1", callerId: "admin-1" });
     expect(result).toEqual({ outcome: "sent", requestId: "req-1", providerDocumentId: "doc-42" });
-    expect(calls.created).toHaveLength(1);
-    expect(calls.marked).toEqual([
-      expect.objectContaining({ profileId: "user-1", provider: "boldsign", signingRequestId: "req-1" }),
+    expect(store.rows).toHaveLength(1);
+    expect(store.rows[0]).toMatchObject({ status: "sent", provider_document_id: "doc-42", signers: 1 });
+    expect(store.profileMarked).toEqual([{ provider: "boldsign", signingRequestId: "req-1" }]);
+  });
+});
+
+describe("gate P1 attack shapes", () => {
+  it("concurrent double-send: exactly one provider send, one request row", async () => {
+    const { store, deps } = makeStore();
+    const [a, b] = await Promise.all([
+      sendBaa(deps, { targetUserId: "user-1", callerId: "user-1" }),
+      sendBaa(deps, { targetUserId: "user-1", callerId: "user-1" }),
     ]);
+    expect(store.sends).toBe(1);
+    expect(store.rows).toHaveLength(1);
+    expect(store.rows[0].status).toBe("sent");
+    expect(store.rows[0].signers).toBe(1);
+    expect(store.profileMarked).toHaveLength(1);
+    expect([a.outcome, b.outcome].sort()).toEqual(["already_sent", "sent"]);
+  });
+
+  it("forced completion failure leaves NO partial state, and a retry adopts the same provider document", async () => {
+    const { store, deps } = makeStore();
+    store.failComplete = true; // the signer insert blows up inside the txn
+    const first = await sendBaa(deps, { targetUserId: "user-1", callerId: "user-1" });
+    expect(first.outcome).toBe("record_failed");
+    // No partial state: profile unmarked, request NOT flipped to sent,
+    // zero signers — only the claim + its provider document id remain.
+    expect(store.profileMarked).toEqual([]);
+    expect(store.rows).toHaveLength(1);
+    expect(store.rows[0]).toMatchObject({ status: "prepared", provider_document_id: "doc-42", signers: 0 });
+
+    store.failComplete = false;
+    const retry = await sendBaa(deps, { targetUserId: "user-1", callerId: "user-1" });
+    expect(retry).toEqual({ outcome: "sent", requestId: "req-1", providerDocumentId: "doc-42" });
+    expect(store.sends).toBe(1); // adopted — no duplicate provider send
+    expect(store.rows[0]).toMatchObject({ status: "sent", signers: 1 });
+    expect(store.profileMarked).toHaveLength(1);
+  });
+
+  it("releases a stale prepared claim with no provider document and sends fresh", async () => {
+    const { store, deps } = makeStore();
+    store.rows.push({
+      id: "req-stale", provider: "boldsign", provider_document_id: null,
+      status: "prepared",
+      created_at: new Date(Date.now() - 11 * 60 * 1000).toISOString(), signers: 0,
+    });
+    const result = await sendBaa(deps, { targetUserId: "user-1", callerId: "user-1" });
+    expect(result.outcome).toBe("sent");
+    expect(store.sends).toBe(1);
+    expect(store.rows.map((r) => r.id)).toEqual(["req-1"]);
   });
 });
 
@@ -245,5 +333,29 @@ describe("signing migration (static checks)", () => {
     expect(sql).toContain("baa_provider");
     expect(sql).toContain("baa_signing_request_id");
     expect(sql).not.toMatch(/ALTER COLUMN baa_dotloop|DROP COLUMN baa_dotloop|UPDATE public\.profiles[^;]*baa_dotloop/);
+  });
+});
+
+describe("atomicity fix migration (static checks)", () => {
+  const fix = readFileSync(
+    path.resolve(__dirname, "../../supabase/migrations/20261104100000_0706_signing_atomicity.sql"),
+    "utf8",
+  );
+
+  it("serializes the idempotency check with a partial unique index over open states", () => {
+    expect(fix).toContain("CREATE UNIQUE INDEX IF NOT EXISTS signature_requests_one_open_per_owner_kind");
+    expect(fix).toMatch(/\(owner_id, kind\)\s+WHERE status IN \('prepared', 'sent', 'partially_signed'\)/);
+  });
+
+  it("completes a send in one function touching request, signers, and profile", () => {
+    expect(fix).toContain("CREATE OR REPLACE FUNCTION public.complete_baa_send(");
+    expect(fix).toContain("UPDATE public.signature_requests");
+    expect(fix).toContain("INSERT INTO public.signature_request_signers");
+    expect(fix).toContain("UPDATE public.profiles");
+  });
+
+  it("restricts the completion function to service_role", () => {
+    expect(fix).toMatch(/REVOKE ALL ON FUNCTION public\.complete_baa_send\([^)]*\)\s+FROM PUBLIC, anon, authenticated/);
+    expect(fix).toMatch(/GRANT EXECUTE ON FUNCTION public\.complete_baa_send\([^)]*\)\s+TO service_role/);
   });
 });
