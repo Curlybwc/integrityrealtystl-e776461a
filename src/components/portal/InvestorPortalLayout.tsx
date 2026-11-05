@@ -1,21 +1,22 @@
 import { useState } from "react";
 import { Link, useLocation, Outlet, Navigate } from "react-router-dom";
 import {
-  LayoutDashboard,
   Building2,
-  FileText,
   Calculator,
-  Users,
-  Folder,
-  User,
-  Menu,
-  LogOut,
-  LayoutGrid,
-  Wrench,
-  FileSignature,
   ClipboardCheck,
   ExternalLink,
+  FileSignature,
+  FileText,
+  Folder,
+  LayoutDashboard,
+  LayoutGrid,
+  LogOut,
+  Menu,
+  ScrollText,
   Search,
+  User,
+  Users,
+  Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/integrity-logo.png";
@@ -36,6 +37,7 @@ const navItems = [
   { title: "Resources", href: "/portal/investor/resources", icon: FileText },
   { title: "Links", href: "/portal/investor/links", icon: ExternalLink },
   { title: "Documents", href: "/portal/investor/documents", icon: Folder },
+  { title: "Forms Library", href: "/portal/investor/forms", icon: ScrollText },
   { title: "Account", href: "/portal/investor/account", icon: User },
 ];
 

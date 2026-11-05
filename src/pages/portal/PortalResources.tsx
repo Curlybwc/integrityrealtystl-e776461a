@@ -247,6 +247,26 @@ const PortalResources = () => {
         </CardContent>
       </Card>
 
+      {/* Forms Library doorway (07.06 Packet INT-07.06-3) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Forms Library
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            The brokerage's standard SLAR forms for purchases and sales — sale
+            contracts, riders, listing and buyer agency contracts, disclosures —
+            each labeled with its SLAR number.{" "}
+            <a href="/portal/investor/forms" className="text-primary underline">
+              Open the Forms Library
+            </a>
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Disclaimer */}
       <div className="bg-muted/50 border border-border rounded-lg p-4">
         <p className="text-xs text-muted-foreground">

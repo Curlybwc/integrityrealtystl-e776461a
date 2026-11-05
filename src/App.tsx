@@ -48,6 +48,7 @@ import PortalPartnerProfile from "./pages/portal/PortalPartnerProfile";
 import PortalResources from "./pages/portal/PortalResources";
 import PortalLinks from "./pages/portal/PortalLinks";
 import PortalDocuments from "./pages/portal/PortalDocuments";
+import PortalForms from "./pages/portal/PortalForms";
 import PortalAccount from "./pages/portal/PortalAccount";
 import PortalSearchAnalyzer from "./pages/portal/PortalSearchAnalyzer";
 import InvestorListingPage from "./pages/portal/InvestorListingPage";
@@ -137,6 +138,7 @@ const App = () => (
             <Route path="resources" element={<PortalResources />} />
             <Route path="links" element={<PortalLinks />} />
             <Route path="documents" element={<PortalDocuments />} />
+            <Route path="forms" element={<PortalForms />} />
             <Route path="account" element={<PortalAccount />} />
             <Route path="search-analyzer" element={<PortalSearchAnalyzer />} />
             <Route path="listing/:mlsNumber" element={<InvestorListingPage />} />

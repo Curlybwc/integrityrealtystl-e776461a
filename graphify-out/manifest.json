@@ -30,9 +30,9 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1793759444.337148,
-    "seen": 1793760250.5590587,
-    "ast_hash": "87e473bb42972c21e6e3e47eb621fe91",
+    "mtime": 1793846221.8419762,
+    "seen": 1793846281.518051,
+    "ast_hash": "573f2d61525de70dda053d3ad186e266",
     "semantic_hash": ""
   },
   "src/components/AboutSection.tsx": {
@@ -282,9 +282,9 @@
     "semantic_hash": ""
   },
   "src/components/portal/InvestorPortalLayout.tsx": {
-    "mtime": 1793759444.3518732,
-    "seen": 1793760250.559562,
-    "ast_hash": "df53abd90855409eacbcfc4a60a369fa",
+    "mtime": 1793846230.2120612,
+    "seen": 1793846281.5181344,
+    "ast_hash": "165aa9556870815c833ff296a6ad02b7",
     "semantic_hash": ""
   },
   "src/components/portal/ListingCard.tsx": {
@@ -330,8 +330,8 @@
     "semantic_hash": ""
   },
   "src/components/portal/TierGuard.tsx": {
-    "mtime": 1793759444.3548732,
-    "seen": 1793760250.559578,
+    "mtime": 1793846169.878149,
+    "seen": 1793846281.5181487,
     "ast_hash": "9f5d7f5cf6e50d4ee4e8161aa119ccf5",
     "semantic_hash": ""
   },
@@ -900,8 +900,8 @@
     "semantic_hash": ""
   },
   "src/integrations/supabase/types.ts": {
-    "mtime": 1793759799.1568704,
-    "seen": 1793760250.5597417,
+    "mtime": 1793846169.8807647,
+    "seen": 1793846281.5183408,
     "ast_hash": "5da3ac2b3c0b378dd6457b5a72000731",
     "semantic_hash": ""
   },
@@ -1140,8 +1140,8 @@
     "semantic_hash": ""
   },
   "src/pages/admin-portal/AdminUsers.tsx": {
-    "mtime": 1793759444.4398732,
-    "seen": 1793760250.5598216,
+    "mtime": 1793846169.8812456,
+    "seen": 1793846281.5184221,
     "ast_hash": "f107e4346f6c35fdb845bef222290a08",
     "semantic_hash": ""
   },
@@ -1218,8 +1218,8 @@
     "semantic_hash": ""
   },
   "src/pages/portal/PortalDocuments.tsx": {
-    "mtime": 1793759778.8648705,
-    "seen": 1793760250.5598457,
+    "mtime": 1793799496.6783726,
+    "seen": 1793846281.518446,
     "ast_hash": "ff6355c934128ef7cc86212a8b167b16",
     "semantic_hash": ""
   },
@@ -1254,8 +1254,8 @@
     "semantic_hash": ""
   },
   "src/pages/portal/PortalOnboarding.tsx": {
-    "mtime": 1793759444.444873,
-    "seen": 1793760250.5598555,
+    "mtime": 1793846169.8812563,
+    "seen": 1793846281.518493,
     "ast_hash": "f8ff776646dbba5f96ad7bcc49463157",
     "semantic_hash": ""
   },
@@ -1278,9 +1278,9 @@
     "semantic_hash": ""
   },
   "src/pages/portal/PortalResources.tsx": {
-    "mtime": 1793759790.4538705,
-    "seen": 1793760250.5598617,
-    "ast_hash": "fdf8ffc4ccc2d1d54f1affd43ce08065",
+    "mtime": 1793846230.2580595,
+    "seen": 1793846281.5185,
+    "ast_hash": "71c0217e0a7bb4e854db33a2e4e1b06c",
     "semantic_hash": ""
   },
   "src/pages/portal/PortalSavedDeals.tsx": {
@@ -1404,8 +1404,8 @@
     "semantic_hash": ""
   },
   "supabase/functions/dotloop-send-baa/index.ts": {
-    "mtime": 1793759444.457873,
-    "seen": 1793760250.5599809,
+    "mtime": 1793846169.8814769,
+    "seen": 1793846281.518575,
     "ast_hash": "620aaf00a70cd3a37d5ac2716ac611ec",
     "semantic_hash": ""
   },
@@ -1836,8 +1836,8 @@
     "semantic_hash": ""
   },
   "src/lib/documents.ts": {
-    "mtime": 1793760025.7368686,
-    "seen": 1793760250.5597496,
+    "mtime": 1793799496.6743727,
+    "seen": 1793846281.5183487,
     "ast_hash": "0d4063ab135a03b879b2ec77bd9a963c",
     "semantic_hash": ""
   },
@@ -1854,9 +1854,9 @@
     "semantic_hash": ""
   },
   "src/test/documents.test.ts": {
-    "mtime": 1793759738.3508708,
-    "seen": 1793760250.5598874,
-    "ast_hash": "f83f541b5fa0f2f412d1fc8bc6266d0d",
+    "mtime": 1793799496.6904702,
+    "seen": 1793846281.5185263,
+    "ast_hash": "a4cfa63b4867911d1134be0ae1e4b713",
     "semantic_hash": ""
   },
   "supabase/migrations/20261019110000_cron_wake_token.sql": {
@@ -1866,9 +1866,141 @@
     "semantic_hash": ""
   },
   "supabase/migrations/20261103210000_0706_document_catalog.sql": {
-    "mtime": 1793759657.9278715,
-    "seen": 1793760250.56005,
+    "mtime": 1793799496.6904702,
+    "seen": 1793846281.518632,
     "ast_hash": "26db1d40eefdbf5f6531d34b83d6e586",
+    "semantic_hash": ""
+  },
+  "src/lib/forms.ts": {
+    "mtime": 1793846208.3348033,
+    "seen": 1793846281.5183523,
+    "ast_hash": "c93bc4e2736724627b7ac222caf69356",
+    "semantic_hash": ""
+  },
+  "src/pages/portal/PortalForms.tsx": {
+    "mtime": 1793846216.6168034,
+    "seen": 1793846281.5184479,
+    "ast_hash": "cda1bc6c64f0e3346c64077d418f1d24",
+    "semantic_hash": ""
+  },
+  "src/test/forms.test.ts": {
+    "mtime": 1793846239.6408033,
+    "seen": 1793846281.518532,
+    "ast_hash": "4cb500e137036d3f56a1afe7224652a9",
+    "semantic_hash": ""
+  },
+  "public/forms/lien-waiver-nois-article.pdf": {
+    "mtime": 1793846196.4763439,
+    "seen": 1793846281.5186715,
+    "ast_hash": "377fe70bb4a0f388ef44065e371e3204",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2039-lead-paint-pamphlet.pdf": {
+    "mtime": 1793846196.4712427,
+    "seen": 1793846281.5186737,
+    "ast_hash": "c0f3bdb4a5b9436d66ad1cbca50635aa",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2046-appraisal-rider.pdf": {
+    "mtime": 1793846196.451086,
+    "seen": 1793846281.5186756,
+    "ast_hash": "da7e11e5816dfd0dd7cdbcb92965ffbb",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2047-listing-contract-exclusive-right-to-sell.pdf": {
+    "mtime": 1793846196.4603994,
+    "seen": 1793846281.5186772,
+    "ast_hash": "15c864a451f30101fe310ce8c4d63d8b",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2047-listing-contract-limited-agency.pdf": {
+    "mtime": 1793846196.4621382,
+    "seen": 1793846281.5186787,
+    "ast_hash": "6d8ad3eeed4f8b744405f7d2d150de02",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2090-residential-sale-contract.pdf": {
+    "mtime": 1793846196.443728,
+    "seen": 1793846281.51868,
+    "ast_hash": "7fb3b38fd8d2ce42c9e5121e24215c4d",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2091-sellers-disclosure-statement.pdf": {
+    "mtime": 1793846196.4675255,
+    "seen": 1793846281.5186815,
+    "ast_hash": "4b8991229b2f860ad9875092001667c5",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2096b-notice-to-tenants.pdf": {
+    "mtime": 1793846196.47303,
+    "seen": 1793846281.518683,
+    "ast_hash": "862e419e76a62327de7e13ea02fbc2dc",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2109-broker-compensation-rider.pdf": {
+    "mtime": 1793846196.4564362,
+    "seen": 1793846281.5186841,
+    "ast_hash": "97cf43f309dd8518410de65379c8ee5f",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2125-buyers-exclusive-agency-contract.pdf": {
+    "mtime": 1793846196.4637344,
+    "seen": 1793846281.5186856,
+    "ast_hash": "abe29bbe8c46baff6f4dba19deed1632",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2125a-buyers-agency-agreement-amendment.pdf": {
+    "mtime": 1793846196.4655707,
+    "seen": 1793846281.5186872,
+    "ast_hash": "f34b9220f61b839934991b671d234ccc",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2135-fha-loan-provision-rider.pdf": {
+    "mtime": 1793846196.4528413,
+    "seen": 1793846281.5186884,
+    "ast_hash": "36a632aefb51e163bf6f1cb22026a442",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2135-va-loan-provision-rider.pdf": {
+    "mtime": 1793846196.454767,
+    "seen": 1793846281.5186899,
+    "ast_hash": "4c2debad346ba02e9355817d6157f7c6",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2140-title-and-survey-work-order.pdf": {
+    "mtime": 1793846196.4582543,
+    "seen": 1793846281.5186913,
+    "ast_hash": "04cbf1b7019623ac2fa014d7a281fb91",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2158-mutual-release.pdf": {
+    "mtime": 1793846196.4746673,
+    "seen": 1793846281.5186925,
+    "ast_hash": "f0edf0cd9413fd4d229beb11febaccb7",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2164-sale-contract-counteroffer.pdf": {
+    "mtime": 1793846196.4494956,
+    "seen": 1793846281.5186942,
+    "ast_hash": "054af8c5ee05c9c7fc7c21277e7e790b",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2165-septic-well-addendum.pdf": {
+    "mtime": 1793846196.4695554,
+    "seen": 1793846281.5186954,
+    "ast_hash": "af16d3a802e14b29549727c2645eec57",
+    "semantic_hash": ""
+  },
+  "public/forms/slar-2184-special-sale-inspection-rider.pdf": {
+    "mtime": 1793846196.447738,
+    "seen": 1793846281.5186968,
+    "ast_hash": "32fc76c1be68281a1156d16425afaf81",
+    "semantic_hash": ""
+  },
+  "public/forms/special-sale-contract-blank.pdf": {
+    "mtime": 1793846196.4459596,
+    "seen": 1793846281.518698,
+    "ast_hash": "8e4907a504a0c4f58318cc35ec9418e2",
     "semantic_hash": ""
   }
 }
