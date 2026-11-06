@@ -30,9 +30,9 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1793759444.337148,
-    "seen": 1793760250.5590587,
-    "ast_hash": "87e473bb42972c21e6e3e47eb621fe91",
+    "mtime": 1793967644.0644836,
+    "seen": 1793967778.0437746,
+    "ast_hash": "13c7a961255efb91fb502bc459fd78f7",
     "semantic_hash": ""
   },
   "src/components/AboutSection.tsx": {
@@ -126,9 +126,9 @@
     "semantic_hash": ""
   },
   "src/components/buyer/BuyerIntakeForm.tsx": {
-    "mtime": 1793759444.3416944,
-    "seen": 1793760250.5595086,
-    "ast_hash": "779979da77d6b848d7120555cb3dce0a",
+    "mtime": 1793967679.6810405,
+    "seen": 1793967778.0438118,
+    "ast_hash": "6699c810e923a7ba454501e93affac11",
     "semantic_hash": ""
   },
   "src/components/buyer/BuyerProcess.tsx": {
@@ -192,9 +192,9 @@
     "semantic_hash": ""
   },
   "src/components/investor/InvestorIntakeForm.tsx": {
-    "mtime": 1793759444.345873,
-    "seen": 1793760250.5595312,
-    "ast_hash": "10fe72b36f48736ce634f860ef2ed359",
+    "mtime": 1793967679.6816337,
+    "seen": 1793967778.0438325,
+    "ast_hash": "f720f963fec24b9658b5ac03f468bbf0",
     "semantic_hash": ""
   },
   "src/components/investor/InvestorPhilosophy.tsx": {
@@ -282,8 +282,8 @@
     "semantic_hash": ""
   },
   "src/components/portal/InvestorPortalLayout.tsx": {
-    "mtime": 1793759444.3518732,
-    "seen": 1793760250.559562,
+    "mtime": 1793846314.2632017,
+    "seen": 1793967778.0438573,
     "ast_hash": "df53abd90855409eacbcfc4a60a369fa",
     "semantic_hash": ""
   },
@@ -330,8 +330,8 @@
     "semantic_hash": ""
   },
   "src/components/portal/TierGuard.tsx": {
-    "mtime": 1793759444.3548732,
-    "seen": 1793760250.559578,
+    "mtime": 1793846169.878149,
+    "seen": 1793967778.0438704,
     "ast_hash": "9f5d7f5cf6e50d4ee4e8161aa119ccf5",
     "semantic_hash": ""
   },
@@ -354,9 +354,9 @@
     "semantic_hash": ""
   },
   "src/components/seller/SellerIntakeForm.tsx": {
-    "mtime": 1793759444.3560693,
-    "seen": 1793760250.5595849,
-    "ast_hash": "a65b12b4885b9f180104e5cf9486102a",
+    "mtime": 1793967679.682063,
+    "seen": 1793967778.0438776,
+    "ast_hash": "d36b695dad5cd8e2906fb3bd312a597d",
     "semantic_hash": ""
   },
   "src/components/seller/SellerPricingEducation.tsx": {
@@ -408,9 +408,9 @@
     "semantic_hash": ""
   },
   "src/components/sellfast/SellFastIntakeForm.tsx": {
-    "mtime": 1793759444.3570497,
-    "seen": 1793760250.5596025,
-    "ast_hash": "c50fd2619243c4db01c2260b720a9781",
+    "mtime": 1793967679.6824849,
+    "seen": 1793967778.0438924,
+    "ast_hash": "09a337d06a8b2c362b5f61feb54e21b5",
     "semantic_hash": ""
   },
   "src/components/sellfast/SellFastTestimonials.tsx": {
@@ -750,9 +750,9 @@
     "semantic_hash": ""
   },
   "src/components/wholesaler/WholesalerApplicationForm.tsx": {
-    "mtime": 1793759444.426966,
-    "seen": 1793760250.559701,
-    "ast_hash": "01b160cf6815cae2e311ab4426ecb459",
+    "mtime": 1793967679.683603,
+    "seen": 1793967778.044001,
+    "ast_hash": "d243e68fc470ef0f107b7bb7b53aae3d",
     "semantic_hash": ""
   },
   "src/components/wholesaler/WholesalerBenefits.tsx": {
@@ -900,8 +900,8 @@
     "semantic_hash": ""
   },
   "src/integrations/supabase/types.ts": {
-    "mtime": 1793759799.1568704,
-    "seen": 1793760250.5597417,
+    "mtime": 1793846169.8807647,
+    "seen": 1793967778.0440438,
     "ast_hash": "5da3ac2b3c0b378dd6457b5a72000731",
     "semantic_hash": ""
   },
@@ -984,9 +984,9 @@
     "semantic_hash": ""
   },
   "src/pages/Contact.tsx": {
-    "mtime": 1793759444.4338732,
-    "seen": 1793760250.5597694,
-    "ast_hash": "93df76eabbfe2f06c22be9bb0df9ade4",
+    "mtime": 1793967693.437842,
+    "seen": 1793967778.0440755,
+    "ast_hash": "291a67e4fb12ac059b6b9b0e63cc4aa9",
     "semantic_hash": ""
   },
   "src/pages/ForgotPassword.tsx": {
@@ -1020,9 +1020,9 @@
     "semantic_hash": ""
   },
   "src/pages/NetworkPartner.tsx": {
-    "mtime": 1793759444.4338732,
-    "seen": 1793760250.5597794,
-    "ast_hash": "87b9f3c7d3ea125a652649c1ed283d17",
+    "mtime": 1793967683.8607092,
+    "seen": 1793967778.0440855,
+    "ast_hash": "5a0717ba5284d4316b4b2f9f372779da",
     "semantic_hash": ""
   },
   "src/pages/NotFound.tsx": {
@@ -1140,8 +1140,8 @@
     "semantic_hash": ""
   },
   "src/pages/admin-portal/AdminUsers.tsx": {
-    "mtime": 1793759444.4398732,
-    "seen": 1793760250.5598216,
+    "mtime": 1793846169.8812456,
+    "seen": 1793967778.0441256,
     "ast_hash": "f107e4346f6c35fdb845bef222290a08",
     "semantic_hash": ""
   },
@@ -1218,8 +1218,8 @@
     "semantic_hash": ""
   },
   "src/pages/portal/PortalDocuments.tsx": {
-    "mtime": 1793759778.8648705,
-    "seen": 1793760250.5598457,
+    "mtime": 1793799496.6783726,
+    "seen": 1793967778.044149,
     "ast_hash": "ff6355c934128ef7cc86212a8b167b16",
     "semantic_hash": ""
   },
@@ -1254,8 +1254,8 @@
     "semantic_hash": ""
   },
   "src/pages/portal/PortalOnboarding.tsx": {
-    "mtime": 1793759444.444873,
-    "seen": 1793760250.5598555,
+    "mtime": 1793846169.8812563,
+    "seen": 1793967778.044159,
     "ast_hash": "f8ff776646dbba5f96ad7bcc49463157",
     "semantic_hash": ""
   },
@@ -1278,8 +1278,8 @@
     "semantic_hash": ""
   },
   "src/pages/portal/PortalResources.tsx": {
-    "mtime": 1793759790.4538705,
-    "seen": 1793760250.5598617,
+    "mtime": 1793846314.2632017,
+    "seen": 1793967778.0441656,
     "ast_hash": "fdf8ffc4ccc2d1d54f1affd43ce08065",
     "semantic_hash": ""
   },
@@ -1404,8 +1404,8 @@
     "semantic_hash": ""
   },
   "supabase/functions/dotloop-send-baa/index.ts": {
-    "mtime": 1793759444.457873,
-    "seen": 1793760250.5599809,
+    "mtime": 1793846169.8814769,
+    "seen": 1793967778.044234,
     "ast_hash": "620aaf00a70cd3a37d5ac2716ac611ec",
     "semantic_hash": ""
   },
@@ -1656,15 +1656,15 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1793759444.3278732,
-    "seen": 1793760250.5601037,
-    "ast_hash": "44655c2972b8fedc60ead3b76b0bcd54",
+    "mtime": 1793967608.0624824,
+    "seen": 1793967778.0443225,
+    "ast_hash": "4ac40975d4a8310d7277db038ce68f3e",
     "semantic_hash": ""
   },
   "public/robots.txt": {
-    "mtime": 1793759444.3358731,
-    "seen": 1793760250.5601058,
-    "ast_hash": "f9dff89adf98833e676de2205921996a",
+    "mtime": 1793967601.9241369,
+    "seen": 1793967778.0443244,
+    "ast_hash": "979e53a2f6f98f60e9e4dfcd49170a97",
     "semantic_hash": ""
   },
   "roadmap.md": {
@@ -1836,8 +1836,8 @@
     "semantic_hash": ""
   },
   "src/lib/documents.ts": {
-    "mtime": 1793760025.7368686,
-    "seen": 1793760250.5597496,
+    "mtime": 1793799496.6743727,
+    "seen": 1793967778.0440505,
     "ast_hash": "0d4063ab135a03b879b2ec77bd9a963c",
     "semantic_hash": ""
   },
@@ -1854,9 +1854,9 @@
     "semantic_hash": ""
   },
   "src/test/documents.test.ts": {
-    "mtime": 1793759738.3508708,
-    "seen": 1793760250.5598874,
-    "ast_hash": "f83f541b5fa0f2f412d1fc8bc6266d0d",
+    "mtime": 1793799496.6904702,
+    "seen": 1793967778.0441911,
+    "ast_hash": "a4cfa63b4867911d1134be0ae1e4b713",
     "semantic_hash": ""
   },
   "supabase/migrations/20261019110000_cron_wake_token.sql": {
@@ -1866,9 +1866,39 @@
     "semantic_hash": ""
   },
   "supabase/migrations/20261103210000_0706_document_catalog.sql": {
-    "mtime": 1793759657.9278715,
-    "seen": 1793760250.56005,
+    "mtime": 1793799496.6904702,
+    "seen": 1793967778.044286,
     "ast_hash": "26db1d40eefdbf5f6531d34b83d6e586",
+    "semantic_hash": ""
+  },
+  "src/components/SeoManager.tsx": {
+    "mtime": 1793967638.0994835,
+    "seen": 1793967778.0437946,
+    "ast_hash": "2a3a4d870c9d1d781430426678e3ad5a",
+    "semantic_hash": ""
+  },
+  "src/lib/leads.ts": {
+    "mtime": 1793967671.0412967,
+    "seen": 1793967778.0440528,
+    "ast_hash": "55b23b4973f9a8b5a49cfe101b2dfa0a",
+    "semantic_hash": ""
+  },
+  "src/lib/seo.ts": {
+    "mtime": 1793967630.451483,
+    "seen": 1793967778.0440645,
+    "ast_hash": "a212b3d9a29a6b4b02aae14fa9264faf",
+    "semantic_hash": ""
+  },
+  "src/test/seo.test.ts": {
+    "mtime": 1793967705.1794858,
+    "seen": 1793967778.0441997,
+    "ast_hash": "b4bd3900b4ae96224696acbf83019f72",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20261106120000_public_leads.sql": {
+    "mtime": 1793967671.0404844,
+    "seen": 1793967778.0442872,
+    "ast_hash": "0dcc98b2bee5142884a3eb0540fb4773",
     "semantic_hash": ""
   }
 }

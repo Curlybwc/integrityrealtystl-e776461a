@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Wrench, CheckCircle, Phone, Briefcase, DollarSign } from "lucide-react";
+import { submitLead } from "@/lib/leads";
 import { Checkbox } from "@/components/ui/checkbox";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -83,7 +84,7 @@ const NetworkPartner = () => {
     feeNotes: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const result = formSchema.safeParse(formData);
@@ -104,8 +105,16 @@ const NetworkPartner = () => {
     }
     
     setErrors({});
-    // Mock submission - will connect to backend later
-    console.log("Network Partner Application submitted");
+    const { error } = await submitLead("network_partner", { ...result.data });
+    if (error) {
+      toast({
+        title: "Something went wrong",
+        description:
+          "Your application didn't go through. Please try again, or email us at jen@integrityrealtystl.com.",
+        variant: "destructive",
+      });
+      return;
+    }
     setIsSubmitted(true);
     toast({
       title: "Application Submitted",
