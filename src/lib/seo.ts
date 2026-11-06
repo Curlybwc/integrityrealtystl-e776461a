@@ -1,7 +1,8 @@
 // Per-route SEO metadata for the public site.
 //
 // Drafted 2026-11-06 from each page's own headline and content (SEO fix
-// bundle). Titles/descriptions are copy — Jen flips them before publish.
+// bundle) and ADOPTED by Jen as written the same day ("I'll take your
+// recommendations"). Changes from here are new copy decisions.
 // The global fallback in index.html only ever describes the home page;
 // every public route below carries its own title, description, canonical
 // and Open Graph values, applied by SeoManager on navigation.
