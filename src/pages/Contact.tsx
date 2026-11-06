@@ -1,4 +1,7 @@
+import { useState } from "react";
 import Layout from "@/components/Layout";
+import { useToast } from "@/hooks/use-toast";
+import { submitLead } from "@/lib/leads";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,6 +9,38 @@ import { Label } from "@/components/ui/label";
 import { Mail } from "lucide-react";
 
 const Contact = () => {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const { error } = await submitLead("contact", { ...formData });
+    if (error) {
+      toast({
+        title: "Something went wrong",
+        description:
+          "Your message didn't go through. Please try again, or email us at jen@integrityrealtystl.com.",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+    toast({
+      title: "Message Sent",
+      description: "Thanks for reaching out. We'll respond as soon as possible.",
+    });
+    setFormData({ firstName: "", lastName: "", email: "", phone: "", message: "" });
+    setIsSubmitting(false);
+  };
+
   return (
     <Layout>
       <section className="pt-32 pb-20 px-6">
@@ -20,39 +55,42 @@ const Contact = () => {
           <div className="grid md:grid-cols-2 gap-12">
             {/* Contact Form */}
             <div className="bg-card border border-border rounded-lg p-8 shadow-card">
-              <form className="space-y-6">
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">First Name</Label>
-                    <Input id="firstName" placeholder="John" />
+                    <Input id="firstName" placeholder="John" required value={formData.firstName} onChange={(e) => setFormData((prev) => ({ ...prev, firstName: e.target.value }))} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Last Name</Label>
-                    <Input id="lastName" placeholder="Doe" />
+                    <Input id="lastName" placeholder="Doe" value={formData.lastName} onChange={(e) => setFormData((prev) => ({ ...prev, lastName: e.target.value }))} />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="you@example.com" />
+                  <Input id="email" type="email" placeholder="you@example.com" required value={formData.email} onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))} />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" type="tel" placeholder="(314) 555-0123" />
+                  <Input id="phone" type="tel" placeholder="(314) 555-0123" value={formData.phone} onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))} />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="message">Message</Label>
-                  <Textarea 
-                    id="message" 
-                    placeholder="Tell us how we can help..." 
+                  <Textarea
+                    id="message"
+                    placeholder="Tell us how we can help..."
                     rows={5}
+                    required
+                    value={formData.message}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, message: e.target.value }))}
                   />
                 </div>
 
-                <Button type="submit" className="w-full">
-                  Send Message
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? "Sending..." : "Send Message"}
                 </Button>
               </form>
             </div>

@@ -23,6 +23,7 @@ import NetworkPartner from "./pages/NetworkPartner";
 import PublicListingPage from "./pages/PublicListingPage";
 import NotFound from "./pages/NotFound";
 import PortalSelector from "@/pages/PortalSelector";
+import SeoManager from "@/components/SeoManager";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 
@@ -88,6 +89,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <SeoManager />
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Index />} />

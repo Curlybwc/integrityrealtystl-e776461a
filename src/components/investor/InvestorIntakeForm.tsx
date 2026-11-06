@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { submitLead } from "@/lib/leads";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,8 +44,17 @@ const InvestorIntakeForm = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission - replace with actual GoHighLevel integration
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const { error } = await submitLead("investor", { ...formData });
+    if (error) {
+      toast({
+        title: "Something went wrong",
+        description:
+          "Your submission didn't go through. Please try again, or email us at jen@integrityrealtystl.com.",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
 
     toast({
       title: "Application Received",
