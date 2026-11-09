@@ -79,7 +79,15 @@ export interface ContactEvent {
     | "dnc_set"
     | "dnc_cleared"
     | "consent_recorded"
-    | "consent_opt_out";
+    | "consent_opt_out"
+    | "lead_received"
+    | "assigned"
+    | "unassigned"
+    | "pipeline_placed"
+    | "pipeline_moved"
+    | "call_booked"
+    | "call_completed"
+    | "transcript_filed";
   detail: Record<string, unknown>;
 }
 
