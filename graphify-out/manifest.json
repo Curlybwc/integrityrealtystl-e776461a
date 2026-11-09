@@ -1872,9 +1872,9 @@
     "semantic_hash": ""
   },
   "src/lib/crmContacts.ts": {
-    "mtime": 1794242355.0579617,
-    "seen": 1794243211.6352224,
-    "ast_hash": "c2d8bf57941f6da126b20a2b165cab6b",
+    "mtime": 1794243661.799964,
+    "seen": 1794244217.9238732,
+    "ast_hash": "fea8569c82a5182335257de5260dfe72",
     "semantic_hash": ""
   },
   "src/test/crmContacts.test.ts": {
@@ -1890,39 +1890,69 @@
     "semantic_hash": ""
   },
   "src/lib/crmMessages.ts": {
-    "mtime": 1794242436.7439613,
-    "seen": 1794243211.6352272,
+    "mtime": 1794243608.8329642,
+    "seen": 1794244217.9238758,
     "ast_hash": "065dbeeeef99fb669b3856bc9855b0f1",
     "semantic_hash": ""
   },
   "src/lib/crmProviders.ts": {
-    "mtime": 1794242447.8119612,
-    "seen": 1794243211.6352303,
+    "mtime": 1794243608.8339589,
+    "seen": 1794244217.92388,
     "ast_hash": "f5321f91ce26042518ac50c336b46889",
     "semantic_hash": ""
   },
   "src/lib/simpletextingImport.ts": {
-    "mtime": 1794242457.2349613,
-    "seen": 1794243211.6352441,
+    "mtime": 1794243608.833964,
+    "seen": 1794244217.9238935,
     "ast_hash": "9a316b590185f1aeb3e2bc6a47a4a27b",
     "semantic_hash": ""
   },
   "src/test/crmMessages.test.ts": {
-    "mtime": 1794242501.107961,
-    "seen": 1794243211.6353993,
+    "mtime": 1794243608.9019642,
+    "seen": 1794244217.9240105,
     "ast_hash": "9dcd75bdcfe7d39bcb2b4c1bd945c852",
     "semantic_hash": ""
   },
   "supabase/migrations/20261109130000_0709_crm_messages.sql": {
-    "mtime": 1794242411.9259615,
-    "seen": 1794243211.6355019,
+    "mtime": 1794243608.906964,
+    "seen": 1794244217.924107,
     "ast_hash": "9af7a3ab4f8486e4233c3a66631c03d7",
     "semantic_hash": ""
   },
   "docs/crm-landing2-dns-and-info.md": {
-    "mtime": 1794242471.725276,
-    "seen": 1794243211.635531,
+    "mtime": 1794243608.5199642,
+    "seen": 1794244217.924149,
     "ast_hash": "8617c3be003d180d7d84ffc0d5b7adac",
+    "semantic_hash": ""
+  },
+  "src/components/crm/CallBookingForm.tsx": {
+    "mtime": 1794243725.9899638,
+    "seen": 1794244217.9236634,
+    "ast_hash": "1c35c10a78948ae9cff9c7ebbe77658d",
+    "semantic_hash": ""
+  },
+  "src/lib/crmCalls.ts": {
+    "mtime": 1794243717.8022943,
+    "seen": 1794244217.9238698,
+    "ast_hash": "50a53e6e6854bda7e153b21e460cda13",
+    "semantic_hash": ""
+  },
+  "src/lib/crmPipelines.ts": {
+    "mtime": 1794243699.099964,
+    "seen": 1794244217.9238777,
+    "ast_hash": "a9895376cb7d1e65a11ed10cfbd5de08",
+    "semantic_hash": ""
+  },
+  "src/test/crmPipelinesCalls.test.ts": {
+    "mtime": 1794243746.1929636,
+    "seen": 1794244217.9240122,
+    "ast_hash": "2fc693d8597cb4035952b5ea4fa76489",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20261109140000_0709_crm_pipelines_calls.sql": {
+    "mtime": 1794243679.2949638,
+    "seen": 1794244217.9241085,
+    "ast_hash": "83d9f6d984f955c41f787dbfb3708d8c",
     "semantic_hash": ""
   },
   "package-lock.json": {
