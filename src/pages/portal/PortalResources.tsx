@@ -68,7 +68,7 @@ const PortalResources = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Table className="w-5 h-5 text-primary" />
-            2025 HUD Small Area Fair Market Rents (SAFMR)
+            FY2027 HUD Small Area Fair Market Rents (SAFMR)
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             Payment standards for Section 8 vouchers by ZIP code and bedroom count.
@@ -128,7 +128,7 @@ const PortalResources = () => {
           </div>
           
           <p className="text-xs text-muted-foreground">
-            Source: HUD FY2025 Small Area Fair Market Rents. Data subject to change.
+            Source: HUD FY2027 Small Area Fair Market Rents. Data subject to change.
           </p>
         </CardContent>
       </Card>
@@ -141,7 +141,7 @@ const PortalResources = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-primary" />
-            Default Utility Allowances (HASLC Single Family 2025)
+            Default Utility Allowances (HASLC Single Family 2027)
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             Pre-calculated allowances assuming: Natural Gas Heating, Electric Cooking, Other Electric, County Water, Sewer, Trash.

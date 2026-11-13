@@ -153,7 +153,7 @@ const Section8Calculator = () => {
     }
   }, [inputs.zip, effectiveBeds, authority]);
 
-  // 2026 HASLC Single Family Detached utility allowance: include only tenant-paid items.
+  // 2027 HASLC Single Family Detached utility allowance: include only tenant-paid items.
   useEffect(() => {
     const i = Math.min(Math.max(effectiveBeds, 0), 6);
     let ua = 0;
@@ -335,7 +335,7 @@ const Section8Calculator = () => {
               {authority === "necac" && (
                 <p className="text-xs text-muted-foreground">
                   NECAC standards cover 9 St. Charles County ZIPs. The utility allowance
-                  below still uses the HASLC 2026 schedule — NECAC's utility allowance
+                  below still uses the HASLC 2027 schedule — NECAC's utility allowance
                   schedule is not loaded yet.
                 </p>
               )}
@@ -403,7 +403,7 @@ const Section8Calculator = () => {
               </div>
 
               <div className="space-y-3 rounded-lg border p-3">
-                <p className="text-sm font-medium">Tenant-Paid Utilities — HASLC Single Family 2026</p>
+                <p className="text-sm font-medium">Tenant-Paid Utilities — HASLC Single Family 2027</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label>Heating</Label><Select value={heating} onValueChange={(v) => setHeating(v as typeof heating)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="owner">Owner Pays</SelectItem><SelectItem value="naturalGas">Tenant — Natural Gas</SelectItem><SelectItem value="electric">Tenant — Electric</SelectItem></SelectContent></Select></div>
                   <div><Label>Cooking</Label><Select value={cooking} onValueChange={(v) => setCooking(v as typeof cooking)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="owner">Owner Pays</SelectItem><SelectItem value="naturalGas">Tenant — Natural Gas</SelectItem><SelectItem value="electric">Tenant — Electric</SelectItem></SelectContent></Select></div>
@@ -424,7 +424,7 @@ const Section8Calculator = () => {
                     </label>
                   ))}
                 </div>
-                <p className="text-xs text-muted-foreground">Source: County Housing / HUD Form-52667, Single Family Detached S8, effective 01/01/2026.</p>
+                <p className="text-xs text-muted-foreground">Source: County Housing / HUD Form-52667, Single Family Detached S8, effective 01/01/2027.</p>
               </div>
 
               <div className="space-y-2">
