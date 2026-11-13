@@ -20,7 +20,9 @@ const PortalSection8Calculator = () => {
         <div>
           <p className="text-sm font-medium text-foreground">Important Disclaimer</p>
           <p className="text-sm text-muted-foreground">
-            This tool uses 2026 HUD Small Area Fair Market Rents as a guide. Actual Section 8 
+            This tool uses FY2027 HUD Small Area Fair Market Rents — or, when NECAC is
+            selected, the St. Charles County PHA payment standards effective July 1, 2026 —
+            as a guide. Actual Section 8 
             approval depends on rent reasonableness determinations by your local 
             housing authority. Results are for informational purposes only.
           </p>

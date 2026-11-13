@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/tooltip";
 import {
   getFmr,
+  getNecacPaymentStandard,
+  getNecacSupportedZips,
   getSection8SupportedZips,
   UTILITY_BREAKDOWN,
 } from "@/data/stlZipData";
@@ -115,7 +117,19 @@ const ResultRow = ({
 const Section8Calculator = () => {
   const [searchParams] = useSearchParams();
   const [inputs, setInputs] = useState<Section8Inputs>(initialInputs);
-  const supportedZips = getSection8SupportedZips();
+  // Payment-standard source: FY2027 SAFMR (County Housing / HASLC default) or
+  // NECAC's adopted standards for the St. Charles County PHA.
+  const [authority, setAuthority] = useState<"safmr" | "necac">("safmr");
+  const supportedZips =
+    authority === "necac" ? getNecacSupportedZips() : getSection8SupportedZips();
+
+  const changeAuthority = (value: "safmr" | "necac") => {
+    setAuthority(value);
+    const zips = value === "necac" ? getNecacSupportedZips() : getSection8SupportedZips();
+    if (inputs.zip && !zips.includes(inputs.zip)) {
+      setInputs((prev) => ({ ...prev, zip: "", paymentStandard: 0 }));
+    }
+  };
   const [heating, setHeating] = useState<"owner" | "naturalGas" | "electric">("owner");
   const [cooking, setCooking] = useState<"owner" | "naturalGas" | "electric">("owner");
   const [waterHeating, setWaterHeating] = useState<"owner" | "naturalGas" | "electric">("owner");
@@ -127,13 +141,17 @@ const Section8Calculator = () => {
   const [tenantRefrigerator, setTenantRefrigerator] = useState(false);
   const effectiveBeds = Math.min(inputs.propertyBeds, inputs.voucherBeds);
 
-  // Auto-populate Payment Standard from ZIP/effective bedroom size.
+  // Auto-populate Payment Standard from ZIP/effective bedroom size, using the
+  // selected authority's schedule (FY2027 SAFMR, or NECAC's adopted standards).
   useEffect(() => {
     if (inputs.zip && effectiveBeds >= 0) {
-      const fmr = getFmr(inputs.zip, effectiveBeds);
-      if (fmr) setInputs(prev => ({ ...prev, paymentStandard: fmr }));
+      const ps =
+        authority === "necac"
+          ? getNecacPaymentStandard(inputs.zip, effectiveBeds)
+          : getFmr(inputs.zip, effectiveBeds);
+      if (ps) setInputs(prev => ({ ...prev, paymentStandard: ps }));
     }
-  }, [inputs.zip, effectiveBeds]);
+  }, [inputs.zip, effectiveBeds, authority]);
 
   // 2026 HASLC Single Family Detached utility allowance: include only tenant-paid items.
   useEffect(() => {
@@ -274,7 +292,7 @@ const Section8Calculator = () => {
           <p className="text-sm font-medium text-foreground mb-2">Instructions</p>
           <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
             <li>Enter rent comps, then set Requested Rent to Owner independently</li>
-            <li>Select ZIP, property bedrooms, and voucher bedrooms; the lower bedroom count drives PS and UA</li>
+            <li>Select the housing authority, ZIP, property bedrooms, and voucher bedrooms; the lower bedroom count drives PS and UA</li>
             <li>Enter the Tenant's Monthly Income - Verify that this is what is reported to Section 8 Caseworker</li>
           </ol>
         </CardContent>
@@ -300,11 +318,34 @@ const Section8Calculator = () => {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label>
+                Housing Authority
+                <InfoTooltip content="County Housing (HASLC) pays against the FY2027 SAFMR. NECAC runs the St. Charles County PHA and publishes its own adopted payment standards (effective July 1, 2026) for 9 St. Charles County ZIPs." />
+              </Label>
+              <Select value={authority} onValueChange={(value) => changeAuthority(value as "safmr" | "necac")}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="safmr">County Housing (HASLC) — FY2027 SAFMR</SelectItem>
+                  <SelectItem value="necac">NECAC — St. Charles County PHA (eff. 7/1/2026)</SelectItem>
+                </SelectContent>
+              </Select>
+              {authority === "necac" && (
+                <p className="text-xs text-muted-foreground">
+                  NECAC standards cover 9 St. Charles County ZIPs. The utility allowance
+                  below still uses the HASLC 2026 schedule — NECAC's utility allowance
+                  schedule is not loaded yet.
+                </p>
+              )}
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="zip">
                   ZIP Code
-                  <InfoTooltip content="Select ZIP to auto-populate SAFMR" />
+                  <InfoTooltip content="Select ZIP to auto-populate the payment standard" />
                 </Label>
                 <Select
                   value={inputs.zip}
@@ -345,8 +386,8 @@ const Section8Calculator = () => {
             <div className="pt-4 border-t border-border space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="paymentStandard">
-                  Payment Standard (SAFMR)
-                  <InfoTooltip content="Auto-populates from ZIP/beds, or enter manually" />
+                  {authority === "necac" ? "Payment Standard (NECAC)" : "Payment Standard (SAFMR FY2027)"}
+                  <InfoTooltip content="Auto-populates from authority/ZIP/beds, or enter manually" />
                 </Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
