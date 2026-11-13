@@ -354,35 +354,36 @@ export const RENT_COMPS_BY_ZIP: Record<string, { bed2: number; bed3: number; bed
   "63121": { bed2: 1100, bed3: 1400, bed4: 1650 },
 };
 
-// Full Utility Allowance Breakdown by bedroom count (HASLC Single Family Detached S8 2026)
-// Source: County Housing / HUD Form-52667, effective 01/01/2026
+// Full Utility Allowance Breakdown by bedroom count (HASLC Single Family Detached S8 2027)
+// Source: County Housing / HUD Form-52667, effective 01/01/2027
+// https://countyhousing.org/wp-content/uploads/2026/10/2027-Single-Family-Utility-Allowance.pdf
 // Index: 0=Studio, 1=1BR, 2=2BR, 3=3BR, 4=4BR, 5=5BR, 6=6BR
 export const UTILITY_BREAKDOWN = {
-  cookingElectric:       [8, 11, 14, 17, 21, 24, 27],
-  cookingNaturalGas:     [4, 6, 8, 10, 12, 14, 15],
-  heatingElectric:       [46, 45, 58, 71, 91, 103, 116],
-  heatingNaturalGas:     [51, 63, 75, 86, 104, 115, 127],
-  otherElectric:         [32, 41, 50, 59, 72, 81, 90],
+  cookingElectric:       [8, 11, 14, 17, 22, 25, 28],
+  cookingNaturalGas:     [5, 6, 8, 11, 13, 16, 17],
+  heatingElectric:       [48, 47, 61, 75, 95, 108, 121],
+  heatingNaturalGas:     [57, 70, 83, 95, 116, 128, 141],
+  otherElectric:         [33, 42, 51, 61, 74, 84, 93],
   range:                 [4, 4, 4, 4, 4, 4, 4],
   refrigerator:          [6, 6, 6, 6, 6, 6, 6],
-  sewer:                 [48, 55, 70, 91, 119, 133, 162],
-  trash:                 [20, 20, 20, 20, 20, 20, 20],
-  waterCity:             [17, 20, 25, 33, 44, 49, 60],
-  waterCounty:           [27, 35, 52, 77, 110, 126, 160],
-  waterHeatingElectric:  [20, 28, 36, 44, 56, 53, 59],
-  waterHeatingNaturalGas:[10, 13, 17, 21, 27, 31, 34],
+  sewer:                 [52, 59, 75, 98, 128, 143, 174],
+  trash:                 [21, 21, 21, 21, 21, 21, 21],
+  waterCity:             [21, 25, 31, 41, 54, 61, 74],
+  waterCounty:           [29, 38, 56, 83, 118, 136, 171],
+  waterHeatingElectric:  [21, 29, 37, 45, 57, 54, 61],
+  waterHeatingNaturalGas:[11, 15, 19, 24, 30, 35, 39],
 };
 
 // Default Utility Allowances (pre-calculated with common setup)
 // Assumes: Natural Gas Heating, Electric Cooking, Other Electric, Water County, Sewer, Trash
 export const UTILITY_ALLOWANCES: Record<number, number> = {
-  0: 186,
-  1: 225,
-  2: 281,
-  3: 350,
-  4: 446,
-  5: 499,
-  6: 586,
+  0: 200,
+  1: 241,
+  2: 300,
+  3: 375,
+  4: 479,
+  5: 537,
+  6: 628,
 };
 
 // Calculate custom utility allowance based on selections

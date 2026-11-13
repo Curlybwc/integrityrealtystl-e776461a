@@ -208,7 +208,7 @@ const UtilityAllowanceCalculator = () => {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Source: HASLC Single Family Section 8 Utility Allowance Schedule, effective 01/01/2025.
+          Source: HASLC Single Family Section 8 Utility Allowance Schedule, effective 01/01/2027.
         </p>
       </CardContent>
     </Card>
