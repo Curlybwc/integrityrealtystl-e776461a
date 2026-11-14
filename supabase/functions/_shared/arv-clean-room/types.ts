@@ -21,6 +21,8 @@ export interface Property {
   levels: string | null;
   /** MLS ArchitecturalStyle, comma-separated (e.g. "Bungalow,Traditional"). */
   archStyle?: string | null;
+  /** MLS SchoolDistrict (raw field). */
+  schoolDistrict?: string | null;
   garageSpaces: number | null;
   hasBasement: boolean | null;
   style: string | null;

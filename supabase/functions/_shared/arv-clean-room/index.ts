@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Repliers/MLS payloads are untyped JSON */
 // Clean-room ARV method — orchestrator: fetch nearest sold records from
 // Repliers page by page, stop as soon as the engine has enough renovated comps.
 
@@ -11,7 +12,7 @@ export * from "./types.ts";
 export { RepliersClient } from "./repliers.ts";
 export { normalizeProperty, valueFromPool } from "./engine.ts";
 export { valueByDoctrine } from "./doctrine.ts";
-export type { DoctrineComp, DoctrineOptions, DoctrineValuation, SupportedLevel } from "./doctrine.ts";
+export type { DoctrineComp, DoctrineOptions, DoctrineValuation, FinishGrade, GradeReads, SupportedLevel } from "./doctrine.ts";
 
 export interface SubjectInput {
   /** Look the subject up in Repliers (active or off-market listing). */
@@ -126,60 +127,93 @@ export interface DoctrineResult extends DoctrineValuation {
   diagnostics: { apiCalls: number; pagesFetched: number; totalMatches: number; warnings: string[] };
 }
 
+export type RetrievalBasis =
+  /** v4 (default): radius + same beds, NO server-side sqft cap; ±200 above-grade sq ft is tested client-side. */
+  | "above-grade-client"
+  /** v3 and earlier: 3.2 km radius with a ±40% server-side band on living area (which includes finished basement). Kept only so the defect fix can be ablated. */
+  | "living-area-band";
+
+export interface PoolFetch {
+  /** Raw Repliers records (trimmed field set), nearest first. */
+  listings: any[];
+  pagesFetched: number;
+  totalMatches: number;
+  warnings: string[];
+}
+
 /**
- * Identical Repliers query to v1 (`estimateArv`). The only orchestration
- * difference is when nearest-first paging stops: v1 stopped once it had enough
- * renovated comps; v2 stops once the records fetched reach past the widest
- * radius its comp ladder can use (0.5 mi, or 1 mi for split levels).
+ * Pull the sold records the comp ladder can use around a subject.
+ *
+ * Defect fixed in v4: the old query capped size server-side on Repliers'
+ * living-area figure, which counts finished basement, while the ladder tests
+ * above-grade area — so qualifying comps with finished basements never
+ * arrived. The default basis now pulls by radius (the widest the ladder can
+ * reach) and bedroom count only.
  */
-export async function estimateArvV2(
+export async function fetchDoctrinePool(
   client: RepliersClient,
-  input: SubjectInput,
-  options: DoctrineOptions = {},
-): Promise<DoctrineResult> {
-  const subject = await resolveSubject(client, input);
-  const asOf = options.asOf ?? new Date().toISOString();
+  subject: Property,
+  asOf: string,
+  basis: RetrievalBasis = "above-grade-client",
+): Promise<PoolFetch> {
   const asOfDate = new Date(asOf);
   const minSold = new Date(asOfDate);
   minSold.setUTCMonth(minSold.getUTCMonth() - DEFAULTS.lookbackMonths);
   const maxSold = new Date(asOfDate.getTime() - 86_400_000);
-  const band = DEFAULTS.sqftTolerance + 0.1;
   const needKm = doctrineRadiusKm(subject);
+  const legacy = basis === "living-area-band";
+  const band = DEFAULTS.sqftTolerance + 0.1;
+  const maxPages = legacy ? DEFAULTS.maxPages : 6;
 
-  const warnings: string[] = [];
-  const pool: SoldComp[] = [];
-  let pagesFetched = 0;
-  let totalMatches = 0;
+  const out: PoolFetch = { listings: [], pagesFetched: 0, totalMatches: 0, warnings: [] };
   let reached = false;
-
-  for (let page = 1; page <= DEFAULTS.maxPages; page++) {
+  for (let page = 1; page <= maxPages; page++) {
     const res = await client.searchSold({
-      lat: subject.lat, lng: subject.lng, radiusKm: DEFAULTS.maxRadiusKm,
+      lat: subject.lat, lng: subject.lng,
+      radiusKm: legacy ? DEFAULTS.maxRadiusKm : Math.round(needKm * 1.03 * 1000) / 1000,
       minSoldDate: isoDay(minSold), maxSoldDate: isoDay(maxSold),
-      minSqft: subject.sqft ? subject.sqft * (1 - band) : undefined,
-      maxSqft: subject.sqft ? subject.sqft / (1 - band) : undefined,
+      minSqft: legacy && subject.sqft ? subject.sqft * (1 - band) : undefined,
+      maxSqft: legacy && subject.sqft ? subject.sqft / (1 - band) : undefined,
+      minBedrooms: !legacy && subject.beds !== null ? subject.beds : undefined,
+      maxBedrooms: !legacy && subject.beds !== null ? subject.beds : undefined,
       style: subject.style, propertyType: subject.propertyType,
       pageNum: page,
     });
-    pagesFetched++;
-    totalMatches = res.count;
-    if (res.unrecognizedParams.length) warnings.push(`Repliers ignored params: ${res.unrecognizedParams.join(", ")}`);
-    for (const l of res.listings) {
-      const c = normalizeSold(l);
-      if (c) pool.push(c);
-    }
-    const last = pool[pool.length - 1];
-    if (page >= res.numPages || (last && haversineKm(subject.lat, subject.lng, last.lat, last.lng) > needKm)) {
+    out.pagesFetched++;
+    out.totalMatches = res.count;
+    if (res.unrecognizedParams.length) out.warnings.push(`Repliers ignored params: ${res.unrecognizedParams.join(", ")}`);
+    out.listings.push(...res.listings);
+    const last = res.listings[res.listings.length - 1];
+    const lastKm = last ? haversineKm(subject.lat, subject.lng, Number(last.map?.latitude), Number(last.map?.longitude)) : Infinity;
+    if (page >= res.numPages || (legacy && lastKm > needKm)) {
       reached = true;
       break;
     }
   }
-  if (!reached) warnings.push(`Page cap hit before the search reached ${(needKm / 1.609344).toFixed(2)} mi; some comps inside the radius were not examined.`);
+  if (!reached) out.warnings.push(`Page cap hit before the search covered ${(needKm / 1.609344).toFixed(2)} mi; some comps inside the radius were not examined.`);
+  // Guard for the raw/normalized trap: every record must carry both.
+  const lacking = out.listings.filter((l) => !(l?.soldPrice && l?.raw && typeof l.raw === "object" && l?.details)).length;
+  if (lacking) out.warnings.push(`${lacking} of ${out.listings.length} records lack normalized or raw fields.`);
+  return out;
+}
 
-  const valuation = valueByDoctrine({ subject, pool, options: { ...options, asOf } });
+export async function estimateArvV2(
+  client: RepliersClient,
+  input: SubjectInput,
+  options: DoctrineOptions & { retrievalBasis?: RetrievalBasis } = {},
+): Promise<DoctrineResult> {
+  const subject = await resolveSubject(client, input);
+  const asOf = options.asOf ?? new Date().toISOString();
+  const { retrievalBasis, ...doctrineOptions } = options;
+  const fetched = await fetchDoctrinePool(client, subject, asOf, retrievalBasis);
+  const pool = fetched.listings.map(normalizeSold).filter((c): c is SoldComp => !!c);
+  const valuation = valueByDoctrine({ subject, pool, options: { ...doctrineOptions, asOf } });
   return {
     ...valuation,
-    diagnostics: { apiCalls: pagesFetched + (input.mlsNumber ? 1 : 0), pagesFetched, totalMatches, warnings },
+    diagnostics: {
+      apiCalls: fetched.pagesFetched + (input.mlsNumber ? 1 : 0), pagesFetched: fetched.pagesFetched,
+      totalMatches: fetched.totalMatches, warnings: fetched.warnings,
+    },
   };
 }
 
@@ -187,7 +221,7 @@ export async function estimateArvV2(
 export async function estimateArvV2Batch(
   client: RepliersClient,
   inputs: SubjectInput[],
-  options: DoctrineOptions = {},
+  options: DoctrineOptions & { retrievalBasis?: RetrievalBasis } = {},
   concurrency = 4,
 ): Promise<(DoctrineResult | { error: string; input: SubjectInput })[]> {
   const out: (DoctrineResult | { error: string; input: SubjectInput })[] = new Array(inputs.length);

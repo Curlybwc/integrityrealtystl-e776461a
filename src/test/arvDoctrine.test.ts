@@ -23,7 +23,7 @@ const subject = (over: any = {}) => ({
   style: "Single Family Residence", propertyType: "Residential", listPrice: null, remarks: "", ...over,
 });
 const run = (prices: any[], subj: any = {}, options: any = {}) =>
-  valueByDoctrine({ subject: subject(subj), pool: prices, options: { asOf: "2026-11-01T00:00:00Z", applyDeficits: false, ...options } });
+  valueByDoctrine({ subject: subject(subj), pool: prices, options: { asOf: "2026-11-01T00:00:00Z", applyDeficits: false, timeAdjust: false, ...options } });
 
 describe("ARV v2 market model — reading the top", () => {
   it("3+ comps clustered within $5K at the top: low end of the cluster", () => {
@@ -158,17 +158,59 @@ describe("ARV v2 market model — populations and comp selection", () => {
     expect(r.noValueReason).toMatch(/Fewer than 3/);
   });
 
-  it("prefers style-matched comps within a step, before widening or relaxing", () => {
+  it("prefers same-storeys comps within a step; the MLS style term is ignored unless switched back on", () => {
     const subj = { levels: "One", archStyle: "Ranch" };
     const ranch = () => [sold(250000, { arch: "Ranch" }), sold(249000, { arch: "Ranch,Traditional" }), sold(248000, { arch: "Ranch" })];
-    // Three style-matched comps exist: higher mismatched sales in the same step are not used.
-    const a = run([...ranch(), sold(270000, { arch: "Bungalow" }), sold(269000, { levels: "Two", arch: "Ranch" })], subj);
+    // v4 default: a one-storey "Bungalow" is style-matched; a two-storey is not.
+    const a = run([...ranch(), sold(270000, { arch: "Bungalow" }), sold(269500, { arch: "Bungalow" }), sold(300000, { levels: "Two" }), sold(299000, { levels: "Two" })], subj);
     expect(a.stepUsed).toMatchObject({ radiusMiles: 0.25, styleMatchedOnly: true });
-    expect(a.value).toBe(248000);
-    // Too few style-matched: mismatches are admitted at the same step, not skipped for a wider one.
-    const b = run([...ranch().slice(0, 2), sold(248000, { arch: "Bungalow" }), sold(300000, { arch: "Ranch", miles: 0.4 })], subj);
-    expect(b.stepUsed).toMatchObject({ radiusMiles: 0.25, styleMatchedOnly: false });
-    expect(b.comps.filter((c) => !c.styleMatch)).toHaveLength(1);
+    expect(a.value).toBe(270000); // midpoint 269,750, rounded to the nearest $500
+    // v3 behaviour behind its flag: the differing style term excludes the Bungalows.
+    const b = run([...ranch(), sold(270000, { arch: "Bungalow" }), sold(269500, { arch: "Bungalow" })], subj, { styleTermPreference: true });
+    expect(b.value).toBe(248000);
+    // Too few matched: other storeys are admitted at the same step, not skipped for a wider one.
+    const c = run([...ranch().slice(0, 2), sold(248000, { levels: "Two" }), sold(300000, { miles: 0.4 })], subj);
+    expect(c.stepUsed).toMatchObject({ radiusMiles: 0.25, styleMatchedOnly: false });
+  });
+
+  it("trends comp prices by age at the named monthly rate, capped at 12 months", () => {
+    const r = run([sold(250000), sold(249000), sold(248000)], {}, { timeAdjust: true });
+    // Comps contracted 2026-08-01, valued 2026-11-01: ~3.02 months at 0.4%/month.
+    expect(r.comps[0].price).toBeGreaterThan(250000 * 1.0119);
+    expect(r.comps[0].price).toBeLessThan(250000 * 1.0123);
+    expect(r.comps[0].adjustments[0]).toMatch(/^time:/);
+    const off = run([sold(250000), sold(249000), sold(248000)]);
+    expect(off.comps[0].price).toBe(250000);
+    const old = run([sold(250000), sold(249000), sold(248000)], {}, { timeAdjust: true, asOf: "2028-11-01T00:00:00Z" });
+    expect(old.comps[0].price).toBeCloseTo(250000 * 1.048, 0);
+  });
+
+  it("prefers same-school-district comps within a step, never as a filter", () => {
+    const subj = { schoolDistrict: "Affton" };
+    const sd = (price: number, district: string, o: any = {}) => sold(price, { ...o, raw: { SchoolDistrict: district } });
+    const pool = () => [sd(250000, "Affton"), sd(249000, "Affton"), sd(248000, "Affton"), sd(280000, "Lindbergh"), sd(279000, "Lindbergh")];
+    const on = run(pool(), subj, { districtPreference: true });
+    expect(on.stepUsed).toMatchObject({ radiusMiles: 0.25, sameDistrictOnly: true });
+    expect(on.value).toBe(248000);
+    expect(run(pool(), subj).value).toBe(279500); // preference off: all qualifying comps
+    // Too few same-district comps: others are admitted at the SAME step; the ladder does not widen or relax for district.
+    const thin = run([sd(250000, "Affton"), sd(249000, "Lindbergh"), sd(248000, "Lindbergh"), sd(400000, "Affton", { miles: 0.4 }), sd(399000, "Affton", { miles: 0.4 })], subj, { districtPreference: true });
+    expect(thin.stepUsed).toMatchObject({ radiusMiles: 0.25, sameDistrictOnly: false });
+    expect(thin.value).toBe(248000);
+  });
+
+  it("reads the value at each finish grade and warns on over-improvement", () => {
+    const reno = { raw: { PropertyCondition: "Updated/Remodeled" } };
+    const pool = () => [sold(250000, reno), sold(249000, reno), sold(248000, reno), sold(200000), sold(199000), sold(198000)];
+    const r = run(pool(), {}, { intendedGrade: "retail" });
+    expect(r.value).toBe(248000);
+    expect(r.gradeReads?.retail.value).toBe(248000);
+    expect(r.gradeReads?.rental.value).toBe(198000);
+    expect(r.gradeReads?.atIntended).toBe(r.gradeReads?.retail);
+    expect(r.gradeReads?.overImprovementWarning).toBeNull();
+    const flat = run([sold(250000, reno), sold(249000, reno), sold(248000, reno), sold(250000), sold(249500), sold(249000)], {}, { intendedGrade: "rental" });
+    expect(flat.gradeReads?.overImprovementWarning).toMatch(/Over-improvement/);
+    expect(run(pool()).gradeReads).toBeUndefined();
   });
 
   it("applies ±200 sq ft, basement and split-level as hard filters", () => {

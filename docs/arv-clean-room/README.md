@@ -1,201 +1,183 @@
-# ARV estimator — market model, third revision
+# ARV estimator v4 — retrieval fix plus three graded transplants
 
-Branch `fable/arv-v2-doctrine`. Not merged, not deployed, not wired into the UI.
+Branch `fable/arv-v4-transplant` (from the v3 tip, `fable/arv-v2-doctrine`).
+Not merged, not deployed, not wired into the UI.
 
-Earlier write-ups and outputs are kept for comparison:
-`README-v2.md`, `demo-output-v2.md`, `backtest-output-v2.md` (previous revision)
-and `README-v1.md`, `demo-output-v1.md`, `backtest-output-v1.md` (v1).
+Earlier write-ups and outputs are kept: `README-v3.md` (the market model as it
+stood — ladder, reading the top, price screen; all unchanged here),
+`README-v2.md`, `README-v1.md`, and the matching `demo-output-*` and
+`backtest-output-*` files.
 
-## What changed in this revision (owner rulings)
+Full harness output for everything below: `backtest-output.md`.
+Five demo listings re-valued: `demo-output.md`.
 
-1. **Ladder.** Bedroom count never relaxes. Order: same beds + similar baths +
-   ±200 sq ft within 0.25 mile → same within 0.5 mile → baths ±1 at 0.5 mile.
-   Baths never cross the 1-bath line at any step: a 1-bath subject takes only
-   1-bath comps; a subject with more than one bath never takes a 1-bath comp.
-   Sales with a different bedroom count are listed as context only.
-2. **Relative-price screen.** After the evidence-based split, a sale priced far
-   below the supported top is treated as distressed-market and removed from
-   the comp count, the value and the step-down. The test is a percentage of
-   the top, never a dollar cutoff.
-3. **Style preference.** Each ladder step is tried first with style-matched
-   comps only, then with all styles, before the ladder widens. Split level
-   stays a hard filter.
+## How the ablation works
 
-Unchanged: reading the top (3+ within $5K → low end; two agreeing → between
-them; a lone comp more than $15K above the next does not set value), the $30K
-outlier rule, downward-only deficit adjustments, and the three required
-outputs — value, support count, step-down.
+`scripts/arv-clean-room/backtest.ts` values the same 96 subjects (read from
+`backtest-output-v2.md`), each as of its own contract date with itself
+excluded, against the actual sale net of concessions. Sold pools are fetched
+once per retrieval basis and cached, so every step runs on identical data and
+only the named switch differs. Step S0 re-runs v3 as shipped and reproduces
+its reported grade exactly.
 
-## The method as it now stands (`_shared/arv-clean-room/doctrine.ts`)
-
-1. **Retrieve** — same Repliers query as v1 (closed sales, same style/property
-   type, living area ±40%, last 12 months, nearest first, `soldDate` as the
-   contract date). Two plumbing touches this revision, both small: the field
-   list gained `raw.ArchitecturalStyle` (needed for ruling 3), and the client
-   now waits out `retry-after` on HTTP 429 (see limitations).
-2. **Split by evidence** — distressed sales (as-is / auction / probate fields,
-   cash, remarks, flip purchase legs) are removed.
-3. **Walk the ladder** — at each sub-step: build the comp set, drop a lone
-   $30K+ outlier, read the supported top, apply the relative-price screen, and
-   stop if 3 or more good comps remain.
-4. **Read the top**, adjust down for subject deficits, and report value,
-   support count, step-down and loan basis (the value with 3+ supporting
-   comps, otherwise the step-down).
-5. If no step yields 3 good comps, or no two comps agree, the answer is
-   **no supported value**.
-
-### Choices the rulings did not specify (mine — please confirm or correct)
-
-| Choice | What I did | Status |
+| Switch | Where | Final setting |
 |---|---|---|
-| "Similar baths" | Within a half bath, same side of the 1-bath line | My reading. Exact-match tested: 30 valued, 7.9% |
-| Where 1.5 baths sits | "More than one": 1.5-bath homes never comp with 1-bath homes | My reading of "1 and more-than-1" |
-| Bath price adjustment | 3% per full bath (1.5% per half), both directions | Uncalibrated placeholder |
-| "Far below" (price screen) | **25% or more below the lowest comp supporting the top** | Uncalibrated. 20%: 29 valued; 33%: 32 valued; error unchanged |
-| Price screen anchor | Applied only when a supported top exists; screened sales do not count toward the 3 good comps | My reading |
-| Style match | Same MLS `Levels`, and — where both list one — a shared MLS `ArchitecturalStyle` term ("Other" ignored) | My reading. The MLS style terms are noisy (see limitations) |
-| "Rank above" | Style-matched comps alone are used when 3+ exist at a step; otherwise all styles at that step, before widening | My reading |
-| Context comps | ±1 bedroom, passing every other test, within the widest radius; displayed only | As ruled |
-| Deficit sizes; distressed threshold; gross comp prices; scattered comps do not widen; loan basis rule | Unchanged from the previous revision | Uncalibrated / my reading, as before |
+| Change 1 — retrieval basis | `retrievalBasis`: `"above-grade-client"` / `"living-area-band"` | above-grade-client |
+| Change 2 — time adjustment | `timeAdjust`; rate is the constant `MONTHLY_TREND_RATE` (0.004) | ON |
+| Change 3 — school district preference | `districtPreference` | OFF |
+| Change 4 — MLS style term dropped | `styleTermPreference` | OFF (dropped) |
+| Change 5 — planned-grade read | `intendedGrade: "retail" \| "rental"` | OFF by default (optional output) |
 
-## Run it
+## Per-change results
 
-```
-export REPLIERS_API_KEY=...            # never commit it
-node scripts/arv-clean-room/demo.ts 26068309 26068087      # Node >= 22.18
-node scripts/arv-clean-room/backtest.ts                    # the same 96 subjects, read from backtest-output-v2.md
-npx vitest run src/test/arvDoctrine.test.ts src/test/arvCleanRoom.test.ts
-```
-
-## Demo: the same five listings (`demo-output.md`)
-
-| Subject | Bd/Ba | v1 | Previous revision | This revision | Support | Step-down | Ladder step used |
-|---|---|---|---|---|---|---|---|
-| 4567 Ray Ave, 63116 | 3/2 | $180,500 | $207,500 | **No supported value** | 0 | none | none — 1 good comp within 0.5 mi |
-| 25 Saint Virgil Ln, Florissant | 3/1.5 | $193,000 | $182,000 | **No supported value** | 0 | none | 0.5 mi, baths ±1 — 3 comps, no two agree |
-| 6308 Sheppard Dr, Affton | 2/1 | $249,000 | $254,000 | **$253,500** | 2 | $242,500 | 0.5 mi, similar baths, style-matched |
-| 1627 Sunset Dr, St. Charles | 3/1 | $267,000 | $264,000 | **No supported value** | 0 | none | none — 1 good comp within 0.5 mi |
-| 7358 Trenton Ave, University City | 2/1 | $182,000 | $149,500 | **$149,500** | 3 | none | 0.5 mi, similar baths, any style |
-
-Trenton: the $85,000, $75,000 and $72,500 sales are now screened out as
-distressed-market, so the $80,000 step-down is gone and there is no supported
-level below the value. Its three supporting comps are one-storey like the
-subject but carry a different MLS style term, so none is style-matched.
-
-## Backtest: the same 96 subjects (`backtest-output.md`)
-
-Target is the actual sale net of concessions, as before.
-
-| | Valued | Median abs error | Median signed | Within 10% | Within 20% |
+| Step | Valued | Median abs error | Bias | Within 10% | Within 20% |
 |---|---|---|---|---|---|
-| v1 | 96/96 | 11.6% | +3.2% | 45.8% | 67.7% |
-| Previous revision | 64/96 | 10.5% | +3.4% | 46.9% | 70.3% |
-| **This revision** | **31/96** | **8.2%** | **-4.5%** | **54.8%** | **77.4%** |
-| v1, on the 31 this revision valued | 31/31 | 8.1% | -1.5% | 71.0% | 83.9% |
-| Previous revision, on the same 31 | 30/31 | 8.6% | -0.9% | 53.3% | 76.7% |
+| S0 v3 as shipped | 31/96 | 8.2% | -4.5% | 54.8% | 77.4% |
+| S1 = S0 + change 1 (retrieval fix) | 32/96 | 8.6% | -3.5% | 53.1% | 71.9% |
+| S2 = S1 + change 4 (style term dropped) = BASE | 33/96 | 8.2% | -4.0% | 54.5% | 72.7% |
+| S3 = BASE + change 2 (time adjustment) | 32/96 | 6.9% | -1.9% | 53.1% | 78.1% |
+| S4 = BASE + change 3 (district preference) | 33/96 | 8.2% | -4.0% | 54.5% | 72.7% |
+| S5 = BASE + changes 2 and 3 | 32/96 | 6.9% | -1.9% | 53.1% | 78.1% |
+| Change 5 retail-grade read (on S3) | 15/96 | 10.7% | +6.1% | 46.7% | 66.7% |
 
-### Per ladder step
+### Change 1 — retrieval basis fix. KEPT (defect fix).
 
-"Reached" = subjects whose ladder stopped at that step with 3+ good comps;
-"valued" = those where two comps also agreed.
+- Implemented: the comp pull is now radius (the widest the ladder can reach —
+  0.5 mi, 1 mi for split levels) plus same bedroom count, with **no**
+  server-side size cap. Above-grade area comes from
+  `raw.AboveGradeFinishedAreaSrchSqFt` and the ±200 test runs client-side.
+- Verified: 2,351 of 2,351 pool records carry both normalized and raw fields;
+  above-grade area present on 2,348; no retrieval warnings.
+- Proven casualty fixed: 4567 Ray Ave now receives 4100 Rosa ($265,000, 1,088
+  above-grade sq ft, 1,958 living) and 4239 Eichelberger ($257,000, 1,080 /
+  1,866), and they set its value ($239,500 after the size deficit; v3 gave no
+  value).
+- Delta vs S0: valued +1, median error +0.3 pts, bias +1.0 pts, within-10%
+  -1.7 pts. The one newly valued subject is 49% high. On the 31 valued by
+  both, 3 values changed and the grade is unchanged except within-20%
+  (77.4% → 74.2%).
+- Coverage barely moved because the binding limit is same-bedroom sales within
+  half a mile, not the size cap: 60 subjects still never reach 3 good comps.
 
-| Step | Reached | Valued | Median abs error | Median signed |
+### Change 4 — settled readings. KEPT (ruled).
+
+- Implemented: a style match is now storeys (`Levels`) only; the MLS style
+  term is ignored (still available behind `styleTermPreference`). "Similar
+  baths" = within a half bath, never across the 1-bath line, and the 25%
+  price screen were already in place and are unchanged.
+- Delta vs S1: valued +1, median error -0.3 pts, bias -0.5 pts, within-10%
+  +1.4 pts. On the 32 valued by both: 8.6% → 7.6%.
+
+### Change 2 — time adjustment. KEPT, on a mixed grade.
+
+- Implemented: each comp's price is multiplied by `1 + MONTHLY_TREND_RATE ×
+  age in months`, age capped at 12 (maximum +4.8%).
+- The rate, 0.4%/month, was set before grading from Repliers statistics:
+  median single-family sold price within 40 km of St. Louis, each of the 12
+  months to October 2026 against the same month a year earlier, median +5.3%.
+- Delta vs BASE: **valued -1, median error -1.3 pts (8.2% → 6.9%), bias +2.1
+  pts (-4.0% → -1.9%), within-10% -1.4 pts (54.5% → 53.1%)**, within-20% +5.4
+  pts. On the 32 valued by both: error 7.6% → 6.9%, bias -3.9% → -1.9%,
+  within-10% 56.3% → 53.1% (one subject).
+- Two of the four graded numbers improved and two worsened, each of the
+  worsened ones by a single subject. I kept it because it does what it was
+  added for (halves the low bias) and lowers median error. **If any worsening
+  disqualifies a change, the final configuration is S2 instead: 33 valued,
+  8.2%, -4.0%, 54.5%.** Run with `ARV_FINAL=S2`.
+- Side effect: subjects with 3+ supporting comps rise from 2 to 7.
+- Other rates, for information only: 0.2% → 7.1% / -2.7%; 0.6% → 7.4% /
+  -1.9%; 0.8% → 29 valued, 9.5% / +0.9%.
+
+### Change 3 — school district preference. DROPPED from the final configuration.
+
+- Implemented: with `districtPreference` on, each ladder step is tried with
+  same-district comps first (then same-district any storeys, then any
+  district), before the ladder widens. Never a filter; never relaxes a rule.
+  District comes from `raw.SchoolDistrict` (present on 2,345 of 2,351 pool
+  records and all 96 subjects).
+- Delta vs BASE: valued +0, median error +0.0 pts, bias +0.0 pts, within-10%
+  +0.0 pts. One value changed; one subject lost its loan basis (12 → 11).
+- Why it does nothing here: only 20 of 96 subjects have any other-district
+  sale within half a mile, and 10 of those are valued. Inside the ladder's
+  radius, comps are almost always in the subject's district already.
+- No measured benefit and one loan basis lost, so it is off. This backtest
+  cannot show whether district matters at wider radii, because the ladder
+  never goes wider.
+
+### Change 5 — planned-grade targeting. Implemented as an optional read; NOT in the headline.
+
+- Implemented: with `intendedGrade`, the result also carries `gradeReads` —
+  the same ladder and top-reading run on renovated-evidence sales only
+  ("retail") and on saleable sales without renovation evidence only
+  ("rental") — plus an over-improvement warning when the retail read is no
+  more than $5,000 above the rental read.
+- Fit: partial. My condition grading is evidence of renovation from MLS fields
+  and remarks, not a finish-grade scale. "Rental grade" here means "saleable,
+  no renovation evidence", which also includes dated owner-occupied homes.
+- Grade: all 96 subjects were selected as renovated, so only the retail read
+  can be graded. Retail read vs headline: valued 15 vs 32; on the 15 with
+  both, median error 10.7% vs 10.7%, bias +6.1% vs -1.5%, within-20% 66.7% vs
+  73.3%. It does not predict better and covers half as many subjects.
+- The rental read existed for 17 subjects and cannot be graded on this
+  sample. Both grades were readable for 8; 3 raised the over-improvement
+  warning.
+
+## Final configuration (S3) next to v3
+
+| | Valued | Median abs error | Bias | Within 10% | Within 20% |
+|---|---|---|---|---|---|
+| v3 (reported, and re-run today) | 31/96 | 8.2% | -4.5% | 54.8% | 77.4% |
+| **v4 final** | **32/96** | **6.9%** | **-1.9%** | **53.1%** | **78.1%** |
+
+- No supported value: 64 (60 too few good comps, 4 no two comps agree).
+- Support: 7 subjects with 3+ supporting comps (5.0% median error), 25 with
+  two (10.7%).
+- Loan basis exists for 12 of 96: median error 5.3%, bias -4.8%.
+- Per ladder step: 0.25 mi — reached 11, valued 9, 6.1%; 0.5 mi similar baths
+  — reached 23, valued 21, 6.4%; 0.5 mi baths ±1 — reached 2, valued 2, 12.6%.
+- By area (v4 | v3): South City 6 valued at 9.5% | 5 at 8.9%; Tower Grove
+  South 3 at 7.3% | 2 at 7.9%; Florissant 3 at 15.9% | 4 at 16.5%;
+  Ferguson/Jennings 0 | 0; University City 5 at 5.5% | 5 at 4.9%; Affton 8 at
+  12.4% | 8 at 14.4%; St. Charles 5 at 3.5% | 5 at 6.2%; Overland 2 at 6.1% |
+  2 at 3.4%.
+
+## Demo (v4 final, `demo-output.md`)
+
+| Subject | v3 | v4 | Support | Step-down |
 |---|---|---|---|---|
-| 0.25 mi, similar baths, style-matched | 4 | 4 | 9.0% | -6.6% |
-| 0.25 mi, similar baths, any style | 5 | 5 | 8.9% | +1.2% |
-| 0.5 mi, similar baths, style-matched | 9 | 6 | 15.3% | -10.2% |
-| 0.5 mi, similar baths, any style | 16 | 14 | 5.4% | -3.3% |
-| 0.5 mi, baths ±1, style-matched | 0 | 0 | - | - |
-| 0.5 mi, baths ±1, any style | 2 | 2 | 10.5% | +10.5% |
-| No step reached 3 good comps | 60 | 0 | - | - |
+| 4567 Ray Ave | no supported value | $239,500 | 2 | none |
+| 25 Saint Virgil Ln | no supported value | no supported value | 0 | none |
+| 6308 Sheppard Dr | $253,500 | no supported value | 0 | none |
+| 1627 Sunset Dr | no supported value | no supported value | 0 | none |
+| 7358 Trenton Ave | $149,500 | $153,500 | 3 | none |
 
-Combined: 0.25 mi 9/9 at 8.9%; 0.5 mi similar baths 20/25 at 6.3%; baths ±1
-2/2 at 10.5%. Style-matched sub-steps 10 valued at 12.3%; any-style sub-steps
-21 valued at 6.4%.
+Sheppard lost its value: it now has three good comps within 0.25 mile that do
+not agree with each other, and the ladder stops at the first step with three
+good comps rather than widening (an unruled reading of mine since v2).
 
-### Coverage
+## Not implemented as specified
 
-- 65 of 96 got no supported value: 60 never reached 3 good comps, 5 reached 3
-  but no two agreed.
-- Of the 60: 25 had no good comp at all with the same bedroom count, 28 had
-  one, 7 had two.
-- Support: 30 of the 31 valued rest on two comps; one has three. A loan basis
-  therefore existed for 10 of 96 (median error 6.2%, all at or below the sale
-  price side: none over by more than 10%).
-- The relative-price screen removed at least one sale in 3 of the 31
-  valuations.
-- 13 of the 31 valued subjects sold above the highest non-outlier comp in
-  their set, 6 by more than $15K.
+- **Context comps are no longer retrieved.** To keep pulls narrow the query
+  asks for the subject's bedroom count only, so the ±1-bedroom context list
+  from v3 is now empty.
+- **v1 is not re-run in this harness** (it needs its own wider pull). Its
+  figures are in `backtest-output-v3.md`.
+- **Change 5** is graded on the retail side only; see above.
+- **The `fields=raw` warning** did not bite this code path: naming normalized
+  paths and individual `raw.*` paths together returns both, and the harness
+  now counts it on every run.
 
-### South City (Bevo/Dutchtown)
+## Limitations (new or changed in v4; the rest are in `README-v3.md`)
 
-| | Valued | Median abs error | Median signed |
-|---|---|---|---|
-| v1 | 12/12 | 11.0% | +2.3% |
-| Previous revision | 9/12 | 28.6% | +28.4% |
-| This revision | 5/12 | 8.9% | -1.7% |
-
-The previous revision's five large overshoots (+28% to +104%) all came from
-mixing bedroom counts. Under the new ladder three of them get no supported
-value, one is now +1.2% (5108 Cologne) and one is now 23% low (5000 Steffens,
-2 bd / 1.5 ba). The five valued: +8.9%, +1.2%, -1.7%, -23.3%, -29.6%. Seven
-get no value: six had fewer than 3 same-bedroom comps within half a mile, and
-one had three that did not agree. The -29.6% (4333 Delor, 1 bd / 1 ba) is
-unchanged from the previous revision.
-
-### Other areas
-
-| Area | Valued | Median abs error | Previous revision |
-|---|---|---|---|
-| Tower Grove South | 2/12 | 7.9% | 8/12 at 11.6% |
-| North County (Florissant) | 4/12 | 16.5% (all low) | 5/12 at 10.9% |
-| Ferguson/Jennings | 0/12 | - | 4/12 at 20.0% |
-| University City | 5/12 | 4.9% | 10/12 at 9.1% |
-| Affton/Lemay | 8/12 | 14.4% | 11/12 at 5.2% |
-| St. Charles | 5/12 | 6.2% | 9/12 at 9.2% |
-| Overland/St. Ann | 2/12 | 3.4% | 8/12 at 10.1% |
-
-### Sensitivity (reported, not tuned; defaults kept)
-
-| Variant | Valued | Median abs error |
-|---|---|---|
-| Default | 31 | 8.2% |
-| Style preference off | 33 | 8.2% |
-| Price screen at 20% | 29 | 8.2% |
-| Price screen at 33% | 32 | 7.9% |
-| "Similar baths" = exact match | 30 | 7.9% |
-
-## Limitations
-
-- **Two thirds of subjects get no value**, and Ferguson/Jennings gets none at
-  all. Same bedroom count within half a mile in 12 months is often 0-2 sales.
-- **On the 31 it does value, v1 was just as accurate** (8.1% vs 8.2%, and 71%
-  vs 55% within 10%). The gain over the previous revision comes from declining
-  the hard cases, not from valuing the easy ones better.
-- **Values now run low** (median -4.5%; 13 of 31 subjects sold above their
-  comp ceiling). Against sale prices, the supported top understates what
-  renovated houses in this sample sold for.
-- **The backtest still does not test the model's claim**, which is about
-  appraisals; only sale prices are available. And it is still circular:
-  the 96 subjects were picked by my own "renovated" classifier.
-- **Small numbers everywhere.** Per-step and per-area figures rest on 2-14
-  valuations each; differences between them are not reliable.
-- **Style preference did not help here.** Style-matched sub-steps scored
-  12.3% against 6.4% for any-style, on 10 and 21 valuations. The MLS
-  `ArchitecturalStyle` terms look inconsistent for the same house type
-  (one-storey 792 sq ft houses listed as "Ranch", "Traditional" or
-  "Bungalow"), so my style match may be testing agent wording.
-- **Affton got worse** (5.2% → 14.4%); I have not diagnosed why.
-- **Support of 3+ occurred once in 96.** The loan basis is almost always the
-  step-down, and usually there is none.
-- **Uncalibrated numbers** remain: the 25% price screen, 3% per bath, deficit
-  sizes, and the distressed-evidence threshold.
-- **The price screen needs a supported top to anchor on.** If two lone high
-  sales sit above a low cluster, the low cluster can still set the value.
-- **Rate limit.** Repliers refused requests (HTTP 429) during back-to-back
-  backtests even though only ~300 page requests had been made; the search
-  endpoints appear to have their own per-minute budget. The client now waits
-  for `retry-after`, which makes large batches slow rather than failing.
-- **No age filter**; condition evidence is still text and sparse MLS fields;
-  split-level and no-basement paths are unit-tested only; single-family only;
-  edge function never run or deployed; `graphify-out/` not regenerated.
+- Two thirds of subjects still get no value; Ferguson/Jennings gets none.
+- The ablation deltas are one or two subjects on a base of about 32. None of
+  them is statistically distinguishable from noise.
+- The backtest is still circular (subjects chosen by my own classifier) and
+  still tests sale prices, not appraisals.
+- The trend rate is one flat metro-wide number. It ignores seasonality and
+  neighbourhood differences, and it happens to sit near the best of the rates
+  tested, which a single sample cannot confirm.
+- Ray Ave's value rests on two comps that differ from it in storeys, one of
+  them listed as-is, with a 9.8% downward size adjustment at an uncalibrated
+  elasticity.
+- Unit tests cover each switch; the edge function has still never been run.

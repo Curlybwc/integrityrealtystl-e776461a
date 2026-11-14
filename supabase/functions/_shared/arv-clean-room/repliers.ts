@@ -13,6 +13,10 @@
 //  - `fields=` supports nested paths incl. individual `raw.*` MLS fields and
 //    cuts a 100-record page from ~640 KB to ~60 KB.
 //  - Unknown params are reported in `unrecognizedParams`, not rejected.
+//  - `fields=raw` on its own returns raw-only records; naming normalized paths
+//    and individual `raw.*` paths together (as COMP_FIELDS does) returns both.
+//  - `minSqft`/`maxSqft` filter on living area, which includes finished
+//    basement; above-grade area is only in raw. `minBedrooms`/`maxBedrooms` work.
 //  - Rate limit: `x-ratelimit-limit: 1800` per ~60 s window on the search
 //    endpoints, exhausted after roughly 300 page requests in a few minutes of
 //    back-to-back backtests; 429 responses carry `retry-after`, which the
@@ -32,6 +36,8 @@ export const COMP_FIELDS = [
   "raw.NewConstructionYN",
   // Added in the third revision, for the style preference (owner ruling 3).
   "raw.ArchitecturalStyle",
+  // Added in v4: above-grade area under the key the MLS search uses, and school district.
+  "raw.AboveGradeFinishedAreaSrchSqFt", "raw.SchoolDistrict",
 ].join(",");
 
 export interface RepliersClientOptions {
@@ -49,6 +55,8 @@ export interface SoldSearch {
   maxSoldDate?: string;
   minSqft?: number;
   maxSqft?: number;
+  minBedrooms?: number;
+  maxBedrooms?: number;
   style?: string | null;
   propertyType?: string | null;
   pageNum?: number;
@@ -162,6 +170,8 @@ export class RepliersClient {
     if (q.maxSoldDate) params.maxSoldDate = q.maxSoldDate;
     if (q.minSqft) params.minSqft = String(Math.floor(q.minSqft));
     if (q.maxSqft) params.maxSqft = String(Math.ceil(q.maxSqft));
+    if (q.minBedrooms !== undefined) params.minBedrooms = String(q.minBedrooms);
+    if (q.maxBedrooms !== undefined) params.maxBedrooms = String(q.maxBedrooms);
     if (q.style) params.style = q.style;
     if (q.propertyType) params.propertyType = q.propertyType;
     const d = await this.get("/listings", params);

@@ -85,7 +85,7 @@ export function normalizeProperty(l: any): Property | null {
   if (lat === null || lng === null || (lat === 0 && lng === 0)) return null;
   const d = l.details ?? {};
   const raw = l.raw ?? {};
-  const aboveGrade = num(raw.AboveGradeFinishedArea);
+  const aboveGrade = num(raw.AboveGradeFinishedAreaSrchSqFt) ?? num(raw.AboveGradeFinishedArea);
   const living = num(d.sqft);
   const sqft = aboveGrade && aboveGrade > 200 ? aboveGrade : living && living > 200 ? living : null;
   const full = num(raw.BathroomsFull);
@@ -108,6 +108,7 @@ export function normalizeProperty(l: any): Property | null {
     yearBuilt: num(d.yearBuilt),
     levels: raw.Levels ?? null,
     archStyle: raw.ArchitecturalStyle ?? null,
+    schoolDistrict: raw.SchoolDistrict ? String(raw.SchoolDistrict).trim() : null,
     garageSpaces: num(raw.GarageSpaces) ?? num(d.numGarageSpaces),
     hasBasement,
     style: d.style ?? null,
