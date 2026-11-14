@@ -1,13 +1,17 @@
 // Clean-room ARV method — orchestrator: fetch nearest sold records from
 // Repliers page by page, stop as soon as the engine has enough renovated comps.
 
-import { DEFAULTS, normalizeProperty, normalizeSold, valueFromPool } from "./engine.ts";
+import { doctrineRadiusKm, valueByDoctrine } from "./doctrine.ts";
+import type { DoctrineOptions, DoctrineValuation } from "./doctrine.ts";
+import { DEFAULTS, haversineKm, normalizeProperty, normalizeSold, valueFromPool } from "./engine.ts";
 import { RepliersClient } from "./repliers.ts";
 import type { ArvOptions, ArvResult, Property, SoldComp } from "./types.ts";
 
 export * from "./types.ts";
 export { RepliersClient } from "./repliers.ts";
 export { normalizeProperty, valueFromPool } from "./engine.ts";
+export { valueByDoctrine } from "./doctrine.ts";
+export type { DoctrineComp, DoctrineOptions, DoctrineValuation, SupportedLevel } from "./doctrine.ts";
 
 export interface SubjectInput {
   /** Look the subject up in Repliers (active or off-market listing). */
@@ -106,6 +110,93 @@ export async function estimateArvBatch(
       const i = next++;
       try {
         out[i] = await estimateArv(client, inputs[i], options);
+      } catch (e) {
+        out[i] = { error: e instanceof Error ? e.message : String(e), input: inputs[i] };
+      }
+    }
+  }));
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// v2: same retrieval, market-model ("doctrine") valuation layer.
+// ---------------------------------------------------------------------------
+
+export interface DoctrineResult extends DoctrineValuation {
+  diagnostics: { apiCalls: number; pagesFetched: number; totalMatches: number; warnings: string[] };
+}
+
+/**
+ * Identical Repliers query to v1 (`estimateArv`). The only orchestration
+ * difference is when nearest-first paging stops: v1 stopped once it had enough
+ * renovated comps; v2 stops once the records fetched reach past the widest
+ * radius its comp ladder can use (0.5 mi, or 1 mi for split levels).
+ */
+export async function estimateArvV2(
+  client: RepliersClient,
+  input: SubjectInput,
+  options: DoctrineOptions = {},
+): Promise<DoctrineResult> {
+  const subject = await resolveSubject(client, input);
+  const asOf = options.asOf ?? new Date().toISOString();
+  const asOfDate = new Date(asOf);
+  const minSold = new Date(asOfDate);
+  minSold.setUTCMonth(minSold.getUTCMonth() - DEFAULTS.lookbackMonths);
+  const maxSold = new Date(asOfDate.getTime() - 86_400_000);
+  const band = DEFAULTS.sqftTolerance + 0.1;
+  const needKm = doctrineRadiusKm(subject);
+
+  const warnings: string[] = [];
+  const pool: SoldComp[] = [];
+  let pagesFetched = 0;
+  let totalMatches = 0;
+  let reached = false;
+
+  for (let page = 1; page <= DEFAULTS.maxPages; page++) {
+    const res = await client.searchSold({
+      lat: subject.lat, lng: subject.lng, radiusKm: DEFAULTS.maxRadiusKm,
+      minSoldDate: isoDay(minSold), maxSoldDate: isoDay(maxSold),
+      minSqft: subject.sqft ? subject.sqft * (1 - band) : undefined,
+      maxSqft: subject.sqft ? subject.sqft / (1 - band) : undefined,
+      style: subject.style, propertyType: subject.propertyType,
+      pageNum: page,
+    });
+    pagesFetched++;
+    totalMatches = res.count;
+    if (res.unrecognizedParams.length) warnings.push(`Repliers ignored params: ${res.unrecognizedParams.join(", ")}`);
+    for (const l of res.listings) {
+      const c = normalizeSold(l);
+      if (c) pool.push(c);
+    }
+    const last = pool[pool.length - 1];
+    if (page >= res.numPages || (last && haversineKm(subject.lat, subject.lng, last.lat, last.lng) > needKm)) {
+      reached = true;
+      break;
+    }
+  }
+  if (!reached) warnings.push(`Page cap hit before the search reached ${(needKm / 1.609344).toFixed(2)} mi; some comps inside the radius were not examined.`);
+
+  const valuation = valueByDoctrine({ subject, pool, options: { ...options, asOf } });
+  return {
+    ...valuation,
+    diagnostics: { apiCalls: pagesFetched + (input.mlsNumber ? 1 : 0), pagesFetched, totalMatches, warnings },
+  };
+}
+
+/** Value many subjects with v2, bounded concurrency. */
+export async function estimateArvV2Batch(
+  client: RepliersClient,
+  inputs: SubjectInput[],
+  options: DoctrineOptions = {},
+  concurrency = 4,
+): Promise<(DoctrineResult | { error: string; input: SubjectInput })[]> {
+  const out: (DoctrineResult | { error: string; input: SubjectInput })[] = new Array(inputs.length);
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(concurrency, inputs.length) }, async () => {
+    while (next < inputs.length) {
+      const i = next++;
+      try {
+        out[i] = await estimateArvV2(client, inputs[i], options);
       } catch (e) {
         out[i] = { error: e instanceof Error ? e.message : String(e), input: inputs[i] };
       }

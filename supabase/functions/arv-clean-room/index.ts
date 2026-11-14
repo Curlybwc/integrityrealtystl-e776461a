@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- Repliers/MLS payloads are untyped JSON */
-// Edge function: clean-room ARV from Repliers sold comps.
+// Edge function: clean-room ARV from Repliers sold comps (v2 market-model estimator).
 // NOT deployed / not wired into the UI — see docs/arv-clean-room/README.md.
 //
 // POST { mlsNumber?: string, subject?: Partial<Property>, options?: ArvOptions }
@@ -7,7 +7,7 @@
 // Requires a signed-in user (Bearer JWT) to protect the Repliers quota.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { estimateArvBatch, RepliersClient } from "../_shared/arv-clean-room/index.ts";
+import { estimateArvV2Batch, RepliersClient } from "../_shared/arv-clean-room/index.ts";
 import type { SubjectInput } from "../_shared/arv-clean-room/index.ts";
 
 const corsHeaders = {
@@ -54,7 +54,7 @@ serve(async (req) => {
       return json({ error: "Each subject needs mlsNumber or subject {lat,lng,sqft,...}" }, 400);
     }
     const client = new RepliersClient({ apiKey });
-    const results = await estimateArvBatch(client, inputs, body?.options ?? {});
+    const results = await estimateArvV2Batch(client, inputs, body?.options ?? {});
     return json(Array.isArray(body?.subjects) ? { results } : results[0]);
   } catch (err) {
     console.error("arv-clean-room failed:", err);
