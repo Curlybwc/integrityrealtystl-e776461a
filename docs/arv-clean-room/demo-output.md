@@ -1,49 +1,42 @@
 ### 4567 Ray Avenue, St Louis 63116 (MLS# 26072345)
 
-Subject: 912 sq ft, 3 bd / 2 ba, basement yes, levels Two, garage spaces unknown, built 1905; list price $99,000.
+Subject: 912 sq ft, 3 bd / 2 ba, basement yes, levels Two, style Traditional, garage spaces unknown, built 1905; list price $99,000.
 
 | | |
 |---|---|
-| **Value (ARV)** | **$207,500** |
-| **Support count** | **2** |
-| **Step-down value** | **$205,500 (2 comps; two comps agree at the top -> between them; read at $207,500, then smaller than supporting comps (912 vs median 929 sq ft): -1.1%)** |
-| Loan-math basis | $205,500 - Only 2 comps support the top range; use the next supported level. |
-| How the value was read | $207,500 (2 comps; two comps agree at the top -> between them; read at $217,000, then smaller than supporting comps (912 vs median 982 sq ft): -4.3%) |
-| Highest sale in the comp set | $223,300 |
-| Comp ladder | 0.25 mi, same bed/bath: 0 good -> 0.5 mi, same bed/bath: 1 good -> 0.5 mi, ±1 bed/bath (adjusted): 21 good (+1 outlier) |
+| **Value (ARV)** | **No supported value** |
+| **Support count** | **0** |
+| **Step-down value** | **none - no supported level below** |
+| Loan-math basis | none - No supported value. |
+| Why no value | Fewer than 3 good comps even at the widest step (1 found within 0.5 mi with the same bedroom count). No supported value. |
+| Highest sale in the comp set | $149,900 |
+| Comp ladder | 0.25 mi, same beds, similar baths, style-matched: 0 good -> 0.25 mi, same beds, similar baths, any style: 1 good -> 0.5 mi, same beds, similar baths, style-matched: 0 good -> 0.5 mi, same beds, similar baths, any style: 1 good (+1 outlier) -> 0.5 mi, same beds, baths ±1, style-matched: 0 good -> 0.5 mi, same beds, baths ±1, any style: 1 good (+1 outlier) |
 | Populations | 100 sales retrieved; 29 distressed excluded, 71 saleable |
+| Previous revision (v2), from demo-output-v2.md | $207,500, support 2, step-down $205,500 |
 | v1 (similarity-weighted median) | $180,500 (range $135,500 - $233,000) |
 
-> Note: The value rests partly on ±1 bed/bath comps whose prices were adjusted with uncalibrated percentages.
+> Note: 1 lone sale(s) $30,000+ above the pack excluded as outliers ($223,300).
 
-> Note: 1 lone sale(s) $30,000+ above the pack excluded as outliers ($276,040).
+Comp set used (widest step), highest first:
 
-Comp set used (0.5 mi, ±1 bed/bath (adjusted)), highest first:
+| Role | MLS# | Address | Miles | Contract date | Sold price | Sq ft | Bd/Ba | Bsmt | Style | Built | Condition evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| outlier - excluded | 26016378 | 4533 Ray Avenue, St Louis 63116 | 0.06 | 2026-04-04 | $220,000 -> $223,300 (1.5 -> 2 baths: +1.5%) | 1000 | 3/1.5 | yes | differs (One and One Half; Bungalow) | 1909 | +3 MLS condition: Updated/Remodeled; +3 remarks: renovated/remodeled, updated, stone counters, stainless |
+| below | 26047635 | 3851 Neosho, St Louis 63116 | 0.41 | 2026-08-12 | $149,900 | 950 | 3/2 | yes | differs (One; Bungalow,Ranch,Traditional) | 1923 | +0.75 FHA financing (appraised/inspected); +3 remarks: renovated/remodeled, new systems, stainless; -1.5 remarks: investor-targeted |
 
-| Role | MLS# | Address | Miles | Contract date | Sold price | Sq ft | Bd/Ba | Bsmt | Built | Condition evidence |
-|---|---|---|---|---|---|---|---|---|---|---|
-| outlier - excluded | 26015551 | 4044 Walsh Street, St Louis 63116 | 0.40 | 2026-03-24 | $268,000 -> $276,040 (2 -> 3 beds: +3.0%) | 884 | 2/2 | yes | 1911 | +3 MLS condition: Updated/Remodeled; +0.75 remarks: new systems; -0.5 remarks: "potential" |
-| **supports value** | 26016378 | 4533 Ray Avenue, St Louis 63116 | 0.06 | 2026-04-04 | $220,000 -> $223,300 (1.5 -> 2 baths: +1.5%) | 1000 | 3/1.5 | yes | 1909 | +3 MLS condition: Updated/Remodeled; +3 remarks: renovated/remodeled, updated, stone counters, stainless |
-| **supports value** | 26050987 | 5000 Steffens Avenue, St Louis 63116 | 0.27 | 2026-08-16 | $201,500 -> $210,658 (2 -> 3 beds: +3.0%; 1.5 -> 2 baths: +1.5%) | 963 | 2/1.5 | yes | 1940 | -0.75 cash buyer; +3 remarks: updated, new systems, new finishes, stainless |
-| supports step-down | 25071677 | 4350 Ellenwood Avenue, St Louis 63116 | 0.47 | 2025-11-14 | $203,000 -> $209,090 (2 -> 3 beds: +3.0%) | 1065 | 2/2 | yes | 1910 | -1 listed as-is; +0.75 FHA financing (appraised/inspected); +2.75 remarks: renovated/remodeled, move-in ready |
-| supports step-down | 25074333 | 4000 Steffens Avenue, St Louis 63116 | 0.12 | 2025-12-12 | $200,000 -> $206,000 (2 -> 3 beds: +3.0%) | 793 | 2/2 | yes | 1965 | +3 remarks: renovated/remodeled, updated, stone counters, stainless |
-| below | 26029781 | 3952 Itaska Street, St Louis 63116 | 0.28 | 2026-05-14 | $182,000 -> $187,460 (2 -> 3 beds: +3.0%) | 829 | 2/2 | yes | 1928 | +2.25 remarks: updated, new systems, move-in ready; -0.5 remarks: "potential" |
-| below | 25071448 | 3939 Itaska Street, St Louis 63116 | 0.28 | 2026-04-21 | $165,000 -> $175,049 (2 -> 3 beds: +3.0%; 1 -> 2 baths: +3.0%) | 1020 | 2/1 | yes | 1950 | +1.5 remarks: updated, new systems |
-| below | 26037368 | 4204 Osceola Street, St Louis 63116 | 0.38 | 2026-06-15 | $167,500 -> $172,525 (1 -> 2 baths: +3.0%) | 845 | 3/1 | yes | 1908 | +0.75 FHA financing (appraised/inspected); +3 remarks: renovated/remodeled, new systems, stone counters, stainless, LVP |
-| below | 26019343 | 4718 Newport Avenue, St Louis 63116 | 0.19 | 2026-06-18 | $165,000 -> $169,950 (1 -> 2 baths: +3.0%) | 1098 | 3/1 | yes | 1923 | +3 MLS condition: Updated/Remodeled; +0.75 FHA financing (appraised/inspected); +1.5 remarks: updated, new systems |
-| below | 26024114 | 3940 Randall Street, St Louis 63116 | 0.33 | 2026-05-27 | $165,000 -> $169,950 (1 -> 2 baths: +3.0%) | 1008 | 3/1 | yes | 1925 | +0.75 FHA financing (appraised/inspected); +3 remarks: updated, new kitchen, new systems, new finishes, move-in ready; -1 remarks: sold as-is |
-| below | 26026298 | 4410 S Spring Avenue, St Louis 63116 | 0.50 | 2026-05-27 | $165,000 -> $169,950 (1 -> 2 baths: +3.0%) | 816 | 3/1 | yes | 1926 | +3 MLS condition: Updated/Remodeled; +3 remarks: renovated/remodeled, updated, new kitchen, move-in ready |
-| below | 26013253 | 4404 S 39th Street, St Louis 63116 | 0.44 | 2026-04-01 | $164,900 -> $169,847 (2 -> 3 beds: +3.0%) | 809 | 2/2 | yes | 1941 | +0.75 FHA financing (appraised/inspected); +3 remarks: renovated/remodeled, new systems, stone counters, stainless |
-| below | 25075879 | 5033 Adkins Avenue, St Louis 63116 | 0.34 | 2025-11-15 | $160,000 -> $169,744 (2 -> 3 beds: +3.0%; 1 -> 2 baths: +3.0%) | 1058 | 2/1 | yes | 1916 | +3 MLS condition: Updated/Remodeled; +2.25 remarks: updated, new systems, stainless; -0.5 remarks: "potential" |
-| below | 26028745 | 4614 S 39th Street, St Louis 63116 | 0.40 | 2026-05-11 | $157,000 -> $166,561 (2 -> 3 beds: +3.0%; 1 -> 2 baths: +3.0%) | 768 | 2/1 | yes | 1924 | +3 MLS condition: Updated/Remodeled; +0.75 FHA financing (appraised/inspected); +3 remarks: new kitchen, stone counters, move-in ready, turnkey |
-| below | 25052112 | 4334 Beethoven Avenue, St Louis 63116 | 0.49 | 2026-01-29 | $150,000 -> $159,135 (2 -> 3 beds: +3.0%; 1 -> 2 baths: +3.0%) | 984 | 2/1 | yes | 1959 | +0.75 remarks: updated |
-| below | 25077785 | 4543 Varrelmann Avenue, St Louis 63116 | 0.17 | 2025-11-23 | $154,000 -> $158,620 (2 -> 3 beds: +3.0%) | 1035 | 2/2 | yes | 1922 | +0.75 FHA financing (appraised/inspected) |
-| below | 26047635 | 3851 Neosho, St Louis 63116 | 0.41 | 2026-08-12 | $149,900 | 950 | 3/2 | yes | 1923 | +0.75 FHA financing (appraised/inspected); +3 remarks: renovated/remodeled, new systems, stainless; -1.5 remarks: investor-targeted |
-| below | 26007288 | 4711 Ray Avenue, St Louis 63116 | 0.23 | 2026-02-14 | $140,000 -> $148,526 (2 -> 3 beds: +3.0%; 1 -> 2 baths: +3.0%) | 1008 | 2/1 | yes | 1925 | -0.75 cash buyer; -0.5 remarks: "potential" |
-| below | 25068737 | 4454 S Spring Avenue, St Louis 63116 | 0.47 | 2026-01-12 | $128,000 -> $135,795 (2 -> 3 beds: +3.0%; 1 -> 2 baths: +3.0%) | 816 | 2/1 | yes | 1924 | +3 remarks: renovated/remodeled, updated, new systems, stainless, move-in ready; -0.5 remarks: "potential" |
-| below | 25080487 | 4625 Adkins Avenue, St Louis 63116 | 0.13 | 2026-03-10 | $125,000 -> $132,613 (2 -> 3 beds: +3.0%; 1 -> 2 baths: +3.0%) | 1066 | 2/1 | yes | 1908 | -0.75 cash buyer; +1.5 remarks: move-in ready, LVP; -0.5 remarks: "potential" |
-| below | 25073464 | 5231 Steffens Avenue, St Louis 63116 | 0.44 | 2025-12-29 | $125,000 -> $132,613 (2 -> 3 beds: +3.0%; 1 -> 2 baths: +3.0%) | 816 | 2/1 | yes | 1925 | +3 MLS condition: Updated/Remodeled; -0.75 cash buyer; +1.5 remarks: updated, new systems |
-| below | 26024979 | 3860 Neosho Street, St Louis 63116 | 0.39 | 2026-07-06 | $125,000 -> $128,750 (1 -> 2 baths: +3.0%) | 1016 | 3/1 | yes | 1926 | -0.75 cash buyer; +2.25 remarks: updated, new systems, stainless; -1.5 remarks: investor-targeted |
+<details><summary>Context only - different bedroom count (7); never used for the value, support count or step-down</summary>
+
+| MLS# | Address | Miles | Contract date | Sold price | Sq ft | Bd/Ba |
+|---|---|---|---|---|---|---|
+| 26015551 | 4044 Walsh Street, St Louis 63116 | 0.40 | 2026-03-24 | $268,000 | 884 | 2/2 |
+| 26050987 | 5000 Steffens Avenue, St Louis 63116 | 0.27 | 2026-08-16 | $201,500 | 963 | 2/1.5 |
+| 25071677 | 4350 Ellenwood Avenue, St Louis 63116 | 0.47 | 2025-11-14 | $203,000 | 1065 | 2/2 |
+| 25074333 | 4000 Steffens Avenue, St Louis 63116 | 0.12 | 2025-12-12 | $200,000 | 793 | 2/2 |
+| 26029781 | 3952 Itaska Street, St Louis 63116 | 0.28 | 2026-05-14 | $182,000 | 829 | 2/2 |
+| 26013253 | 4404 S 39th Street, St Louis 63116 | 0.44 | 2026-04-01 | $164,900 | 809 | 2/2 |
+| 25077785 | 4543 Varrelmann Avenue, St Louis 63116 | 0.17 | 2025-11-23 | $154,000 | 1035 | 2/2 |
+
+</details>
 
 <details><summary>Distressed sales excluded within the search radius (18)</summary>
 
@@ -64,35 +57,38 @@ Comp set used (0.5 mi, ±1 bed/bath (adjusted)), highest first:
 
 ### 25 Saint Virgil Lane, Florissant 63031 (MLS# 26068301)
 
-Subject: 1092 sq ft, 3 bd / 1.5 ba, basement yes, levels One, garage spaces unknown, built 1955; list price $115,000.
+Subject: 1092 sq ft, 3 bd / 1.5 ba, basement yes, levels One, style Ranch, garage spaces unknown, built 1955; list price $115,000.
 
 | | |
 |---|---|
-| **Value (ARV)** | **$182,000** |
-| **Support count** | **2** |
-| **Step-down value** | **$160,500 (2 comps; two comps agree at the top -> between them; read at $167,500, then smaller than supporting comps (1092 vs median 1171 sq ft): -4.1%)** |
-| Loan-math basis | $160,500 - Only 2 comps support the top range; use the next supported level. |
-| How the value was read | $182,000 (2 comps; two comps agree at the top -> between them) |
+| **Value (ARV)** | **No supported value** |
+| **Support count** | **0** |
+| **Step-down value** | **none - no supported level below** |
+| Loan-math basis | none - No supported value. |
+| Why no value | 3 good comps, but no two of them agree within $15,000 — every sale stands alone, so no level is supported. |
 | Highest sale in the comp set | $182,225 |
-| Comp ladder | 0.25 mi, same bed/bath: 0 good -> 0.5 mi, same bed/bath: 0 good -> 0.5 mi, ±1 bed/bath (adjusted): 6 good (+1 outlier) |
+| Comp ladder | 0.25 mi, same beds, similar baths, style-matched: 0 good -> 0.25 mi, same beds, similar baths, any style: 0 good -> 0.5 mi, same beds, similar baths, style-matched: 1 good (+1 outlier) -> 0.5 mi, same beds, similar baths, any style: 1 good (+2 outlier) -> 0.5 mi, same beds, baths ±1, style-matched: 2 good (+1 outlier) -> 0.5 mi, same beds, baths ±1, any style: 3 good (+1 outlier) |
 | Populations | 100 sales retrieved; 15 distressed excluded, 85 saleable |
+| Previous revision (v2), from demo-output-v2.md | $182,000, support 2, step-down $160,500 |
 | v1 (similarity-weighted median) | $193,000 (range $174,000 - $227,000) |
-
-> Note: The value rests partly on ±1 bed/bath comps whose prices were adjusted with uncalibrated percentages.
 
 > Note: 1 lone sale(s) $30,000+ above the pack excluded as outliers ($241,325).
 
-Comp set used (0.5 mi, ±1 bed/bath (adjusted)), highest first:
+Comp set used (0.5 mi, same beds, baths ±1, any style), highest first:
 
-| Role | MLS# | Address | Miles | Contract date | Sold price | Sq ft | Bd/Ba | Bsmt | Built | Condition evidence |
-|---|---|---|---|---|---|---|---|---|---|---|
-| outlier - excluded | 26049103 | 160 Saint Patrick Lane, Florissant 63031 | 0.34 | 2026-09-10 | $245,000 -> $241,325 (2 -> 1.5 baths: -1.5%) | 1025 | 3/2 | yes | 1955 | +3 remarks: renovated/remodeled, updated, new finishes, stainless, LVP |
-| **supports value** | 26016044 | 265 W Saint Anthony Lane, Florissant 63031 | 0.46 | 2026-07-18 | $185,000 -> $182,225 (2 -> 1.5 baths: -1.5%) | 1050 | 3/2 | yes | 1955 | +0.75 remarks: move-in ready |
-| **supports value** | 26003682 | 225 S Saint Charles Street, Florissant 63031 | 0.30 | 2026-04-02 | $179,000 -> $181,685 (1 -> 1.5 baths: +1.5%) | 900 | 3/1 | yes | 1958 | +3 remarks: renovated/remodeled, new kitchen, new finishes, move-in ready |
-| supports step-down | 26057314 | 164 Graham Road, Florissant 63031 | 0.30 | 2026-09-17 | $165,500 -> $167,982 (1 -> 1.5 baths: +1.5%) | 1236 | 3/1 | yes | 1953 | +0.75 FHA financing (appraised/inspected); +1.5 remarks: updated, new systems |
-| supports step-down | 26043566 | 585 S Lafayette Street, Florissant 63031 | 0.23 | 2026-07-12 | $172,000 -> $166,840 (2.5 -> 1.5 baths: -3.0%) | 1106 | 3/2.5 | yes | 1953 | -0.75 cash buyer |
-| below | 26042199 | 245 Saint Patrick Lane, Florissant 63031 | 0.40 | 2026-08-12 | $139,000 -> $141,085 (1 -> 1.5 baths: +1.5%) | 1025 | 3/1 | yes | 1955 | no condition signals |
-| below | 26015840 | 116 Graham Road, Florissant 63031 | 0.35 | 2026-03-27 | $141,000 -> $138,885 (2 -> 1.5 baths: -1.5%) | 1204 | 3/2 | yes | 1953 | -0.75 cash buyer |
+| Role | MLS# | Address | Miles | Contract date | Sold price | Sq ft | Bd/Ba | Bsmt | Style | Built | Condition evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| outlier - excluded | 26049103 | 160 Saint Patrick Lane, Florissant 63031 | 0.34 | 2026-09-10 | $245,000 -> $241,325 (2 -> 1.5 baths: -1.5%) | 1025 | 3/2 | yes | match (One; Ranch) | 1955 | +3 remarks: renovated/remodeled, updated, new finishes, stainless, LVP |
+| below | 26016044 | 265 W Saint Anthony Lane, Florissant 63031 | 0.46 | 2026-07-18 | $185,000 -> $182,225 (2 -> 1.5 baths: -1.5%) | 1050 | 3/2 | yes | match (One; Ranch,Traditional) | 1955 | +0.75 remarks: move-in ready |
+| below | 26043566 | 585 S Lafayette Street, Florissant 63031 | 0.23 | 2026-07-12 | $172,000 -> $166,840 (2.5 -> 1.5 baths: -3.0%) | 1106 | 3/2.5 | yes | match (One; Ranch) | 1953 | -0.75 cash buyer |
+| below | 26015840 | 116 Graham Road, Florissant 63031 | 0.35 | 2026-03-27 | $141,000 -> $138,885 (2 -> 1.5 baths: -1.5%) | 1204 | 3/2 | yes | differs (One; Bungalow) | 1953 | -0.75 cash buyer |
+
+<details><summary>Context only - different bedroom count (0); never used for the value, support count or step-down</summary>
+
+| MLS# | Address | Miles | Contract date | Sold price | Sq ft | Bd/Ba |
+|---|---|---|---|---|---|---|
+
+</details>
 
 <details><summary>Distressed sales excluded within the search radius (8)</summary>
 
@@ -111,34 +107,43 @@ Comp set used (0.5 mi, ±1 bed/bath (adjusted)), highest first:
 
 ### 6308 Sheppard Drive, St Louis 63123 (MLS# 26068309)
 
-Subject: 988 sq ft, 2 bd / 1 ba, basement yes, levels One, garage spaces 1, built 1953; list price $160,000.
+Subject: 988 sq ft, 2 bd / 1 ba, basement yes, levels One, style Ranch,Traditional, garage spaces 1, built 1953; list price $160,000.
 
 | | |
 |---|---|
-| **Value (ARV)** | **$254,000** |
+| **Value (ARV)** | **$253,500** |
 | **Support count** | **2** |
-| **Step-down value** | **$248,500 (2 comps; two comps agree at the top -> between them)** |
-| Loan-math basis | $248,500 - Only 2 comps support the top range; use the next supported level. |
-| How the value was read | $254,000 (2 comps; two comps agree at the top -> between them; read at $260,000, then smaller than supporting comps (988 vs median 1026 sq ft): -2.2%) |
-| Highest sale in the comp set | $265,000 |
-| Comp ladder | 0.25 mi, same bed/bath: 2 good (+1 outlier) -> 0.5 mi, same bed/bath: 10 good |
+| **Step-down value** | **$242,500 (2 comps; two comps agree at the top -> between them)** |
+| Loan-math basis | $242,500 - Only 2 comps support the top range; use the next supported level. |
+| How the value was read | $253,500 (2 comps; two comps agree at the top -> between them) |
+| Highest sale in the comp set | $255,000 |
+| Comp ladder | 0.25 mi, same beds, similar baths, style-matched: 1 good (+1 outlier) -> 0.25 mi, same beds, similar baths, any style: 2 good (+1 outlier) -> 0.5 mi, same beds, similar baths, style-matched: 5 good (+1 price-screened) |
 | Populations | 100 sales retrieved; 10 distressed excluded, 90 saleable |
+| Previous revision (v2), from demo-output-v2.md | $254,000, support 2, step-down $248,500 |
 | v1 (similarity-weighted median) | $249,000 (range $227,000 - $270,500) |
 
-Comp set used (0.5 mi, same bed/bath), highest first:
+> Note: 1 sale(s) 25%+ below the supported top treated as distressed-market by relative price and excluded ($185,000).
 
-| Role | MLS# | Address | Miles | Contract date | Sold price | Sq ft | Bd/Ba | Bsmt | Built | Condition evidence |
-|---|---|---|---|---|---|---|---|---|---|---|
-| **supports value** | 26050701 | 8735 Brenda Avenue, Affton 63123 | 0.31 | 2026-09-03 | $265,000 | 1112 | 2/1 | yes | 1967 | +3 remarks: renovated/remodeled, updated, stone counters, stainless, move-in ready, turnkey |
-| **supports value** | 26010399 | 8200 New Hampshire Avenue, Unincorporated 63123 | 0.41 | 2026-03-09 | $255,000 | 940 | 2/1 | yes | 1954 | +3 remarks: renovated/remodeled, updated, stone counters, stainless, turnkey |
-| supports step-down | 26029292 | 6009 Staely Avenue, St Louis 63123 | 0.45 | 2026-05-30 | $252,000 | 1020 | 2/1 | yes | 1940 | +0.75 VA financing (appraised/inspected) |
-| supports step-down | 26028719 | 8636 Charlton Lane, Affton 63123 | 0.29 | 2026-05-18 | $245,000 | 864 | 2/1 | yes | 1941 | +3 remarks: renovated/remodeled, updated, new kitchen, new systems, new finishes, stone counters, stainless, LVP |
-| below | 26053012 | 6720 Bonnie Avenue, St Louis 63123 | 0.50 | 2026-08-22 | $240,000 | 1089 | 2/1 | yes | 1938 | -0.75 cash buyer; +0.75 remarks: new systems |
-| below | 26040751 | 6235 Dexter Drive, St Louis 63123 | 0.18 | 2026-07-06 | $235,000 | 865 | 2/1 | yes | 1939 | +2.25 remarks: updated, stone counters, stainless |
-| below | 26000124 | 6017 Maxwell Avenue, St Louis 63123 | 0.29 | 2026-01-11 | $226,000 | 864 | 2/1 | yes | 1940 | +1.5 remarks: updated, move-in ready; -1 remarks: sold as-is |
-| below | 25064028 | 6236 Bixby Avenue, St Louis 63123 | 0.17 | 2025-12-15 | $201,000 | 864 | 2/1 | yes | 1939 | +3 remarks: renovated/remodeled, updated, new kitchen, new systems, stone counters, stainless, move-in ready, turnkey, LVP |
-| below | 26025570 | 8042 Mackenzie Road, Affton 63123 | 0.43 | 2026-05-02 | $192,000 | 870 | 2/1 | yes | 1946 | -1 listed as-is; +2.75 remarks: renovated/remodeled, updated; -1 remarks: sold as-is |
-| below | 26029155 | 8615 Mackenzie Road, St Louis 63123 | 0.18 | 2026-05-17 | $185,000 | 910 | 2/1 | yes | 1936 | -0.75 cash buyer |
+Comp set used (0.5 mi, same beds, similar baths, style-matched), highest first:
+
+| Role | MLS# | Address | Miles | Contract date | Sold price | Sq ft | Bd/Ba | Bsmt | Style | Built | Condition evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **supports value** | 26010399 | 8200 New Hampshire Avenue, Unincorporated 63123 | 0.41 | 2026-03-09 | $255,000 | 940 | 2/1 | yes | match (One; Ranch) | 1954 | +3 remarks: renovated/remodeled, updated, stone counters, stainless, turnkey |
+| **supports value** | 26029292 | 6009 Staely Avenue, St Louis 63123 | 0.45 | 2026-05-30 | $252,000 | 1020 | 2/1 | yes | match (One; Bungalow,Traditional) | 1940 | +0.75 VA financing (appraised/inspected) |
+| supports step-down | 26028719 | 8636 Charlton Lane, Affton 63123 | 0.29 | 2026-05-18 | $245,000 | 864 | 2/1 | yes | match (One; Bungalow,Traditional) | 1941 | +3 remarks: renovated/remodeled, updated, new kitchen, new systems, new finishes, stone counters, stainless, LVP |
+| supports step-down | 26053012 | 6720 Bonnie Avenue, St Louis 63123 | 0.50 | 2026-08-22 | $240,000 | 1089 | 2/1 | yes | match (One; Traditional) | 1938 | -0.75 cash buyer; +0.75 remarks: new systems |
+| below | 26040751 | 6235 Dexter Drive, St Louis 63123 | 0.18 | 2026-07-06 | $235,000 | 865 | 2/1 | yes | match (One; Ranch,Traditional) | 1939 | +2.25 remarks: updated, stone counters, stainless |
+| far below the top - distressed market, excluded | 26029155 | 8615 Mackenzie Road, St Louis 63123 | 0.18 | 2026-05-17 | $185,000 | 910 | 2/1 | yes | match (One; Bungalow,Traditional) | 1936 | -0.75 cash buyer |
+
+<details><summary>Context only - different bedroom count (3); never used for the value, support count or step-down</summary>
+
+| MLS# | Address | Miles | Contract date | Sold price | Sq ft | Bd/Ba |
+|---|---|---|---|---|---|---|
+| 25078361 | 8314 Horst Drive, Affton 63123 | 0.30 | 2025-12-09 | $251,000 | 940 | 3/1 |
+| 26007014 | 8628 Charlton Lane, St Louis 63123 | 0.28 | 2026-03-25 | $236,000 | 1088 | 3/1 |
+| 25077361 | 9225 Pavia Avenue, Affton 63123 | 0.39 | 2026-03-04 | $215,000 | 883 | 3/1 |
+
+</details>
 
 <details><summary>Distressed sales excluded within the search radius (4)</summary>
 
@@ -153,37 +158,37 @@ Comp set used (0.5 mi, same bed/bath), highest first:
 
 ### 1627 Sunset Drive, St Charles 63301 (MLS# 26071667)
 
-Subject: 1110 sq ft, 3 bd / 1 ba, basement yes, levels One, garage spaces 2, built 1951; list price $165,000.
+Subject: 1110 sq ft, 3 bd / 1 ba, basement yes, levels One, style Ranch, garage spaces 2, built 1951; list price $165,000.
 
 | | |
 |---|---|
-| **Value (ARV)** | **$264,000** |
-| **Support count** | **2** |
-| **Step-down value** | **$251,000 (2 comps; two comps agree at the top -> between them)** |
-| Loan-math basis | $251,000 - Only 2 comps support the top range; use the next supported level. |
-| How the value was read | $264,000 (2 comps; two comps agree at the top -> between them) |
-| Highest sale in the comp set | $266,750 |
-| Comp ladder | 0.25 mi, same bed/bath: 1 good -> 0.5 mi, same bed/bath: 1 good (+1 outlier) -> 0.5 mi, ±1 bed/bath (adjusted): 8 good (+1 outlier) |
+| **Value (ARV)** | **No supported value** |
+| **Support count** | **0** |
+| **Step-down value** | **none - no supported level below** |
+| Loan-math basis | none - No supported value. |
+| Why no value | Fewer than 3 good comps even at the widest step (1 found within 0.5 mi with the same bedroom count). No supported value. |
+| Highest sale in the comp set | $195,000 |
+| Comp ladder | 0.25 mi, same beds, similar baths, style-matched: 1 good -> 0.25 mi, same beds, similar baths, any style: 1 good -> 0.5 mi, same beds, similar baths, style-matched: 1 good (+1 outlier) -> 0.5 mi, same beds, similar baths, any style: 1 good (+1 outlier) -> 0.5 mi, same beds, baths ±1, style-matched: 1 good (+1 outlier) -> 0.5 mi, same beds, baths ±1, any style: 1 good (+1 outlier) |
 | Populations | 100 sales retrieved; 12 distressed excluded, 88 saleable |
+| Previous revision (v2), from demo-output-v2.md | $264,000, support 2, step-down $251,000 |
 | v1 (similarity-weighted median) | $267,000 (range $251,500 - $291,500) |
 
-> Note: The value rests partly on ±1 bed/bath comps whose prices were adjusted with uncalibrated percentages.
+> Note: 1 lone sale(s) $30,000+ above the pack excluded as outliers ($245,000).
 
-> Note: 1 lone sale(s) $30,000+ above the pack excluded as outliers ($304,872).
+Comp set used (widest step), highest first:
 
-Comp set used (0.5 mi, ±1 bed/bath (adjusted)), highest first:
+| Role | MLS# | Address | Miles | Contract date | Sold price | Sq ft | Bd/Ba | Bsmt | Style | Built | Condition evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| outlier - excluded | 26043690 | 1217 Clearview Drive, St Charles 63303 | 0.49 | 2026-07-16 | $245,000 | 932 | 3/1 | yes | match (One; Ranch) | 1961 | -1 listed as-is; +3 remarks: updated, new systems, move-in ready, LVP; -1 remarks: sold as-is |
+| below | 25082303 | 944 Saint Charles Avenue, St Charles 63301 | 0.22 | 2026-01-28 | $195,000 | 940 | 3/1 | yes | match (One; Ranch) | 1962 | -0.75 cash buyer; +1.5 remarks: updated, stone counters |
 
-| Role | MLS# | Address | Miles | Contract date | Sold price | Sq ft | Bd/Ba | Bsmt | Built | Condition evidence |
-|---|---|---|---|---|---|---|---|---|---|---|
-| outlier - excluded | 26048266 | 1309 Clearview Drive, St Charles 63303 | 0.44 | 2026-08-01 | $300,500 -> $304,872 (2 -> 3 beds: +3.0%; 1.5 -> 1 baths: -1.5%) | 1092 | 2/1.5 | yes | 1961 | +2.25 remarks: updated, stainless, move-in ready |
-| **supports value** | 26055890 | 1316 Clearview Drive, St Charles 63303 | 0.40 | 2026-09-20 | $275,000 -> $266,750 (2 -> 1 baths: -3.0%) | 1092 | 3/2 | yes | 1960 | +2.25 remarks: updated, move-in ready, LVP |
-| **supports value** | 26048077 | 1304 South Drive, St Charles 63303 | 0.45 | 2026-08-30 | $253,725 -> $261,337 (2 -> 3 beds: +3.0%) | 936 | 2/1 | yes | 1960 | no condition signals |
-| supports step-down | 26022495 | 1308 South Drive, St Charles 63303 | 0.45 | 2026-05-28 | $265,000 -> $257,050 (2 -> 1 baths: -3.0%) | 950 | 3/2 | yes | 1948 | no condition signals |
-| supports step-down | 26043690 | 1217 Clearview Drive, St Charles 63303 | 0.49 | 2026-07-16 | $245,000 | 932 | 3/1 | yes | 1961 | -1 listed as-is; +3 remarks: updated, new systems, move-in ready, LVP; -1 remarks: sold as-is |
-| below | 26034377 | 139 Woodlawn Drive, St Charles 63301 | 0.19 | 2026-06-21 | $240,000 -> $239,784 (2 -> 3 beds: +3.0%; 2 -> 1 baths: -3.0%) | 988 | 2/2 | yes | 1960 | +3 remarks: updated, new kitchen, new systems, new finishes; -0.5 remarks: "potential" |
-| below | 26002236 | 923 Joeard Lane, St Charles 63301 | 0.37 | 2026-01-28 | $245,000 -> $237,650 (2 -> 1 baths: -3.0%) | 960 | 3/2 | yes | 1967 | -0.75 cash buyer; +2.25 remarks: updated, new systems, move-in ready |
-| below | 26038591 | 921 Gustane Drive, St Charles 63301 | 0.30 | 2026-06-28 | $210,000 -> $206,850 (1.5 -> 1 baths: -1.5%) | 945 | 3/1.5 | yes | 1965 | +0.75 remarks: stainless |
-| below | 25082303 | 944 Saint Charles Avenue, St Charles 63301 | 0.22 | 2026-01-28 | $195,000 | 940 | 3/1 | yes | 1962 | -0.75 cash buyer; +1.5 remarks: updated, stone counters |
+<details><summary>Context only - different bedroom count (1); never used for the value, support count or step-down</summary>
+
+| MLS# | Address | Miles | Contract date | Sold price | Sq ft | Bd/Ba |
+|---|---|---|---|---|---|---|
+| 26048077 | 1304 South Drive, St Charles 63303 | 0.45 | 2026-08-30 | $253,725 | 936 | 2/1 |
+
+</details>
 
 <details><summary>Distressed sales excluded within the search radius (2)</summary>
 
@@ -196,34 +201,46 @@ Comp set used (0.5 mi, ±1 bed/bath (adjusted)), highest first:
 
 ### 7358 Trenton Avenue, University City 63130 (MLS# 26068087)
 
-Subject: 960 sq ft, 2 bd / 1 ba, basement yes, levels One, garage spaces 1, built 1946; list price $274,900.
+Subject: 960 sq ft, 2 bd / 1 ba, basement yes, levels One, style Ranch, garage spaces 1, built 1946; list price $274,900.
 
 | | |
 |---|---|
 | **Value (ARV)** | **$149,500** |
 | **Support count** | **3** |
-| **Step-down value** | **$80,000 (2 comps; two comps agree at the top -> between them)** |
+| **Step-down value** | **none - no supported level below** |
 | Loan-math basis | $149,500 - 3 comps support the top range. |
 | How the value was read | $149,500 (3 comps; 3+ comps clustered at the top -> low end of the cluster) |
 | Highest sale in the comp set | $150,000 |
-| Comp ladder | 0.25 mi, same bed/bath: 1 good -> 0.5 mi, same bed/bath: 7 good (+1 outlier) |
+| Comp ladder | 0.25 mi, same beds, similar baths, style-matched: 0 good -> 0.25 mi, same beds, similar baths, any style: 1 good -> 0.5 mi, same beds, similar baths, style-matched: 1 good (+1 outlier) -> 0.5 mi, same beds, similar baths, any style: 4 good (+1 outlier) (+3 price-screened) |
 | Populations | 100 sales retrieved; 45 distressed excluded, 55 saleable |
+| Previous revision (v2), from demo-output-v2.md | $149,500, support 3, step-down $80,000 |
 | v1 (similarity-weighted median) | $182,000 (range $128,000 - $222,500) |
+
+> Note: 3 of 3 supporting comps are not style-matched (too few style-matched comps at this step).
 
 > Note: 1 lone sale(s) $30,000+ above the pack excluded as outliers ($196,000).
 
-Comp set used (0.5 mi, same bed/bath), highest first:
+> Note: 3 sale(s) 25%+ below the supported top treated as distressed-market by relative price and excluded ($85,000, $75,000, $72,500).
 
-| Role | MLS# | Address | Miles | Contract date | Sold price | Sq ft | Bd/Ba | Bsmt | Built | Condition evidence |
-|---|---|---|---|---|---|---|---|---|---|---|
-| outlier - excluded | 26044039 | 7640 Lynn Avenue, University City 63130 | 0.49 | 2026-06-02 | $196,000 | 912 | 2/1 | yes | 1941 | +0.75 remarks: updated |
-| **supports value** | 26028386 | 7912 Monroe Drive, St Louis 63133 | 0.36 | 2026-05-13 | $150,000 | 792 | 2/1 | yes | 1949 | +3 MLS condition: Updated/Remodeled; +1.5 remarks: updated, stainless |
-| **supports value** | 25076523 | 2000 Falcon Drive, St Louis 63133 | 0.45 | 2026-01-10 | $150,000 | 792 | 2/1 | yes | 1950 | +1.5 remarks: updated, stainless |
-| **supports value** | 26000615 | 7449 Trenton Avenue, University City 63130 | 0.20 | 2026-02-03 | $149,500 | 792 | 2/1 | yes | 1949 | +3 remarks: renovated/remodeled, updated, move-in ready |
-| below | 26050633 | 8126 Madison Avenue, Vinita Park 63114 | 0.46 | 2026-09-16 | $121,000 | 1052 | 2/1 | yes | 1925 | -0.75 cash buyer; -0.5 remarks: "potential" |
-| supports step-down | 26027607 | 1506 Bradford Avenue, St Louis 63133 | 0.40 | 2026-06-06 | $85,000 | 875 | 2/1 | yes | 1950 | +2.25 remarks: stainless, move-in ready, turnkey |
-| supports step-down | 26020241 | 7805 Utica Drive, St Louis 63133 | 0.38 | 2026-06-05 | $75,000 | 792 | 2/1 | yes | 1950 | -0.75 cash buyer; +1.5 remarks: move-in ready, turnkey |
-| below | 26049210 | 7820 Alert Drive, St Louis 63133 | 0.48 | 2026-09-18 | $72,500 | 792 | 2/1 | yes | 1949 | -0.75 cash buyer; -0.5 remarks: "potential" |
+Comp set used (0.5 mi, same beds, similar baths, any style), highest first:
+
+| Role | MLS# | Address | Miles | Contract date | Sold price | Sq ft | Bd/Ba | Bsmt | Style | Built | Condition evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| outlier - excluded | 26044039 | 7640 Lynn Avenue, University City 63130 | 0.49 | 2026-06-02 | $196,000 | 912 | 2/1 | yes | match (One; Ranch) | 1941 | +0.75 remarks: updated |
+| **supports value** | 26028386 | 7912 Monroe Drive, St Louis 63133 | 0.36 | 2026-05-13 | $150,000 | 792 | 2/1 | yes | differs (One; Traditional) | 1949 | +3 MLS condition: Updated/Remodeled; +1.5 remarks: updated, stainless |
+| **supports value** | 25076523 | 2000 Falcon Drive, St Louis 63133 | 0.45 | 2026-01-10 | $150,000 | 792 | 2/1 | yes | differs (One; Bungalow) | 1950 | +1.5 remarks: updated, stainless |
+| **supports value** | 26000615 | 7449 Trenton Avenue, University City 63130 | 0.20 | 2026-02-03 | $149,500 | 792 | 2/1 | yes | differs (One; Traditional) | 1949 | +3 remarks: renovated/remodeled, updated, move-in ready |
+| below | 26050633 | 8126 Madison Avenue, Vinita Park 63114 | 0.46 | 2026-09-16 | $121,000 | 1052 | 2/1 | yes | differs (One; A-Frame,Raised Ranch) | 1925 | -0.75 cash buyer; -0.5 remarks: "potential" |
+| far below the top - distressed market, excluded | 26027607 | 1506 Bradford Avenue, St Louis 63133 | 0.40 | 2026-06-06 | $85,000 | 875 | 2/1 | yes | differs (One; Bungalow,Traditional) | 1950 | +2.25 remarks: stainless, move-in ready, turnkey |
+| far below the top - distressed market, excluded | 26020241 | 7805 Utica Drive, St Louis 63133 | 0.38 | 2026-06-05 | $75,000 | 792 | 2/1 | yes | differs (One; Bungalow) | 1950 | -0.75 cash buyer; +1.5 remarks: move-in ready, turnkey |
+| far below the top - distressed market, excluded | 26049210 | 7820 Alert Drive, St Louis 63133 | 0.48 | 2026-09-18 | $72,500 | 792 | 2/1 | yes | match (One; Ranch) | 1949 | -0.75 cash buyer; -0.5 remarks: "potential" |
+
+<details><summary>Context only - different bedroom count (0); never used for the value, support count or step-down</summary>
+
+| MLS# | Address | Miles | Contract date | Sold price | Sq ft | Bd/Ba |
+|---|---|---|---|---|---|---|
+
+</details>
 
 <details><summary>Distressed sales excluded within the search radius (22)</summary>
 

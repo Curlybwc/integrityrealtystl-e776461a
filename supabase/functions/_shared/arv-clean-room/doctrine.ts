@@ -1,16 +1,18 @@
-// ARV v2 — "market model" valuation layer (pure, no I/O).
+// ARV market-model valuation layer (pure, no I/O) — third revision.
 //
-// Replaces v1's similarity-weighted median. The owner's model:
+// The owner's model:
 //   1. Sold data mixes a saleable market and a distressed market. Separate
-//      them first; distressed sales are excluded, never averaged in.
+//      them first — by evidence, then by relative price; distressed sales are
+//      excluded, never averaged in.
 //   2. ARV is the standard renovated price, read off the SHAPE of the top of
 //      the saleable comp set — never a mean or median of the set.
-//   3. Comps come from a fixed ladder (0.25 mi -> 0.5 mi -> relax bed/bath),
-//      with basement and split-level as hard filters and lone outliers removed.
+//   3. Comps come from a fixed ladder. Bedroom count never relaxes. Baths may
+//      relax last, and never across the 1-bath line. Basement and split level
+//      are hard filters. Within a step, style-matched comps come first.
 //   4. Anchor at the supported top; adjust DOWN only, for subject deficits.
 //   5. Always report value, support count, and the next supported level down.
 //
-// v1's condition evidence (assessCondition / detectFlips) is reused only to
+// The condition evidence (assessCondition / detectFlips) is used only to
 // EXCLUDE distressed sales. It does not grade or weight anything here.
 
 import { assessCondition, detectFlips, haversineKm } from "./engine.ts";
@@ -24,16 +26,26 @@ export interface DoctrineOptions {
   excludeMls?: string[];
   /** "Clustered tightly at the top": within this many dollars. Owner's figure. */
   clusterTolerance?: number;
-  /** A comp this far above the next is "lone" and does not set value. UNCALIBRATED. */
+  /** A comp this far above the next is "lone" and does not set value. Owner-confirmed. */
   significantGap?: number;
-  /** A lone comp this far above the pack is an outlier and is excluded. Owner's figure (low end of $30-40K). */
+  /** A lone comp this far above the pack is an outlier and is excluded. Owner's figure. */
   outlierGap?: number;
   /** Good comp = within this many sq ft of the subject. Owner's figure. */
   sqftBand?: number;
   minComps?: number;
-  /** Price change per bedroom / per full bath when a relaxed (±1) comp is adjusted. UNCALIBRATED. */
-  bedAdjustPct?: number;
+  /** Bath difference allowed at the "similar baths" steps and at the relaxed step. */
+  similarBathTolerance?: number;
+  relaxedBathTolerance?: number;
+  /** Price change per full bath of difference (within the same side of the 1-bath line). UNCALIBRATED. */
   bathAdjustPct?: number;
+  /**
+   * Relative-price screen: a saleable comp priced this fraction (or more) below
+   * the low end of the supported top range belongs to the distressed market.
+   * UNCALIBRATED.
+   */
+  distressGapPct?: number;
+  /** Try each ladder step with style-matched comps only before admitting other styles. Default true. */
+  stylePreference?: boolean;
   /** Apply downward-only subject-deficit adjustments (size, garage). Default true. */
   applyDeficits?: boolean;
   /** Deficit magnitudes. UNCALIBRATED (carried over from v1's priors). */
@@ -47,8 +59,11 @@ export const DOCTRINE_DEFAULTS = {
   outlierGap: 30_000,
   sqftBand: 200,
   minComps: 3,
-  bedAdjustPct: 0.03,
+  similarBathTolerance: 0.5,
+  relaxedBathTolerance: 1,
   bathAdjustPct: 0.03,
+  distressGapPct: 0.25,
+  stylePreference: true,
   applyDeficits: true,
   sizeElasticity: 0.6,
   garageDeficitPct: 0.025,
@@ -59,15 +74,18 @@ export type CompRole =
   | "unconfirmed-high" // lone sale above the supported level; does not set value
   | "outlier-excluded" // lone sale >= outlierGap above the pack; removed from the set
   | "supports-step-down"
-  | "below"; // saleable comp below the supported levels
+  | "below" // saleable comp below the supported levels
+  | "price-screened"; // far below the supported top: distressed market by relative price
 
 export interface DoctrineComp {
   comp: SoldComp;
   distanceMiles: number;
   condition: ConditionAssessment;
-  /** Sold price, adjusted only if this is a relaxed (±1 bed/bath) comp. */
+  /** Sold price, adjusted only for a bath-count difference. */
   price: number;
   adjustments: string[];
+  /** Same Levels and (where both are known) an overlapping MLS architectural style. */
+  styleMatch: boolean;
   role: CompRole;
 }
 
@@ -90,9 +108,12 @@ export interface SupportedLevel {
 export interface LadderStep {
   label: string;
   radiusMiles: number;
-  relaxed: boolean;
+  bathTolerance: number;
+  /** True when only style-matched comps were admitted at this step. */
+  styleMatchedOnly: boolean;
   goodComps: number;
   outliersExcluded: number;
+  priceScreened: number;
 }
 
 export interface DoctrineValuation {
@@ -110,15 +131,21 @@ export interface DoctrineValuation {
   /** Highest non-outlier sale in the comp set — the market's observed ceiling. */
   observedCeiling: number | null;
   noValueReason: string | null;
-  /** Comp set of the ladder step used, highest price first (includes excluded outliers). */
+  /** Comp set of the ladder step used, highest price first (includes excluded outliers and price-screened sales). */
   comps: DoctrineComp[];
+  /**
+   * CONTEXT ONLY: saleable sales within the widest radius that pass every test
+   * except bedroom count (±1 bedroom). Never used for the value, the support
+   * count or the step-down.
+   */
+  contextComps: DoctrineComp[];
   ladder: LadderStep[];
   stepUsed: LadderStep | null;
   populations: {
     poolSize: number;
     saleable: number;
     distressedExcluded: number;
-    /** Distressed sales inside the search radius, for review. */
+    /** Distressed-by-evidence sales inside the search radius, for review. */
     distressedNearby: { comp: SoldComp; distanceMiles: number; signals: string[] }[];
   };
   notes: string[];
@@ -131,6 +158,20 @@ const medianOf = (xs: number[]) => {
   const s = [...xs].sort((a, b) => a - b);
   return (s[(s.length - 1) >> 1] + s[s.length >> 1]) / 2;
 };
+/** The 1-bath line: one bath vs more than one is a value break, not a gradient. */
+const bathSide = (baths: number) => (baths <= 1 ? 1 : 2);
+const styleTokens = (s: string | null | undefined) =>
+  (s ?? "").split(",").map((t) => t.trim().toLowerCase()).filter((t) => t && t !== "other");
+
+export function isStyleMatch(subject: Property, c: Property): boolean {
+  const levelsKnown = !!subject.levels && !!c.levels;
+  const a = styleTokens(subject.archStyle), b = styleTokens(c.archStyle);
+  const archKnown = a.length > 0 && b.length > 0;
+  if (!levelsKnown && !archKnown) return false;
+  if (levelsKnown && subject.levels !== c.levels) return false;
+  if (archKnown && !a.some((t) => b.includes(t))) return false;
+  return true;
+}
 
 interface Level {
   anchor: number;
@@ -195,6 +236,13 @@ function applyDeficits(subject: Property, level: Level, o: typeof DOCTRINE_DEFAU
   };
 }
 
+interface StepDef {
+  label: string;
+  radiusMiles: number;
+  bathTolerance: number;
+  styleMatchedOnly: boolean;
+}
+
 export function valueByDoctrine(input: { subject: Property; pool: SoldComp[]; options?: DoctrineOptions }): DoctrineValuation {
   const { subject, pool } = input;
   const o = { ...DOCTRINE_DEFAULTS, ...(input.options ?? {}) };
@@ -215,7 +263,7 @@ export function valueByDoctrine(input: { subject: Property; pool: SoldComp[]; op
     return c.soldPrice >= 5000;
   });
 
-  // ---- 1. separate the populations ----
+  // ---- 1a. separate the populations by evidence ----
   const { uplift, buyLegs } = detectFlips(usable);
   const saleable: { c: SoldComp; cond: ConditionAssessment; mi: number }[] = [];
   const distressed: { comp: SoldComp; distanceMiles: number; signals: string[] }[] = [];
@@ -230,23 +278,35 @@ export function valueByDoctrine(input: { subject: Property; pool: SoldComp[]; op
 
   // ---- 3. comp selection ladder ----
   const split = isSplit(subject.levels);
-  const steps: { label: string; radiusMiles: number; relaxed: boolean }[] = split
+  const tag = split ? ", split-level only" : "";
+  const sim = `same beds, similar baths${tag}`;
+  const rel = `same beds, baths ±${o.relaxedBathTolerance}${tag}`;
+  const base: Omit<StepDef, "styleMatchedOnly">[] = split
     ? [
-      { label: "0.25 mi, same bed/bath, split-level only", radiusMiles: 0.25, relaxed: false },
-      { label: "0.5 mi, same bed/bath, split-level only", radiusMiles: 0.5, relaxed: false },
-      { label: "1 mi, same bed/bath, split-level only", radiusMiles: 1, relaxed: false },
-      { label: "1 mi, ±1 bed/bath (adjusted), split-level only", radiusMiles: 1, relaxed: true },
+      { label: `0.25 mi, ${sim}`, radiusMiles: 0.25, bathTolerance: o.similarBathTolerance },
+      { label: `0.5 mi, ${sim}`, radiusMiles: 0.5, bathTolerance: o.similarBathTolerance },
+      { label: `1 mi, ${sim}`, radiusMiles: 1, bathTolerance: o.similarBathTolerance },
+      { label: `1 mi, ${rel}`, radiusMiles: 1, bathTolerance: o.relaxedBathTolerance },
     ]
     : [
-      { label: "0.25 mi, same bed/bath", radiusMiles: 0.25, relaxed: false },
-      { label: "0.5 mi, same bed/bath", radiusMiles: 0.5, relaxed: false },
-      { label: "0.5 mi, ±1 bed/bath (adjusted)", radiusMiles: 0.5, relaxed: true },
+      { label: `0.25 mi, ${sim}`, radiusMiles: 0.25, bathTolerance: o.similarBathTolerance },
+      { label: `0.5 mi, ${sim}`, radiusMiles: 0.5, bathTolerance: o.similarBathTolerance },
+      { label: `0.5 mi, ${rel}`, radiusMiles: 0.5, bathTolerance: o.relaxedBathTolerance },
     ];
-  const maxRadius = steps[steps.length - 1].radiusMiles;
+  // Style is a preference: each step is tried with style-matched comps only, then with all.
+  const subjectHasStyle = o.stylePreference && (!!subject.levels || styleTokens(subject.archStyle).length > 0);
+  const steps: StepDef[] = base.flatMap((s) =>
+    subjectHasStyle
+      ? [{ ...s, label: `${s.label}, style-matched`, styleMatchedOnly: true }, { ...s, label: `${s.label}, any style`, styleMatchedOnly: false }]
+      : [{ ...s, label: `${s.label}, any style`, styleMatchedOnly: false }]
+  );
+  const maxRadius = base[base.length - 1].radiusMiles;
 
   if (subject.sqft === null) notes.push("Subject square footage unknown: the ±200 sq ft test could not be applied.");
-  if (subject.beds === null || subject.baths === null) notes.push("Subject bed or bath count unknown: the same-bed/bath test could not be fully applied.");
+  if (subject.beds === null) notes.push("Subject bedroom count unknown: the same-beds test could not be applied.");
+  if (subject.baths === null) notes.push("Subject bath count unknown: the bath tests and the 1-bath line could not be applied.");
   if (subject.hasBasement === null) notes.push("Subject basement status unknown: the basement hard filter could not be applied.");
+  if (!subjectHasStyle && o.stylePreference) notes.push("Subject style unknown: the style preference could not be applied.");
 
   const passesFixed = (c: SoldComp) => {
     if (subject.sqft !== null && (c.sqft === null || Math.abs(c.sqft - subject.sqft) > o.sqftBand)) return false;
@@ -256,31 +316,30 @@ export function valueByDoctrine(input: { subject: Property; pool: SoldComp[]; op
     if (isSplit(c.levels) !== split) return false;
     return true;
   };
-  const bedBath = (c: SoldComp, relaxed: boolean) => {
-    const tol = relaxed ? 1 : 0;
-    if (subject.beds !== null && (c.beds === null || Math.abs(c.beds - subject.beds) > tol)) return false;
-    if (subject.baths !== null && (c.baths === null || Math.abs(c.baths - subject.baths) > tol)) return false;
-    return true;
+  /** Baths within tolerance and on the same side of the 1-bath line. */
+  const bathsOk = (c: SoldComp, tol: number) => {
+    if (subject.baths === null) return true;
+    if (c.baths === null) return false;
+    return bathSide(c.baths) === bathSide(subject.baths) && Math.abs(c.baths - subject.baths) <= tol;
+  };
+  const sameBeds = (c: SoldComp) => subject.beds === null || c.beds === subject.beds;
+
+  const toComp = (s: { c: SoldComp; cond: ConditionAssessment; mi: number }): DoctrineComp => {
+    let price = s.c.soldPrice;
+    const adjustments: string[] = [];
+    const dBath = subject.baths !== null && s.c.baths !== null ? subject.baths - s.c.baths : 0;
+    if (dBath) {
+      price *= 1 + o.bathAdjustPct * dBath;
+      adjustments.push(`${s.c.baths} -> ${subject.baths} baths: ${dBath > 0 ? "+" : ""}${(o.bathAdjustPct * dBath * 100).toFixed(1)}%`);
+    }
+    return { comp: s.c, distanceMiles: s.mi, condition: s.cond, price, adjustments, styleMatch: isStyleMatch(subject, s.c), role: "below" };
   };
 
-  const build = (step: { radiusMiles: number; relaxed: boolean }): DoctrineComp[] =>
+  const build = (step: StepDef): DoctrineComp[] =>
     saleable
-      .filter((s) => s.mi <= step.radiusMiles && passesFixed(s.c) && bedBath(s.c, step.relaxed))
-      .map((s) => {
-        let price = s.c.soldPrice;
-        const adjustments: string[] = [];
-        const dBed = subject.beds !== null && s.c.beds !== null ? subject.beds - s.c.beds : 0;
-        const dBath = subject.baths !== null && s.c.baths !== null ? subject.baths - s.c.baths : 0;
-        if (dBed) {
-          price *= 1 + o.bedAdjustPct * dBed;
-          adjustments.push(`${s.c.beds} -> ${subject.beds} beds: ${dBed > 0 ? "+" : ""}${(o.bedAdjustPct * dBed * 100).toFixed(1)}%`);
-        }
-        if (dBath) {
-          price *= 1 + o.bathAdjustPct * dBath;
-          adjustments.push(`${s.c.baths} -> ${subject.baths} baths: ${dBath > 0 ? "+" : ""}${(o.bathAdjustPct * dBath * 100).toFixed(1)}%`);
-        }
-        return { comp: s.c, distanceMiles: s.mi, condition: s.cond, price, adjustments, role: "below" as CompRole };
-      })
+      .filter((s) => s.mi <= step.radiusMiles && passesFixed(s.c) && sameBeds(s.c) && bathsOk(s.c, step.bathTolerance))
+      .map(toComp)
+      .filter((c) => !step.styleMatchedOnly || c.styleMatch)
       .sort((a, b) => b.price - a.price);
 
   /** A lone top comp >= outlierGap above the pack is excluded (repeat while it holds). */
@@ -295,51 +354,76 @@ export function valueByDoctrine(input: { subject: Property; pool: SoldComp[]; op
     return { kept, out };
   };
 
+  // ---- walk the ladder; 1b. relative-price screen; 2. read the top ----
   const ladder: LadderStep[] = [];
   let stepUsed: LadderStep | null = null;
   let good: DoctrineComp[] = [];
   let outliers: DoctrineComp[] = [];
+  let screened: DoctrineComp[] = [];
+  let level: Level | null = null;
+  let scattered = false;
+
   for (const step of steps) {
     const { kept, out } = stripOutliers(build(step));
-    const rec: LadderStep = { ...step, goodComps: kept.length, outliersExcluded: out.length };
-    ladder.push(rec);
-    good = kept;
-    outliers = out;
+    let lvl: Level | null = null;
+    let scr: DoctrineComp[] = [];
+    let remaining = kept;
     if (kept.length >= o.minComps) {
+      lvl = readSupportedLevel(kept, o);
+      if (lvl) {
+        // A saleable-by-evidence sale far below the supported top is a distressed-market
+        // sale: exclude it from the comp count, the value and the step-down.
+        const floor = lvl.supporters[lvl.supporters.length - 1].price * (1 - o.distressGapPct);
+        scr = lvl.rest.filter((c) => c.price < floor);
+        if (scr.length) {
+          for (const c of scr) c.role = "price-screened";
+          lvl = { ...lvl, rest: lvl.rest.filter((c) => c.price >= floor) };
+          remaining = kept.filter((c) => c.role !== "price-screened");
+        }
+      }
+    }
+    const rec: LadderStep = { ...step, goodComps: remaining.length, outliersExcluded: out.length, priceScreened: scr.length };
+    ladder.push(rec);
+    good = remaining;
+    outliers = out;
+    screened = scr;
+    level = lvl;
+    scattered = kept.length >= o.minComps && !lvl;
+    if (remaining.length >= o.minComps) {
       stepUsed = rec;
       break;
     }
   }
 
-  // ---- 2. read the top; 4. deficits; 5. support + step-down ----
+  // ---- 4. deficits; 5. support + step-down ----
   let top: SupportedLevel | null = null;
   let stepDown: SupportedLevel | null = null;
   let noValueReason: string | null = null;
 
   if (!stepUsed) {
-    noValueReason = `Fewer than ${o.minComps} good comps even at the widest step (${good.length} found within ${maxRadius} mi). No supported value.`;
+    noValueReason = `Fewer than ${o.minComps} good comps even at the widest step (${good.length} found within ${maxRadius} mi with the same bedroom count). No supported value.`;
+  } else if (scattered || !level) {
+    noValueReason = `${good.length} good comps, but no two of them agree within ${usd(o.significantGap)} — every sale stands alone, so no level is supported.`;
   } else {
-    const level = readSupportedLevel(good, o);
-    if (!level) {
-      noValueReason = `${good.length} good comps, but no two of them agree within ${usd(o.significantGap)} — every sale stands alone, so no level is supported.`;
-    } else {
-      for (const c of level.unconfirmed) c.role = "unconfirmed-high";
-      for (const c of level.supporters) c.role = "supports-value";
-      top = applyDeficits(subject, level, o);
-      const below = readSupportedLevel(level.rest, o);
-      if (below) {
-        for (const c of below.supporters) c.role = "supports-step-down";
-        stepDown = applyDeficits(subject, below, o);
-      }
-      if (level.unconfirmed.length) {
-        notes.push(`${level.unconfirmed.length} sale(s) above the value (${level.unconfirmed.map((c) => usd(c.price)).join(", ")}) stand alone and do not set it; a second sale at that level would.`);
-      }
-      if (level.supporters.some((c) => c.adjustments.length)) notes.push("The value rests partly on ±1 bed/bath comps whose prices were adjusted with uncalibrated percentages.");
-      const eraOdd = level.supporters.filter((c) => c.comp.newConstruction || (subject.yearBuilt && c.comp.yearBuilt && Math.abs(subject.yearBuilt - c.comp.yearBuilt) > 40));
-      if (eraOdd.length) notes.push(`${eraOdd.length} supporting comp(s) are new construction or 40+ years different in age from the subject; the model has no age filter, so check them.`);
+    for (const c of level.unconfirmed) c.role = "unconfirmed-high";
+    for (const c of level.supporters) c.role = "supports-value";
+    top = applyDeficits(subject, level, o);
+    const below = readSupportedLevel(level.rest, o);
+    if (below) {
+      for (const c of below.supporters) c.role = "supports-step-down";
+      stepDown = applyDeficits(subject, below, o);
     }
+    if (level.unconfirmed.length) {
+      notes.push(`${level.unconfirmed.length} sale(s) above the value (${level.unconfirmed.map((c) => usd(c.price)).join(", ")}) stand alone and do not set it; a second sale at that level would.`);
+    }
+    if (level.supporters.some((c) => c.adjustments.length)) notes.push("The value rests partly on comps with a different bath count whose prices were adjusted with an uncalibrated percentage.");
+    const mism = level.supporters.filter((c) => !c.styleMatch).length;
+    if (mism && subjectHasStyle) notes.push(`${mism} of ${level.supporters.length} supporting comps are not style-matched (too few style-matched comps at this step).`);
+    const eraOdd = level.supporters.filter((c) => c.comp.newConstruction || (subject.yearBuilt && c.comp.yearBuilt && Math.abs(subject.yearBuilt - c.comp.yearBuilt) > 40));
+    if (eraOdd.length) notes.push(`${eraOdd.length} supporting comp(s) are new construction or 40+ years different in age from the subject; the model has no age filter, so check them.`);
   }
   if (outliers.length) notes.push(`${outliers.length} lone sale(s) ${usd(o.outlierGap)}+ above the pack excluded as outliers (${outliers.map((c) => usd(c.price)).join(", ")}).`);
+  if (screened.length) notes.push(`${screened.length} sale(s) ${(o.distressGapPct * 100).toFixed(0)}%+ below the supported top treated as distressed-market by relative price and excluded (${screened.map((c) => usd(c.price)).join(", ")}).`);
 
   const value = top?.value ?? null;
   const supportCount = top?.supportCount ?? 0;
@@ -349,11 +433,17 @@ export function valueByDoctrine(input: { subject: Property; pool: SoldComp[]; op
   else if (stepDown) loanBasis = { value: stepDown.value, basis: "step-down", reason: `Only ${supportCount} comps support the top range; use the next supported level.` };
   else loanBasis = { value: null, basis: "none", reason: `Only ${supportCount} comps support the top range and there is no supported level below it.` };
 
-  const comps = [...outliers, ...good];
+  // Context only: ±1 bedroom, otherwise passing the widest step's tests. Never used above.
+  const contextComps = subject.beds === null ? [] : saleable
+    .filter((s) => s.mi <= maxRadius && passesFixed(s.c) && s.c.beds !== null && Math.abs(s.c.beds - (subject.beds as number)) === 1 && bathsOk(s.c, o.relaxedBathTolerance))
+    .map(toComp)
+    .sort((a, b) => b.price - a.price);
+
+  const comps = [...outliers, ...good, ...screened];
   return {
     subject, asOf, value, supportCount, stepDown, loanBasis, top,
     observedCeiling: good.length ? good[0].price : null,
-    noValueReason, comps, ladder, stepUsed,
+    noValueReason, comps, contextComps, ladder, stepUsed,
     populations: {
       poolSize: usable.length, saleable: saleable.length, distressedExcluded: distressed.length,
       distressedNearby: distressed.filter((d) => d.distanceMiles <= maxRadius).sort((a, b) => a.distanceMiles - b.distanceMiles),

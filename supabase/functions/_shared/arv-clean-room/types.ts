@@ -19,6 +19,8 @@ export interface Property {
   baths: number | null;
   yearBuilt: number | null;
   levels: string | null;
+  /** MLS ArchitecturalStyle, comma-separated (e.g. "Bungalow,Traditional"). */
+  archStyle?: string | null;
   garageSpaces: number | null;
   hasBasement: boolean | null;
   style: string | null;

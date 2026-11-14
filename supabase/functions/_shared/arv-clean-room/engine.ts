@@ -107,6 +107,7 @@ export function normalizeProperty(l: any): Property | null {
     baths,
     yearBuilt: num(d.yearBuilt),
     levels: raw.Levels ?? null,
+    archStyle: raw.ArchitecturalStyle ?? null,
     garageSpaces: num(raw.GarageSpaces) ?? num(d.numGarageSpaces),
     hasBasement,
     style: d.style ?? null,

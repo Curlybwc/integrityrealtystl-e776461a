@@ -13,6 +13,10 @@
 //  - `fields=` supports nested paths incl. individual `raw.*` MLS fields and
 //    cuts a 100-record page from ~640 KB to ~60 KB.
 //  - Unknown params are reported in `unrecognizedParams`, not rejected.
+//  - Rate limit: `x-ratelimit-limit: 1800` per ~60 s window on the search
+//    endpoints, exhausted after roughly 300 page requests in a few minutes of
+//    back-to-back backtests; 429 responses carry `retry-after`, which the
+//    client now waits out.
 
 const BASE = "https://api.repliers.io";
 
@@ -26,6 +30,8 @@ export const COMP_FIELDS = [
   "raw.ConcessionsAmount", "raw.AboveGradeFinishedArea", "raw.Levels", "raw.SubdivisionName",
   "raw.GarageSpaces", "raw.BasementYN", "raw.BathroomsFull", "raw.BathroomsHalf",
   "raw.NewConstructionYN",
+  // Added in the third revision, for the style preference (owner ruling 3).
+  "raw.ArchitecturalStyle",
 ].join(",");
 
 export interface RepliersClientOptions {
@@ -90,8 +96,12 @@ export class RepliersClient {
 
   private async fetchWithRetry(url: string): Promise<any> {
     let lastErr: unknown;
+    // Verified live: a 429 carries `retry-after` (seconds, up to ~60) and the
+    // search endpoints share a per-minute budget separate from other calls.
+    let waitMs: number | null = null;
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
-      if (attempt > 0) await new Promise((r) => setTimeout(r, 400 * 2 ** attempt));
+      if (attempt > 0) await new Promise((r) => setTimeout(r, waitMs ?? 400 * 2 ** attempt));
+      waitMs = null;
       this.calls++;
       try {
         const resp = await this.fetchImpl(url, {
@@ -99,6 +109,8 @@ export class RepliersClient {
           signal: typeof AbortSignal.timeout === "function" ? AbortSignal.timeout(this.timeoutMs) : undefined,
         });
         if (resp.status === 429 || resp.status >= 500) {
+          const retryAfter = Number(resp.headers?.get?.("retry-after"));
+          if (resp.status === 429 && Number.isFinite(retryAfter) && retryAfter > 0) waitMs = Math.min(retryAfter, 65) * 1000 + 500;
           lastErr = new Error(`Repliers ${resp.status}`);
           continue;
         }
